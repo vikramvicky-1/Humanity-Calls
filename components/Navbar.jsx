@@ -29,9 +29,9 @@ const Navbar = () => {
           animateMobileMenuOpen(mobileMenu);
         }
       }, navRef);
-      
+
       document.body.style.overflow = "hidden";
-      
+
       return () => {
         ctx.revert();
         document.body.style.overflow = "";
@@ -172,7 +172,9 @@ const Navbar = () => {
             <button
               onClick={() => setIsOpen(!isOpen)}
               className="text-[#1A1A1A] p-2"
-              aria-label={isOpen ? "Close navigation menu" : "Open navigation menu"}
+              aria-label={
+                isOpen ? "Close navigation menu" : "Open navigation menu"
+              }
               aria-expanded={isOpen}
             >
               <svg
@@ -252,12 +254,17 @@ const Navbar = () => {
             </div>
             <div className="flex flex-col space-y-3 pt-8 px-4">
               <Link to="/request-donors" onClick={() => setIsOpen(false)}>
-                <Button variant="outline" className="w-full min-h-[48px] md:min-h-[44px]">
+                <Button
+                  variant="outline"
+                  className="w-full min-h-[48px] md:min-h-[44px]"
+                >
                   Request For Donors
                 </Button>
               </Link>
               <Link to="/donate" onClick={() => setIsOpen(false)}>
-                <Button className="w-full min-h-[48px] md:min-h-[44px]">Donate Now</Button>
+                <Button className="w-full min-h-[48px] md:min-h-[44px]">
+                  Donate Now
+                </Button>
               </Link>
             </div>
 
