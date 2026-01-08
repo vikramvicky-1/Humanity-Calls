@@ -293,7 +293,7 @@ const Home = () => {
               the underprivileged, and protecting our animal companions
               nationwide.
             </p>
-            <div className="flex flex-wrap gap-4">
+            <div className="flex flex-wrap gap-6 lg:gap-4">
               <Link to="/collaborate">
                 <Button data-animation="hero-button">
                   Collaborate With Us
@@ -445,10 +445,10 @@ const Home = () => {
             <img
               src="https://res.cloudinary.com/daokrum7i/image/upload/f_auto,q_auto,w_600/v1767814233/humanity_how_can_i_help_xezom5.avif"
               alt={IMAGE_ALTS.howCanIHelp}
-              className="object-fit aspect-[3/3]"
+              className="object-cover aspect-[4/5] w-full"
               data-animation="help-image"
               width="600"
-              height="600"
+              height="750"
               loading="lazy"
             />
           </div>

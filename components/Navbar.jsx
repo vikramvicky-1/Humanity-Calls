@@ -144,11 +144,11 @@ const Navbar = () => {
               )}
             </div>
 
-            <div className="flex space-x-3 ml-4">
+            <div className="flex space-x-4 ml-4 items-center">
               <Link to="/request-donors">
                 <Button
                   variant={isActive("/request-donors") ? "primary" : "outline"}
-                  className="text-[12px] py-1.5 px-3"
+                  className="text-[12px] py-2.5 px-4 min-h-[40px]"
                   data-animation="cta-button"
                 >
                   Request For Donors
@@ -156,7 +156,7 @@ const Navbar = () => {
               </Link>
               <Link to="/donate">
                 <Button
-                  className={`text-[12px] py-1.5 px-3 shadow-md ${
+                  className={`text-[12px] py-2.5 px-4 shadow-md min-h-[40px] ${
                     isActive("/donate") ? "bg-[#8E1616]" : ""
                   }`}
                   data-animation="cta-button"
