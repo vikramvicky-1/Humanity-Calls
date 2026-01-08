@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useLayoutEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import SEO from "../components/SEO";
@@ -8,15 +8,20 @@ import { redirectToWhatsApp } from "../utils/whatsapp";
 gsap.registerPlugin(ScrollTrigger);
 
 const Donate = () => {
-  useEffect(() => {
-    setTimeout(() => {
+  const containerRef = useRef(null);
+
+  useLayoutEffect(() => {
+    const isMobile = window.innerWidth < 768;
+    const yOffset = isMobile ? 15 : 30;
+    
+    const ctx = gsap.context(() => {
       const title = document.querySelector('[data-animation="donate-title"]');
       const form = document.querySelector('[data-animation="donate-form"]');
 
       if (title) {
         gsap.fromTo(
           title,
-          { opacity: 0, y: 30 },
+          { opacity: 0, y: yOffset },
           {
             opacity: 1,
             y: 0,
@@ -25,7 +30,6 @@ const Donate = () => {
             scrollTrigger: {
               trigger: title,
               start: 'top 80%',
-              end: 'bottom 60%',
               once: true,
             },
           }
@@ -35,7 +39,7 @@ const Donate = () => {
       if (form) {
         gsap.fromTo(
           form,
-          { opacity: 0, y: 40, scale: 0.95 },
+          { opacity: 0, y: isMobile ? 20 : 40, scale: 0.98 },
           {
             opacity: 1,
             y: 0,
@@ -45,13 +49,14 @@ const Donate = () => {
             scrollTrigger: {
               trigger: form,
               start: 'top 80%',
-              end: 'bottom 60%',
               once: true,
             },
           }
         );
       }
-    }, 100);
+    }, containerRef);
+
+    return () => ctx.revert();
   }, []);
   const [formData, setFormData] = useState({
     name: "",
@@ -71,7 +76,7 @@ const Donate = () => {
   };
 
   return (
-    <div className="bg-white min-h-screen py-24">
+    <div className="bg-white min-h-screen py-24" ref={containerRef}>
       <SEO
         title="Donate Now | Support Humanity Calls NGO"
         description="Your contribution helps us save lives, rescue animals, and support those in need. Donate today to Humanity Calls NGO."

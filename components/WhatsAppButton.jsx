@@ -1,13 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useLayoutEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { WHATSAPP_NUMBER } from '../constants';
 
 const WhatsAppButton = () => {
   const [isFooterVisible, setIsFooterVisible] = useState(false);
   const buttonRef = useRef(null);
-  const footerRef = useRef(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
         setIsFooterVisible(entry.isIntersecting);
@@ -18,7 +17,6 @@ const WhatsAppButton = () => {
     const footer = document.querySelector('footer');
     if (footer) {
       observer.observe(footer);
-      footerRef.current = footer;
     }
 
     return () => {
@@ -26,24 +24,27 @@ const WhatsAppButton = () => {
     };
   }, []);
 
-  useEffect(() => {
-    if (buttonRef.current) {
-      if (isFooterVisible) {
-        gsap.to(buttonRef.current, {
-          duration: 0.5,
-          opacity: 1,
-          pointerEvents: 'auto',
-          ease: 'power2.out',
-        });
-      } else {
-        gsap.to(buttonRef.current, {
-          duration: 0.5,
-          opacity: 0,
-          pointerEvents: 'none',
-          ease: 'power2.in',
-        });
+  useLayoutEffect(() => {
+    const ctx = gsap.context(() => {
+      if (buttonRef.current) {
+        if (isFooterVisible) {
+          gsap.to(buttonRef.current, {
+            duration: 0.5,
+            opacity: 1,
+            pointerEvents: 'auto',
+            ease: 'power2.out',
+          });
+        } else {
+          gsap.to(buttonRef.current, {
+            duration: 0.5,
+            opacity: 0,
+            pointerEvents: 'none',
+            ease: 'power2.in',
+          });
+        }
       }
-    }
+    }, buttonRef);
+    return () => ctx.revert();
   }, [isFooterVisible]);
 
   const scrollToTop = () => {

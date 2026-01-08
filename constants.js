@@ -7,14 +7,6 @@ import {
 } from "react-icons/fa";
 import { FaXTwitter } from "react-icons/fa6";
 
-export const COLORS = {
-  bloodRed: "#B71C1C",
-  white: "#FFFFFF",
-  grayLight: "#F5F5F5",
-  grayMedium: "#E0E0E0",
-  grayDark: "#9E9E9E",
-};
-
 export const WHATSAPP_NUMBER = "918867713031"; // Placeholder number
 
 export const IMAGE_ALTS = {
@@ -24,14 +16,6 @@ export const IMAGE_ALTS = {
   poorNeedy: "Volunteers distributing food and clothes to people in need",
   animalRescue: "Volunteer rescuing a stray dog from the streets",
   collaborate: "Professionals and NGO leaders collaborating for a cause",
-  volunteer: "Young volunteers working together in a community garden",
-  communityConservation:
-    "Community members planting trees for environmental restoration",
-  earlyEducation: "Children learning in an outdoor classroom with a teacher",
-  forestRestoration: "New saplings being planted for forest restoration",
-  wildlifeCrime: "Majestic lion representing wildlife protection",
-  marineConservation: "Divers cleaning coral reefs from plastic waste",
-  environmentalPolicy: "Sustainable policy making for a greener planet",
   howCanIHelp: "Person helping others - Humanity Calls NGO initiative",
   mission: "Our Mission - Humanity Calls NGO helping those in need",
   vision: "Our Vision - Empowering Communities and building a better future",

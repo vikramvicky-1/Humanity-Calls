@@ -3,108 +3,18 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 gsap.registerPlugin(ScrollTrigger);
 
-export const animatePageLoad = (selector) => {
-  const elements = document.querySelectorAll(selector);
-  elements.forEach((element) => {
-    gsap.fromTo(
-      element,
-      { opacity: 0, y: 30 },
-      {
-        opacity: 1,
-        y: 0,
-        duration: 0.8,
-        ease: 'power3.out',
-        scrollTrigger: {
-          trigger: element,
-          start: 'top 80%',
-          end: 'bottom 60%',
-          once: true,
-        },
-      }
-    );
-  });
-};
-
-export const animateTextIn = (element) => {
-  if (!element) return;
-  gsap.fromTo(
-    element,
-    { opacity: 0, y: 20 },
-    {
-      opacity: 1,
-      y: 0,
-      duration: 0.6,
-      ease: 'power2.out',
-      scrollTrigger: {
-        trigger: element,
-        start: 'top 80%',
-        end: 'bottom 60%',
-        once: true,
-      },
-    }
-  );
-};
-
-export const animateImageIn = (element) => {
-  if (!element) return;
-  gsap.fromTo(
-    element,
-    { opacity: 0, scale: 0.95 },
-    {
-      opacity: 1,
-      scale: 1,
-      duration: 0.8,
-      ease: 'power2.out',
-      scrollTrigger: {
-        trigger: element,
-        start: 'top 80%',
-        end: 'bottom 60%',
-        once: true,
-      },
-    }
-  );
-};
-
-export const staggerElements = (elements, options = {}) => {
-  if (!elements || elements.length === 0) return;
-  
-  const defaults = {
-    duration: 0.6,
-    stagger: 0.1,
-    ease: 'power2.out',
-  };
-  const finalOptions = { ...defaults, ...options };
-
-  elements.forEach((element) => {
-    gsap.fromTo(
-      element,
-      { opacity: 0, y: 20 },
-      {
-        opacity: 1,
-        y: 0,
-        ...finalOptions,
-        scrollTrigger: {
-          trigger: element,
-          start: 'top 80%',
-          end: 'bottom 60%',
-          once: true,
-        },
-      }
-    );
-  });
-};
-
 export const animateNavBar = () => {
   const logo = document.querySelector('[data-animation="logo"]');
   const navLinks = document.querySelectorAll('[data-animation="nav-link"]');
   const ctaButtons = document.querySelectorAll('[data-animation="cta-button"]');
+  const isMobile = window.innerWidth < 768;
 
   const tl = gsap.timeline();
 
   if (logo) {
     tl.fromTo(
       logo,
-      { opacity: 0, x: -20 },
+      { opacity: 0, x: isMobile ? -10 : -20 },
       { opacity: 1, x: 0, duration: 0.5, ease: 'power2.out' },
       0
     );
@@ -113,7 +23,7 @@ export const animateNavBar = () => {
   if (navLinks.length > 0) {
     tl.fromTo(
       navLinks,
-      { opacity: 0, y: -10 },
+      { opacity: 0, y: isMobile ? -5 : -10 },
       {
         opacity: 1,
         y: 0,
@@ -128,7 +38,7 @@ export const animateNavBar = () => {
   if (ctaButtons.length > 0) {
     tl.fromTo(
       ctaButtons,
-      { opacity: 0, scale: 0.9 },
+      { opacity: 0, scale: 0.95 },
       {
         opacity: 1,
         scale: 1,
@@ -155,24 +65,6 @@ export const animateMobileMenuOpen = (menu) => {
       ease: 'power2.out',
     }
   );
-};
-
-export const animateButtonHover = (button) => {
-  gsap.to(button, {
-    scale: 1.05,
-    duration: 0.3,
-    ease: 'power2.out',
-    overwrite: 'auto',
-  });
-};
-
-export const animateButtonHoverOut = (button) => {
-  gsap.to(button, {
-    scale: 1,
-    duration: 0.3,
-    ease: 'power2.out',
-    overwrite: 'auto',
-  });
 };
 
 export const animateFooterElements = () => {
@@ -272,39 +164,44 @@ export const animateCards = (cards) => {
 export const animateTitleIn = (element) => {
   if (!element) return;
   
-  if (element.querySelector('[data-word="true"]')) return;
-
-  const childNodes = Array.from(element.childNodes);
-  element.innerHTML = '';
-
-  childNodes.forEach((node) => {
-    if (node.nodeType === 3) { // Text node
-      const words = node.textContent.split(/(\s+)/);
-      words.forEach((word) => {
-        if (word.trim() === '') {
-          element.appendChild(document.createTextNode(word));
-        } else {
-          const span = document.createElement('span');
-          span.style.display = 'inline-block';
-          span.setAttribute('data-word', 'true');
-          span.textContent = word;
-          element.appendChild(span);
-        }
-      });
-    } else if (node.nodeType === 1) { // Element node
-      const el = node;
-      el.setAttribute('data-word', 'true');
-      // Preserve existing display if it's already set (like inline-flex)
-      if (!el.style.display) {
-        el.style.display = 'inline-block';
-      }
-      element.appendChild(el);
-    }
-  });
-
+  // Use a cleaner way to animate text that doesn't mess with React's DOM as much
+  // if possible, but for now we keep the word splitting if it's already there
+  // and just make sure it's GSAP safe
+  
   const wordSpans = element.querySelectorAll('[data-word="true"]');
+  if (wordSpans.length === 0) {
+    // If words are not yet split, we can do it once
+    const childNodes = Array.from(element.childNodes);
+    element.innerHTML = '';
+
+    childNodes.forEach((node) => {
+      if (node.nodeType === 3) { // Text node
+        const words = node.textContent.split(/(\s+)/);
+        words.forEach((word) => {
+          if (word.trim() === '') {
+            element.appendChild(document.createTextNode(word));
+          } else {
+            const span = document.createElement('span');
+            span.style.display = 'inline-block';
+            span.setAttribute('data-word', 'true');
+            span.textContent = word;
+            element.appendChild(span);
+          }
+        });
+      } else if (node.nodeType === 1) { // Element node
+        const el = node;
+        el.setAttribute('data-word', 'true');
+        if (!el.style.display) {
+          el.style.display = 'inline-block';
+        }
+        element.appendChild(el);
+      }
+    });
+  }
+
+  const targets = element.querySelectorAll('[data-word="true"]');
   gsap.fromTo(
-    wordSpans,
+    targets,
     { opacity: 0, y: 30, scale: 0.8, rotate: -2 },
     {
       opacity: 1,
@@ -342,35 +239,4 @@ export const animateParagraphIn = (element) => {
       },
     }
   );
-};
-
-export const animateElementWithTrigger = (element, options = {}) => {
-  if (!element) return;
-
-  const defaults = {
-    duration: 0.6,
-    ease: 'power2.out',
-    fromProps: { opacity: 0, y: 30 },
-  };
-
-  const config = { ...defaults, ...options };
-  const { fromProps, ...animationProps } = config;
-
-  gsap.fromTo(element, fromProps, {
-    ...animationProps,
-    scrollTrigger: {
-      trigger: element,
-      start: 'top 80%',
-      end: 'bottom 60%',
-      once: true,
-    },
-  });
-};
-
-export const scrollSmoothTo = (target) => {
-  gsap.to(window, {
-    scrollTo: { y: target, autoKill: true },
-    duration: 1,
-    ease: 'power2.inOut',
-  });
 };

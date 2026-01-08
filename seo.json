@@ -1,47 +1,5 @@
 {
   "seo": {
-    "target_country": "India",
-    "language": "en-IN",
-    "site_name": "Humanity Calls NGO",
-    "keywords": {
-      "primary": [
-        "blood donation camp in India",
-        "NGO blood donation drive",
-        "blood donation NGO India",
-        "hospital blood donation camp",
-        "emergency blood donation India",
-        "nationwide blood donation NGO",
-        "humanity calls NGO india"
-      ],
-      "secondary": [
-        "blood donation camp near me",
-        "NGO hospital blood drive",
-        "volunteer blood donation India",
-        "blood donation awareness program",
-        "free blood donation camp",
-        "emergency blood donors india",
-        "best NGO for blood donation"
-      ],
-      "geo_targeted": [
-        "blood donation camp in Bangalore",
-        "blood donation camp in Delhi",
-        "blood donation camp in Mumbai",
-        "blood donation camp in Chennai",
-        "blood donation camp in Hyderabad",
-        "blood donation camp in Pune",
-        "blood donation camp in Kolkata",
-        "NGO blood donation camp in India",
-        "hospital blood donation drive near me"
-      ],
-      "long_tail": [
-        "NGO organizing blood donation camps in India",
-        "how to volunteer for blood donation camp",
-        "emergency blood help NGO India",
-        "CSR blood donation initiative in India",
-        "corporate blood donation drive with NGO",
-        "voluntary blood donation organizations in india"
-      ]
-    },
     "meta": {
       "title": "Blood Donation Camp in India | NGO Saving Lives | Humanity Calls",
       "description": "Join Humanity Calls NGO-led blood donation camps across India. We partner with volunteers and hospitals to provide emergency blood and save lives. Donate today!",
@@ -64,35 +22,6 @@
       "twitter:image": "/assets/humanitycallslogo.avif",
       "twitter:site": "@HumanityCalls"
     },
-    "url_structure": [
-      "/",
-      "/about",
-      "/poor-needy",
-      "/animal-rescue",
-      "/collaborate",
-      "/volunteer",
-      "/request-donors"
-    ],
-    "content_structure": {
-      "h1": "Blood Donation Camps in India – Saving Lives Together",
-      "h2": [
-        "Hospital Blood Donation Drives",
-        "Volunteer With Our NGO",
-        "Emergency Blood Support Across India",
-        "Corporate & College Blood Donation Programs"
-      ]
-    },
-    "cta": [
-      "Donate Blood. Save Lives. Serve India.",
-      "Volunteer for Blood Donation Camps Near You."
-    ],
-    "trust_signals": [
-      "Registered NGO in India",
-      "Hospital partnerships",
-      "Corporate CSR collaborations",
-      "Nationwide volunteer network",
-      "Emergency blood support"
-    ],
     "schemas": [
       {
         "@context": "https://schema.org",

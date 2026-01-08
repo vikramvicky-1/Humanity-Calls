@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useLayoutEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import SEO from "../components/SEO";
@@ -9,8 +9,13 @@ import { redirectToWhatsApp } from "../utils/whatsapp";
 gsap.registerPlugin(ScrollTrigger);
 
 const PoorNeedy = () => {
-  useEffect(() => {
-    setTimeout(() => {
+  const containerRef = useRef(null);
+
+  useLayoutEffect(() => {
+    const isMobile = window.innerWidth < 768;
+    const yOffset = isMobile ? 15 : 30;
+    
+    const ctx = gsap.context(() => {
       const image = document.querySelector('[data-animation="pn-image"]');
       const title = document.querySelector('[data-animation="pn-title"]');
       const text = document.querySelector('[data-animation="pn-text"]');
@@ -19,7 +24,7 @@ const PoorNeedy = () => {
       if (image) {
         gsap.fromTo(
           image,
-          { opacity: 0, scale: 0.9 },
+          { opacity: 0, scale: 0.95 },
           {
             opacity: 1,
             scale: 1,
@@ -28,7 +33,6 @@ const PoorNeedy = () => {
             scrollTrigger: {
               trigger: image,
               start: 'top 80%',
-              end: 'bottom 60%',
               once: true,
             },
           }
@@ -38,7 +42,7 @@ const PoorNeedy = () => {
       if (title) {
         gsap.fromTo(
           title,
-          { opacity: 0, y: 30 },
+          { opacity: 0, y: yOffset },
           {
             opacity: 1,
             y: 0,
@@ -47,7 +51,6 @@ const PoorNeedy = () => {
             scrollTrigger: {
               trigger: title,
               start: 'top 80%',
-              end: 'bottom 60%',
               once: true,
             },
           }
@@ -57,7 +60,7 @@ const PoorNeedy = () => {
       if (text) {
         gsap.fromTo(
           text,
-          { opacity: 0, y: 20 },
+          { opacity: 0, y: isMobile ? 10 : 20 },
           {
             opacity: 1,
             y: 0,
@@ -66,7 +69,6 @@ const PoorNeedy = () => {
             scrollTrigger: {
               trigger: text,
               start: 'top 80%',
-              end: 'bottom 60%',
               once: true,
             },
           }
@@ -76,7 +78,7 @@ const PoorNeedy = () => {
       if (form) {
         gsap.fromTo(
           form,
-          { opacity: 0, y: 40, scale: 0.95 },
+          { opacity: 0, y: isMobile ? 20 : 40, scale: 0.98 },
           {
             opacity: 1,
             y: 0,
@@ -86,13 +88,14 @@ const PoorNeedy = () => {
             scrollTrigger: {
               trigger: form,
               start: 'top 80%',
-              end: 'bottom 60%',
               once: true,
             },
           }
         );
       }
-    }, 100);
+    }, containerRef);
+
+    return () => ctx.revert();
   }, []);
   const [formData, setFormData] = useState({
     firstName: "",
@@ -113,7 +116,7 @@ const PoorNeedy = () => {
   };
 
   return (
-    <div className="bg-white pb-24">
+    <div className="bg-white pb-24" ref={containerRef}>
       <SEO
         title="Supporting Poor & Needy | Humanity Calls NGO"
         description="We provide essential support to the underprivileged including food distribution, education, and moral support. Help us build a better society."

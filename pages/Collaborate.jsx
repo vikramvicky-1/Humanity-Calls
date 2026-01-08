@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useLayoutEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import SEO from "../components/SEO";
@@ -9,15 +9,20 @@ import { redirectToWhatsApp } from "../utils/whatsapp";
 gsap.registerPlugin(ScrollTrigger);
 
 const Collaborate = () => {
-  useEffect(() => {
-    setTimeout(() => {
+  const containerRef = useRef(null);
+
+  useLayoutEffect(() => {
+    const isMobile = window.innerWidth < 768;
+    const yOffset = isMobile ? 15 : 30;
+    
+    const ctx = gsap.context(() => {
       const content = document.querySelector('[data-animation="collab-content"]');
       const form = document.querySelector('[data-animation="collab-form"]');
 
       if (content) {
         gsap.fromTo(
           content,
-          { opacity: 0, y: 30 },
+          { opacity: 0, y: yOffset },
           {
             opacity: 1,
             y: 0,
@@ -26,7 +31,6 @@ const Collaborate = () => {
             scrollTrigger: {
               trigger: content,
               start: 'top 80%',
-              end: 'bottom 60%',
               once: true,
             },
           }
@@ -36,7 +40,7 @@ const Collaborate = () => {
       if (form) {
         gsap.fromTo(
           form,
-          { opacity: 0, y: 40, scale: 0.95 },
+          { opacity: 0, y: isMobile ? 20 : 40, scale: 0.98 },
           {
             opacity: 1,
             y: 0,
@@ -46,13 +50,14 @@ const Collaborate = () => {
             scrollTrigger: {
               trigger: form,
               start: 'top 80%',
-              end: 'bottom 60%',
               once: true,
             },
           }
         );
       }
-    }, 100);
+    }, containerRef);
+
+    return () => ctx.revert();
   }, []);
   const [formData, setFormData] = useState({
     institutionName: "",
@@ -74,7 +79,7 @@ const Collaborate = () => {
   };
 
   return (
-    <div className="bg-white pb-24">
+    <div className="bg-white pb-24" ref={containerRef}>
       <SEO
         title="Collaborate with Humanity Calls | CSR & NGO Partnerships"
         description="Partner with Humanity Calls for CSR initiatives, blood donation drives, and community outreach. We collaborate with schools, colleges, and corporates."

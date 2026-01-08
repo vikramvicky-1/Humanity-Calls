@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useLayoutEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import gsap from "gsap";
 import Button from "./Button";
@@ -7,6 +7,7 @@ import { SOCIAL_LINKS } from "../constants";
 import { animateFooterElements } from "../utils/animations";
 
 const Footer = () => {
+  const footerRef = useRef(null);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -14,8 +15,11 @@ const Footer = () => {
     message: "",
   });
 
-  useEffect(() => {
-    animateFooterElements();
+  useLayoutEffect(() => {
+    const ctx = gsap.context(() => {
+      animateFooterElements();
+    }, footerRef);
+    return () => ctx.revert();
   }, []);
 
   const scrollToTop = () => {
@@ -33,7 +37,7 @@ const Footer = () => {
   };
 
   return (
-    <footer className="bg-[#1A1A1A] text-white pt-20 pb-10">
+    <footer className="bg-[#1A1A1A] text-white pt-20 pb-10" ref={footerRef}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
           {/* Contact Form */}

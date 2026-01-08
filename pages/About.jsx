@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useLayoutEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import SEO from "../components/SEO";
@@ -8,8 +8,13 @@ import { animateCards } from "../utils/animations";
 gsap.registerPlugin(ScrollTrigger);
 
 const About = () => {
-  useEffect(() => {
-    setTimeout(() => {
+  const containerRef = useRef(null);
+
+  useLayoutEffect(() => {
+    const isMobile = window.innerWidth < 768;
+    const yOffset = isMobile ? 15 : 30;
+    
+    const ctx = gsap.context(() => {
       const aboutTitle = document.querySelector('[data-animation="about-title"]');
       const aboutPara = document.querySelector('[data-animation="about-para"]');
       const missionSection = document.querySelector('[data-animation="mission-section"]');
@@ -23,7 +28,7 @@ const About = () => {
       if (aboutTitle) {
         gsap.fromTo(
           aboutTitle,
-          { opacity: 0, y: 30 },
+          { opacity: 0, y: yOffset },
           {
             opacity: 1,
             y: 0,
@@ -32,7 +37,6 @@ const About = () => {
             scrollTrigger: {
               trigger: aboutTitle,
               start: 'top 80%',
-              end: 'bottom 60%',
               once: true,
             },
           }
@@ -42,7 +46,7 @@ const About = () => {
       if (aboutPara) {
         gsap.fromTo(
           aboutPara,
-          { opacity: 0, y: 20 },
+          { opacity: 0, y: isMobile ? 10 : 20 },
           {
             opacity: 1,
             y: 0,
@@ -51,7 +55,6 @@ const About = () => {
             scrollTrigger: {
               trigger: aboutPara,
               start: 'top 80%',
-              end: 'bottom 60%',
               once: true,
             },
           }
@@ -61,7 +64,7 @@ const About = () => {
       if (missionSection) {
         gsap.fromTo(
           missionSection,
-          { opacity: 0, y: 30 },
+          { opacity: 0, y: yOffset },
           {
             opacity: 1,
             y: 0,
@@ -70,7 +73,6 @@ const About = () => {
             scrollTrigger: {
               trigger: missionSection,
               start: 'top 80%',
-              end: 'bottom 60%',
               once: true,
             },
           }
@@ -80,7 +82,7 @@ const About = () => {
       if (missionImage) {
         gsap.fromTo(
           missionImage,
-          { opacity: 0, scale: 0.9 },
+          { opacity: 0, scale: 0.95 },
           {
             opacity: 1,
             scale: 1,
@@ -89,7 +91,6 @@ const About = () => {
             scrollTrigger: {
               trigger: missionImage,
               start: 'top 80%',
-              end: 'bottom 60%',
               once: true,
             },
           }
@@ -99,7 +100,7 @@ const About = () => {
       if (visionSection) {
         gsap.fromTo(
           visionSection,
-          { opacity: 0, y: 30 },
+          { opacity: 0, y: yOffset },
           {
             opacity: 1,
             y: 0,
@@ -108,7 +109,6 @@ const About = () => {
             scrollTrigger: {
               trigger: visionSection,
               start: 'top 80%',
-              end: 'bottom 60%',
               once: true,
             },
           }
@@ -118,7 +118,7 @@ const About = () => {
       if (visionImage) {
         gsap.fromTo(
           visionImage,
-          { opacity: 0, scale: 0.9 },
+          { opacity: 0, scale: 0.95 },
           {
             opacity: 1,
             scale: 1,
@@ -127,7 +127,6 @@ const About = () => {
             scrollTrigger: {
               trigger: visionImage,
               start: 'top 80%',
-              end: 'bottom 60%',
               once: true,
             },
           }
@@ -137,7 +136,7 @@ const About = () => {
       if (programTitle) {
         gsap.fromTo(
           programTitle,
-          { opacity: 0, y: 20 },
+          { opacity: 0, y: isMobile ? 10 : 20 },
           {
             opacity: 1,
             y: 0,
@@ -146,7 +145,6 @@ const About = () => {
             scrollTrigger: {
               trigger: programTitle,
               start: 'top 80%',
-              end: 'bottom 60%',
               once: true,
             },
           }
@@ -160,7 +158,7 @@ const About = () => {
       if (covidSection) {
         gsap.fromTo(
           covidSection,
-          { opacity: 0, y: 30 },
+          { opacity: 0, y: yOffset },
           {
             opacity: 1,
             y: 0,
@@ -169,13 +167,14 @@ const About = () => {
             scrollTrigger: {
               trigger: covidSection,
               start: 'top 80%',
-              end: 'bottom 60%',
               once: true,
             },
           }
         );
       }
-    }, 100);
+    }, containerRef);
+
+    return () => ctx.revert();
   }, []);
   const programs = [
     {
@@ -223,7 +222,7 @@ const About = () => {
   ];
 
   return (
-    <div className="bg-white">
+    <div className="bg-white" ref={containerRef}>
       <SEO
         title="About Us | Our Mission to Serve Humanity"
         description="Discover the story behind Humanity Calls. Our mission is to provide emergency blood support, help the underprivileged, and protect nature and animals."

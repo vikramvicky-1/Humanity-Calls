@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useLayoutEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import gsap from "gsap";
 import Button from "./Button";
@@ -10,19 +10,26 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMoreOpen, setIsMoreOpen] = useState(false);
   const { pathname } = useLocation();
+  const navRef = useRef(null);
 
-  useEffect(() => {
-    animateNavBar();
+  useLayoutEffect(() => {
+    const ctx = gsap.context(() => {
+      animateNavBar();
+    }, navRef);
+    return () => ctx.revert();
   }, []);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (isOpen) {
-      const mobileMenu = document.querySelector(
-        '[data-animation="mobile-menu"]'
-      );
-      if (mobileMenu) {
-        animateMobileMenuOpen(mobileMenu);
-      }
+      const ctx = gsap.context(() => {
+        const mobileMenu = document.querySelector(
+          '[data-animation="mobile-menu"]'
+        );
+        if (mobileMenu) {
+          animateMobileMenuOpen(mobileMenu);
+        }
+      }, navRef);
+      return () => ctx.revert();
     }
   }, [isOpen]);
 
@@ -51,7 +58,7 @@ const Navbar = () => {
   const isActive = (path) => pathname === path;
 
   return (
-    <nav className="sticky top-0 z-50 bg-white shadow-md">
+    <nav className="sticky top-0 z-50 bg-white shadow-md" ref={navRef}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
           {/* Logo */}
@@ -62,9 +69,10 @@ const Navbar = () => {
           >
             <img
               src={hclogo}
-              width={"50"}
-              height={"50"}
-              alt="humanity calls logo"
+              width="50"
+              height="50"
+              style={{ minWidth: 50, minHeight: 50 }}
+              alt="Humanity Calls logo"
             />
             <span className="text-xl font-bold text-[#B71C1C] tracking-tight">
               Humanity Calls

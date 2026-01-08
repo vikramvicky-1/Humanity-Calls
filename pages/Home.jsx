@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useLayoutEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -8,16 +8,19 @@ import { IMAGE_ALTS } from "../constants";
 import {
   animateTitleIn,
   animateParagraphIn,
-  animateImageIn,
   animateCards,
-  animateElementWithTrigger,
 } from "../utils/animations";
 
 gsap.registerPlugin(ScrollTrigger);
 
 const Home = () => {
-  useEffect(() => {
-    setTimeout(() => {
+  const containerRef = useRef(null);
+
+  useLayoutEffect(() => {
+    const isMobile = window.innerWidth < 768;
+    const yOffset = isMobile ? 20 : 40;
+    
+    const ctx = gsap.context(() => {
       const heroTitle = document.querySelector('[data-animation="hero-title"]');
       const heroParagraph = document.querySelector(
         '[data-animation="hero-paragraph"]'
@@ -54,7 +57,7 @@ const Home = () => {
       if (heroButtons.length > 0) {
         gsap.fromTo(
           heroButtons,
-          { opacity: 0, y: 30, scale: 0.9 },
+          { opacity: 0, y: yOffset, scale: 0.9 },
           {
             opacity: 1,
             y: 0,
@@ -90,7 +93,7 @@ const Home = () => {
       if (heroImage) {
         gsap.fromTo(
           heroImage,
-          { opacity: 0, scale: 0.8, x: 100, rotate: 5 },
+          { opacity: 0, scale: 0.8, x: isMobile ? 30 : 100, rotate: 5 },
           {
             opacity: 1,
             scale: 1,
@@ -104,7 +107,6 @@ const Home = () => {
               once: true,
             },
             onComplete: () => {
-              // Add a floating animation after entry
               gsap.to(heroImage, {
                 y: 15,
                 duration: 2,
@@ -120,7 +122,7 @@ const Home = () => {
       if (bloodDonationSection) {
         gsap.fromTo(
           bloodDonationSection,
-          { opacity: 0, y: 40 },
+          { opacity: 0, y: yOffset },
           {
             opacity: 1,
             y: 0,
@@ -139,7 +141,7 @@ const Home = () => {
       if (bloodSectionImage) {
         gsap.fromTo(
           bloodSectionImage,
-          { opacity: 0, scale: 0.9, x: -40 },
+          { opacity: 0, scale: 0.9, x: isMobile ? -20 : -40 },
           {
             opacity: 1,
             scale: 1,
@@ -182,7 +184,7 @@ const Home = () => {
       if (helpImage) {
         gsap.fromTo(
           helpImage,
-          { opacity: 0, scale: 0.9, x: -40 },
+          { opacity: 0, scale: 0.9, x: isMobile ? -20 : -40 },
           {
             opacity: 1,
             scale: 1,
@@ -202,7 +204,7 @@ const Home = () => {
       if (helpText) {
         gsap.fromTo(
           helpText,
-          { opacity: 0, y: 30 },
+          { opacity: 0, y: yOffset },
           {
             opacity: 1,
             y: 0,
@@ -236,11 +238,13 @@ const Home = () => {
           }
         );
       }
-    }, 100);
+    }, containerRef);
+
+    return () => ctx.revert();
   }, []);
 
   return (
-    <div>
+    <div ref={containerRef}>
       <SEO
         title="Humanity Calls | NGO for Blood Donation & Animal Rescue"
         description="Join Humanity Calls. We provide emergency blood donor support, help the needy, and conduct animal rescue operations. Volunteer today to make a difference."
@@ -292,11 +296,17 @@ const Home = () => {
           </div>
           <div className="relative">
             <div
-              className="absolute -inset-10 bg-blood-red/5 rounded-full blur-3xl -z-10"
+              className="absolute blur-3xl bg-blood-red/5 -z-10"
+              style={{
+                width: "400px",
+                height: "400px",
+                top: "-80px",
+                left: "-80px",
+              }}
               data-animation="hero-glow"
             ></div>
             <img
-              src="https://res.cloudinary.com/daokrum7i/image/upload/f_auto,q_auto,w_1000/v1767814232/hc_landing_page_xrcmny.png"
+              src="https://res.cloudinary.com/daokrum7i/image/upload/f_auto,q_auto,w_900/v1767814232/hc_landing_page_xrcmny.png"
               alt={IMAGE_ALTS.hero}
               className="z-10 w-full object-cover aspect-[4/3.5]"
               data-animation="hero-image"

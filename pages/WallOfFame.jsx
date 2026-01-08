@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useLayoutEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import SEO from "../components/SEO";
@@ -6,8 +6,13 @@ import SEO from "../components/SEO";
 gsap.registerPlugin(ScrollTrigger);
 
 const WallOfFame = () => {
-  useEffect(() => {
-    setTimeout(() => {
+  const containerRef = useRef(null);
+
+  useLayoutEffect(() => {
+    const isMobile = window.innerWidth < 768;
+    const yOffset = isMobile ? 15 : 30;
+    
+    const ctx = gsap.context(() => {
       const heading = document.querySelector('[data-animation="wof-heading"]');
       const story = document.querySelector('[data-animation="wof-story"]');
       const team = document.querySelector('[data-animation="wof-team"]');
@@ -16,7 +21,7 @@ const WallOfFame = () => {
       if (heading) {
         gsap.fromTo(
           heading,
-          { opacity: 0, y: 30 },
+          { opacity: 0, y: yOffset },
           {
             opacity: 1,
             y: 0,
@@ -25,7 +30,6 @@ const WallOfFame = () => {
             scrollTrigger: {
               trigger: heading,
               start: 'top 80%',
-              end: 'bottom 60%',
               once: true,
             },
           }
@@ -35,7 +39,7 @@ const WallOfFame = () => {
       if (story) {
         gsap.fromTo(
           story,
-          { opacity: 0, y: 30 },
+          { opacity: 0, y: yOffset },
           {
             opacity: 1,
             y: 0,
@@ -44,7 +48,6 @@ const WallOfFame = () => {
             scrollTrigger: {
               trigger: story,
               start: 'top 80%',
-              end: 'bottom 60%',
               once: true,
             },
           }
@@ -54,7 +57,7 @@ const WallOfFame = () => {
       if (team) {
         gsap.fromTo(
           team,
-          { opacity: 0, y: 30 },
+          { opacity: 0, y: yOffset },
           {
             opacity: 1,
             y: 0,
@@ -63,7 +66,6 @@ const WallOfFame = () => {
             scrollTrigger: {
               trigger: team,
               start: 'top 80%',
-              end: 'bottom 60%',
               once: true,
             },
           }
@@ -84,14 +86,15 @@ const WallOfFame = () => {
               scrollTrigger: {
                 trigger: inst,
                 start: 'top 80%',
-                end: 'bottom 60%',
                 once: true,
               },
             }
           );
         });
       }
-    }, 100);
+    }, containerRef);
+
+    return () => ctx.revert();
   }, []);
   const institutions = [
     {
@@ -128,7 +131,7 @@ const WallOfFame = () => {
   ];
 
   return (
-    <div className="bg-[#F5F5F5] min-h-screen">
+    <div className="bg-[#F5F5F5] min-h-screen" ref={containerRef}>
       <SEO
         title="Wall of Fame | Our Hero Donors | Humanity Calls NGO"
         description="Meet the heroes of Humanity Calls. Our Wall of Fame honors those who have contributed their time, blood, and resources to help others."

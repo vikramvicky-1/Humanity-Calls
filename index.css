@@ -2,9 +2,11 @@
 @config "./tailwind.config.js";
 
 @layer base {
-  * {
-    font-family: "Montserrat", sans-serif !important;
+  body {
+    font-family: "Poppins", system-ui, -apple-system, BlinkMacSystemFont,
+      sans-serif;
   }
+
   body {
     @apply bg-[#F5F5F5] text-[#1A1A1A] scroll-smooth;
   }
