@@ -1,5 +1,6 @@
 import React, { useLayoutEffect, useRef } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import SEO from "../components/SEO";
@@ -14,6 +15,7 @@ import {
 gsap.registerPlugin(ScrollTrigger);
 
 const Home = () => {
+  const { t, i18n } = useTranslation();
   const containerRef = useRef(null);
 
   useLayoutEffect(() => {
@@ -253,7 +255,7 @@ const Home = () => {
     }, containerRef);
 
     return () => ctx.revert();
-  }, []);
+  }, [i18n.language]);
 
   return (
     <div ref={containerRef}>
@@ -264,15 +266,16 @@ const Home = () => {
 
       {/* Hero Section */}
       <section className="relative min-h-[85vh] flex items-center bg-white overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div className="max-w-none mx-auto px-[5%] grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div className="space-y-8 z-10">
             <h1
+              key={i18n.language}
               className="text-5xl md:text-7xl font-bold text-[#1A1A1A] leading-tight"
               data-animation="hero-title"
             >
-              Help{" "}
+              {t("home.hero_title_help")}{" "}
               <span className="text-blood-red inline-flex items-center">
-                Humanity
+                {t("home.hero_title_humanity")}
                 <span className="inline-block ml-2 drop-shadow-md animate-bounce">
                   <svg
                     className="w-8 h-8 md:w-12 md:h-12"
@@ -289,19 +292,17 @@ const Home = () => {
               className="text-xl text-[#4A4A4A] max-w-lg leading-relaxed"
               data-animation="hero-paragraph"
             >
-              Serving those in need through emergency blood support, uplifting
-              the underprivileged, and protecting our animal companions
-              nationwide.
+              {t("home.hero_paragraph")}
             </p>
             <div className="flex flex-wrap gap-6 lg:gap-4">
               <Link to="/collaborate">
                 <Button data-animation="hero-button">
-                  Collaborate With Us
+                  {t("home.collaborate_with_us")}
                 </Button>
               </Link>
               <Link to="/volunteer">
                 <Button variant="outline" data-animation="hero-button">
-                  Volunteer With Us
+                  {t("home.volunteer_with_us")}
                 </Button>
               </Link>
             </div>
@@ -341,20 +342,17 @@ const Home = () => {
         className="bg-blood-red text-white py-24 overflow-hidden"
         data-animation="blood-section"
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-none mx-auto px-[5%]">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div className="space-y-6">
               <h2 className="text-4xl md:text-5xl font-bold">
-                Donate Blood, Save Lives
+                {t("home.donate_blood_save_lives")}
               </h2>
               <p className="text-lg text-white/90 leading-relaxed">
-                Blood is essential to help patients survive surgeries, cancer
-                treatment, chronic illnesses, and traumatic injuries. This
-                lifesaving care starts with one person making a generous
-                donation. The need for blood is constant.
+                {t("home.blood_donation_paragraph")}
               </p>
               <Link to="/donate">
-                <Button variant="white">Donate Today</Button>
+                <Button variant="white">{t("home.donate_today")}</Button>
               </Link>
             </div>
             <div className="">
@@ -376,31 +374,28 @@ const Home = () => {
         className="bg-white py-20 border-b"
         data-animation="stat-section"
       >
-        <div className="max-w-7xl mx-auto px-4 text-center">
+        <div className="max-w-none mx-auto px-[5%] text-center">
           <p className="text-3xl md:text-4xl font-bold text-[#4A4A4A]">
-            <span className="text-blood-red">1000+</span> donors and{" "}
-            <span className="text-blood-red">1</span> purpose !
+            {t("home.donors_count")}
           </p>
         </div>
       </section>
 
       {/* Cards Section */}
       <section className="py-24 bg-[#F5F5F5]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-none mx-auto px-[5%]">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div
               className="bg-white p-10 rounded-2xl shadow-sm hover:shadow-xl transition-all border-t-4 border-blood-red"
               data-animation="card"
             >
-              <h3 className="text-2xl font-bold mb-4">Donations Made</h3>
+              <h3 className="text-2xl font-bold mb-4">{t("home.donations_made_title")}</h3>
               <p className="text-[#9E9E9E] mb-8">
-                Here is our precious donors who came forward to donate their
-                blood save so many lives with unconditional timings and
-                situations.
+                {t("home.donations_made_desc")}
               </p>
               <Link to="/donations-made">
                 <Button variant="secondary" className="w-full">
-                  View Us
+                  {t("common.view_us")}
                 </Button>
               </Link>
             </div>
@@ -408,14 +403,13 @@ const Home = () => {
               className="bg-[#E0E0E0] p-10 rounded-2xl shadow-sm hover:shadow-xl transition-all"
               data-animation="card"
             >
-              <h3 className="text-2xl font-bold mb-4">Become a Member</h3>
+              <h3 className="text-2xl font-bold mb-4">{t("home.become_member_title")}</h3>
               <p className="text-[#4A4A4A] mb-8">
-                Become a member of our organization @Humanity Calls and find
-                people near you who have a requirement for blood...
+                {t("home.become_member_desc")}
               </p>
               <Link to="/volunteer">
                 <Button variant="primary" className="w-full">
-                  Join Now
+                  {t("volunteer.join_now")}
                 </Button>
               </Link>
             </div>
@@ -423,14 +417,13 @@ const Home = () => {
               className="bg-white p-10 rounded-2xl shadow-sm hover:shadow-xl transition-all border-t-4 border-gray-400"
               data-animation="card"
             >
-              <h3 className="text-2xl font-bold mb-4">Our Wall of Fame</h3>
+              <h3 className="text-2xl font-bold mb-4">{t("home.wall_of_fame_title")}</h3>
               <p className="text-[#9E9E9E] mb-8">
-                Our wall of fame shows all the donations made @Humanity Calls
-                possible by us and our team.
+                {t("home.wall_of_fame_desc")}
               </p>
               <Link to="/wall-of-fame">
                 <Button variant="secondary" className="w-full">
-                  Wall of Fame
+                  {t("nav.wall_of_fame")}
                 </Button>
               </Link>
             </div>
@@ -440,7 +433,7 @@ const Home = () => {
 
       {/* How You Can Help Section */}
       <section className="py-24 bg-white" data-animation="help-section">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+        <div className="max-w-none mx-auto px-[5%] grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           <div>
             <img
               src="https://res.cloudinary.com/daokrum7i/image/upload/f_auto,q_auto,w_600/v1767814233/humanity_how_can_i_help_xezom5.avif"
@@ -454,16 +447,13 @@ const Home = () => {
           </div>
           <div className="space-y-16" data-animation="help-text">
             <h2 className="text-4xl font-bold text-[#1A1A1A]">
-              HOW CAN YOU HELP?
+              {t("home.how_can_help_title")}
             </h2>
             <p className="text-lg text-[#4A4A4A] leading-relaxed">
-              We @Humanity calls look forward to donors for patients from time
-              to time. We will be posting requirements on our donor-requirement
-              page. Become a member of our organization and join hands with us
-              today!
+              {t("home.how_can_help_desc")}
             </p>
             <Link to="/volunteer">
-              <Button>Join Us</Button>
+              <Button>{t("nav.stay_connected")}</Button>
             </Link>
           </div>
         </div>
@@ -474,18 +464,18 @@ const Home = () => {
         className="py-20 bg-gray-100"
         data-animation="newsletter-section"
       >
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold mb-4">JOIN THE MOVEMENT!</h2>
+        <div className="max-w-none mx-auto px-[5%] text-center">
+          <h2 className="text-3xl font-bold mb-4">{t("home.join_the_movement")}</h2>
           <p className="text-gray-600 mb-8">
-            Get the Latest News & Updates directly in your inbox.
+            {t("home.newsletter_desc")}
           </p>
           <div className="flex flex-col sm:flex-row gap-2 max-w-md mx-auto">
             <input
               type="email"
-              placeholder="Your Email Address"
+              placeholder={t("home.email_placeholder")}
               className="flex-1 px-6 py-3 rounded-md outline-none border focus:border-blood-red"
             />
-            <Button>Subscribe</Button>
+            <Button>{t("home.subscribe")}</Button>
           </div>
         </div>
       </section>

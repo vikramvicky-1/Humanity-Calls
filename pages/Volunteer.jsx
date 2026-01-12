@@ -1,4 +1,5 @@
 import React, { useState, useLayoutEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import SEO from "../components/SEO";
@@ -8,6 +9,7 @@ import { redirectToWhatsApp } from "../utils/whatsapp";
 gsap.registerPlugin(ScrollTrigger);
 
 const Volunteer = () => {
+  const { t, i18n } = useTranslation();
   const containerRef = useRef(null);
 
   useLayoutEffect(() => {
@@ -57,7 +59,7 @@ const Volunteer = () => {
     }, containerRef);
 
     return () => ctx.revert();
-  }, []);
+  }, [i18n.language]);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -68,7 +70,7 @@ const Volunteer = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const msg = `Volunteer Application:\n\nName: ${formData.firstName} ${formData.lastName}\nPhone: ${formData.phone}\nEmail: ${formData.email}\nInterest: ${formData.interest}`;
+    const msg = `${t("volunteer.form_title")}:\n\n${t("volunteer.first_name")}: ${formData.firstName}\n${t("volunteer.last_name")}: ${formData.lastName}\n${t("volunteer.phone")}: ${formData.phone}\n${t("volunteer.email")}: ${formData.email}\n${t("volunteer.interest_area")}: ${formData.interest}`;
     redirectToWhatsApp(msg);
   };
 
@@ -79,44 +81,42 @@ const Volunteer = () => {
   return (
     <div className="bg-white min-h-screen py-24" ref={containerRef}>
       <SEO
-        title="Volunteer with Humanity Calls | Join Our NGO"
-        description="Join our mission to serve humanity. Become a volunteer at Humanity Calls and help us with blood donation, animal rescue, and supporting the needy."
+        title={t("volunteer.seo_title")}
+        description={t("volunteer.seo_desc")}
       />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+      <div className="max-w-none mx-auto px-[5%] grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
         <div data-animation="vol-title">
           <h1 className="text-4xl font-bold text-[#1A1A1A] mb-8">
-            Join the Movement
+            {t("volunteer.title")}
           </h1>
           <p className="text-xl text-gray-600 leading-relaxed mb-12">
-            Volunteers are the backbone of Humanity Calls. Whether you can
-            donate blood, help with logistics, or assist in animal rescue, your
-            contribution matters.
+            {t("volunteer.description")}
           </p>
           <div className="grid grid-cols-2 gap-8">
             <div className="space-y-2">
               <h3 className="text-3xl font-bold text-blood-red">10+</h3>
-              <p className="text-gray-500 font-medium">Active Volunteers</p>
+              <p className="text-gray-500 font-medium">{t("volunteer.active_volunteers")}</p>
             </div>
           </div>
         </div>
 
         <div className="bg-[#F5F5F5] p-8 md:p-12 rounded-3xl border border-gray-200" data-animation="vol-form">
-          <h3 className="text-2xl font-bold mb-8">Volunteer Application</h3>
+          <h3 className="text-2xl font-bold mb-8">{t("volunteer.form_title")}</h3>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <input
                 required
                 name="firstName"
                 onChange={handleChange}
-                placeholder="First Name"
+                placeholder={t("volunteer.first_name")}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg"
               />
               <input
                 required
                 name="lastName"
                 onChange={handleChange}
-                placeholder="Last Name"
+                placeholder={t("volunteer.last_name")}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg"
               />
             </div>
@@ -125,7 +125,7 @@ const Volunteer = () => {
               type="email"
               name="email"
               onChange={handleChange}
-              placeholder="Email"
+              placeholder={t("volunteer.email")}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg"
             />
             <input
@@ -133,7 +133,7 @@ const Volunteer = () => {
               type="tel"
               name="phone"
               onChange={handleChange}
-              placeholder="Phone"
+              placeholder={t("volunteer.phone")}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg"
             />
             <select
@@ -142,14 +142,14 @@ const Volunteer = () => {
               onChange={handleChange}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-500"
             >
-              <option value="">Area of Interest</option>
-              <option value="Blood Donation">Blood Donation</option>
-              <option value="Poor/Needy Support">Poor/Needy Support</option>
-              <option value="Animal Rescue">Animal Rescue</option>
-              <option value="Event Organizing">Event Organizing</option>
+              <option value="">{t("volunteer.interest_area")}</option>
+              <option value="Blood Donation">{t("volunteer.interests.blood")}</option>
+              <option value="Poor/Needy Support">{t("volunteer.interests.needy")}</option>
+              <option value="Animal Rescue">{t("volunteer.interests.animal")}</option>
+              <option value="Event Organizing">{t("volunteer.interests.event")}</option>
             </select>
             <Button type="submit" className="w-full py-4">
-              Join Now
+              {t("volunteer.join_now")}
             </Button>
           </form>
         </div>

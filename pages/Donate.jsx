@@ -1,4 +1,5 @@
 import React, { useState, useLayoutEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import SEO from "../components/SEO";
@@ -8,6 +9,7 @@ import { redirectToWhatsApp } from "../utils/whatsapp";
 gsap.registerPlugin(ScrollTrigger);
 
 const Donate = () => {
+  const { t, i18n } = useTranslation();
   const containerRef = useRef(null);
 
   useLayoutEffect(() => {
@@ -57,7 +59,7 @@ const Donate = () => {
     }, containerRef);
 
     return () => ctx.revert();
-  }, []);
+  }, [i18n.language]);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -71,89 +73,86 @@ const Donate = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const message = `I would like to donate.\n\nDetails:\nName: ${formData.name}\nEmail: ${formData.email}\nPhone: ${formData.phone}\nAmount: ${formData.amount}`;
+    const message = `${t("donate.whatsapp_message_header")}\n\n${t("donate.details")}:\n${t("donate.full_name")}: ${formData.name}\n${t("donate.email_address")}: ${formData.email}\n${t("donate.phone_number")}: ${formData.phone}\n${t("donate.donation_amount")}: ${formData.amount}`;
     redirectToWhatsApp(message);
   };
 
   return (
     <div className="bg-white min-h-screen py-24" ref={containerRef}>
       <SEO
-        title="Donate Now | Support Humanity Calls NGO"
-        description="Your contribution helps us save lives, rescue animals, and support those in need. Donate today to Humanity Calls NGO."
+        title={t("donate.seo_title")}
+        description={t("donate.seo_desc")}
       />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+      <div className="max-w-none mx-auto px-[5%] grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
         <div data-animation="donate-title">
-          <h1 className="text-5xl font-bold text-blood-red mb-8">Donate Now</h1>
+          <h1 className="text-5xl font-bold text-blood-red mb-8">{t("donate.title")}</h1>
           <p className="text-xl text-gray-600 leading-relaxed mb-12">
-            Your generosity can make a real difference. Every donation goes
-            directly towards our mission of saving lives through blood donation
-            drives, animal rescue, and helping the underprivileged.
+            {t("donate.description")}
           </p>
           <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100">
-            <h4 className="font-bold text-lg mb-2 text-gray-800">Why Donate?</h4>
+            <h4 className="font-bold text-lg mb-2 text-gray-800">{t("donate.why_donate_title")}</h4>
             <ul className="text-gray-600 space-y-2">
-              <li>• Support emergency blood donation drives</li>
-              <li>• Provide medical care for rescued animals</li>
-              <li>• Help underprivileged families with essentials</li>
-              <li>• Facilitate community conservation programs</li>
+              {t("donate.why_donate_list", { returnObjects: true }).map((item, idx) => (
+                <li key={idx}>• {item}</li>
+              ))}
             </ul>
           </div>
         </div>
 
         <div className="bg-[#F5F5F5] p-8 md:p-12 rounded-3xl border border-gray-200 shadow-sm" data-animation="donate-form">
-          <h3 className="text-2xl font-bold mb-8 text-gray-800">Donor Information</h3>
+          <h3 className="text-2xl font-bold mb-8 text-gray-800">{t("donate.form_title")}</h3>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t("donate.full_name")}</label>
               <input
                 required
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                placeholder="John Doe"
+                placeholder={t("donate.placeholders.name")}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blood-red focus:border-transparent outline-none transition-all"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t("donate.email_address")}</label>
               <input
                 required
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                placeholder="john@example.com"
+                placeholder={t("donate.placeholders.email")}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blood-red focus:border-transparent outline-none transition-all"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t("donate.phone_number")}</label>
               <input
                 required
                 type="tel"
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
-                placeholder="+91 1234567890"
+                placeholder={t("donate.placeholders.phone")}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blood-red focus:border-transparent outline-none transition-all"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Donation Amount (Optional)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t("donate.donation_amount")}</label>
               <input
                 name="amount"
                 value={formData.amount}
                 onChange={handleChange}
-                placeholder="e.g. 1000"
+                placeholder={t("donate.placeholders.amount")}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blood-red focus:border-transparent outline-none transition-all"
               />
             </div>
             <Button type="submit" className="w-full py-4 text-lg font-semibold mt-4">
-              Donate via WhatsApp
+              {t("donate.submit_whatsapp")}
             </Button>
             <p className="text-xs text-gray-500 text-center mt-4">
-              Clicking the button will open WhatsApp with your message.
+              {t("donate.whatsapp_note")}
             </p>
           </form>
         </div>

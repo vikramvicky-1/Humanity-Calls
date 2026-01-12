@@ -1,4 +1,5 @@
 import React, { useLayoutEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import SEO from "../components/SEO";
@@ -8,6 +9,7 @@ import { animateCards } from "../utils/animations";
 gsap.registerPlugin(ScrollTrigger);
 
 const About = () => {
+  const { t, i18n } = useTranslation();
   const containerRef = useRef(null);
 
   useLayoutEffect(() => {
@@ -175,48 +177,43 @@ const About = () => {
     }, containerRef);
 
     return () => ctx.revert();
-  }, []);
+  }, [i18n.language]);
+
   const programs = [
     {
-      title: "Community Conservation",
+      id: "community_conservation",
       image:
         "https://res.cloudinary.com/daokrum7i/image/upload/v1767814231/hc_community_conservation_leov19.jpg",
-      description: "Empowering locals to protect their environment.",
       alt: "Community conservation project by Humanity Calls",
     },
     {
-      title: "Early Education",
+      id: "early_education",
       image:
         "https://res.cloudinary.com/daokrum7i/image/upload/v1767814231/hc_early_education_u8j2cv.jpg",
-      description: "Providing tools for children to build their futures.",
       alt: "Early education support for children",
     },
     {
-      title: "Forest Restoration",
+      id: "forest_restoration",
       image:
         "https://res.cloudinary.com/daokrum7i/image/upload/v1767814231/hc_forest_restoration_jjjomq.jpg",
-      description: "Healing the earth one sapling at a time.",
       alt: "Forest restoration initiative",
     },
     {
-      title: "Stop Wildlife Crime",
+      id: "stop_wildlife_crime",
       image:
         "https://res.cloudinary.com/daokrum7i/image/upload/v1767814232/hc_stop_wildlife_crime_rxiaqf.jpg",
-      description: "Vigilance and protection for our wildlife.",
       alt: "Stopping wildlife crime initiative",
     },
     {
-      title: "Marine Conservation",
+      id: "marine_conservation",
       image:
         "https://res.cloudinary.com/daokrum7i/image/upload/v1767814233/hc_marine_conservation_ptw4yg.webp",
-      description: "Keeping our oceans clean and teeming with life.",
       alt: "Marine conservation project",
     },
     {
-      title: "Environmental Policy",
+      id: "environmental_policy",
       image:
         "https://res.cloudinary.com/daokrum7i/image/upload/v1767814231/hc_environmental_policy_gjhqyx.png",
-      description: "Advocating for sustainable governance.",
       alt: "Environmental policy advocacy",
     },
   ];
@@ -224,18 +221,17 @@ const About = () => {
   return (
     <div className="bg-white" ref={containerRef}>
       <SEO
-        title="About Us | Our Mission to Serve Humanity"
-        description="Discover the story behind Humanity Calls. Our mission is to provide emergency blood support, help the underprivileged, and protect nature and animals."
+        title={`${t("about.title")} | Humanity Calls`}
+        description={t("about.programs_para")}
       />
 
-      {/* The Full Story */}
-      <section className="py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* About Section */}
+      <section className="py-24 max-w-none mx-auto px-[5%]">
         <div className="grid grid-cols-1 lg:grid-cols-1 gap-16 items-center">
           <div className="space-y-6">
-            <h1 className="text-5xl font-bold text-blood-red" data-animation="about-title">About Us</h1>
+            <h1 className="text-5xl font-bold text-blood-red" data-animation="about-title">{t("about.title")}</h1>
             <p className="text-lg text-gray-700 leading-relaxed lowercase" data-animation="about-para">
-              we humanity calls mainly focus on fulfilling the requirement of
-              blood in emergency condition.
+              {t("about.story_para")}
             </p>
           </div>
         </div>
@@ -243,15 +239,12 @@ const About = () => {
 
       {/* Mission */}
       <section className="py-24 bg-[#F5F5F5]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-none mx-auto px-[5%]">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div className="order-2 lg:order-1 space-y-6" data-animation="mission-section">
-              <h2 className="text-4xl font-bold text-blood-red">Mission</h2>
+              <h2 className="text-4xl font-bold text-blood-red">{t("about.mission_title")}</h2>
               <p className="text-lg text-gray-700 leading-relaxed lowercase">
-                we @humanity calls working for the society with social
-                responsibility to help every person, who have medical
-                emergencies and assistance in all the time and in all the places
-                to provide our services through people.
+                {t("about.mission_para")}
               </p>
             </div>
             <img
@@ -265,7 +258,7 @@ const About = () => {
       </section>
 
       {/* Vision */}
-      <section className="py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-24 max-w-none mx-auto px-[5%]">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           <img
             src="https://res.cloudinary.com/daokrum7i/image/upload/v1767814233/humanity_calls_vision_i942bq.png"
@@ -274,12 +267,9 @@ const About = () => {
             data-animation="vision-image"
           />
           <div className="space-y-6" data-animation="vision-section">
-            <h2 className="text-4xl font-bold text-blood-red">Vision</h2>
+            <h2 className="text-4xl font-bold text-blood-red">{t("about.vision_title")}</h2>
             <p className="text-lg text-gray-700 leading-relaxed lowercase">
-              humanity calls looking forward to help in various ways like
-              hospitalizations, poor/needy, education, animal rescue, animal
-              shelter and even our humanity calls into nature protections to
-              bring a positive changes in entire nation with humanity. ​
+              {t("about.vision_para")}
             </p>
           </div>
         </div>
@@ -287,12 +277,11 @@ const About = () => {
 
       {/* Programs & Projects */}
       <section className="py-24 bg-[#1A1A1A] text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-none mx-auto px-[5%]">
           <div className="text-center mb-16" data-animation="program-title">
-            <h2 className="text-4xl font-bold mb-6">PROGRAMS & PROJECTS</h2>
+            <h2 className="text-4xl font-bold mb-6">{t("about.programs_title")}</h2>
             <p className="max-w-2xl mx-auto text-gray-400 lowercase">
-              humanity calls extends its reach beyond emergency blood support
-              into several core areas of social impact.
+              {t("about.programs_para")}
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -308,8 +297,8 @@ const About = () => {
                   className="w-full h-48 object-cover opacity-80"
                 />
                 <div className="p-6">
-                  <h3 className="text-xl font-bold mb-3">{p.title}</h3>
-                  <p className="text-gray-400 text-sm lowercase">{p.description}</p>
+                  <h3 className="text-xl font-bold mb-3">{t(`about.programs.${p.id}.title`)}</h3>
+                  <p className="text-gray-400 text-sm lowercase">{t(`about.programs.${p.id}.desc`)}</p>
                 </div>
               </div>
             ))}
@@ -318,16 +307,13 @@ const About = () => {
       </section>
 
       {/* COVID-19 Contributions */}
-      <section className="py-24 max-w-5xl mx-auto px-4 text-center" data-animation="covid-section">
+      <section className="py-24 max-w-none mx-auto px-[5%] text-center" data-animation="covid-section">
         <h2 className="text-3xl font-bold mb-8">
-          OUR CONTRIBUTIONS DURING COVID-19
+          {t("about.covid_title")}
         </h2>
         <div className="bg-blood-red/5 p-12 rounded-3xl border border-blood-red/10">
           <p className="text-xl text-gray-800 leading-relaxed italic lowercase">
-            "during the height of the pandemic, our volunteers were on the front
-            lines, facilitating oxygen supply, distributing over 5000 meal
-            packets daily, and providing medical support to families in
-            isolation. humanity truly calls when the times are toughest."
+            {t("about.covid_para")}
           </p>
         </div>
       </section>

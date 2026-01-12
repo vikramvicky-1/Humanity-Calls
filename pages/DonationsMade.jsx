@@ -1,19 +1,21 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import SEO from "../components/SEO";
 
 const DonationsMade = () => {
+  const { t } = useTranslation();
   return (
     <div className="bg-white min-h-screen">
       <SEO
-        title="Donations Made | Humanity Calls NGO"
-        description="View the donations made by our dedicated members at Humanity Calls NGO. Join us in making a difference."
+        title={t("donations_made.seo_title")}
+        description={t("donations_made.seo_desc")}
       />
 
-      <div className="flex flex-col items-center justify-center min-h-[80vh] px-4 text-center">
+      <div className="flex flex-col items-center justify-center min-h-[80vh] px-[5%] text-center">
         <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-[#1A1A1A] tracking-tighter uppercase leading-none">
-          DONATIONS MADE BY
+          {t("donations_made.hero_text")}
           <br />
-          <span className="text-blood-red">OUR MEMBERS</span>
+          <span className="text-blood-red">{t("donations_made.our_members")}</span>
         </h1>
       </div>
 

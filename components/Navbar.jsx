@@ -1,12 +1,76 @@
-import React, { useState, useLayoutEffect, useRef } from "react";
+import React, { useState, useLayoutEffect, useRef, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { FaGlobe, FaChevronDown } from "react-icons/fa";
 import gsap from "gsap";
 import Button from "./Button";
 import hclogo from "../assets/humanitycallslogo.avif";
 import { SOCIAL_LINKS } from "../constants";
 import { animateNavBar, animateMobileMenuOpen } from "../utils/animations";
 
+const LanguageSelector = ({ className }) => {
+  const { i18n } = useTranslation();
+  const [isLangOpen, setIsLangOpen] = useState(false);
+  const langRef = useRef(null);
+
+  const languages = [
+    { code: "en", label: "English" },
+    { code: "kn", label: "ಕನ್ನಡ" },
+    { code: "te", label: "తెలుగు" },
+    { code: "ta", label: "தமிழ்" },
+    { code: "ml", label: "മലയാളം" },
+    { code: "hi", label: "हिन्दी" },
+  ];
+
+  const changeLanguage = (lng) => {
+    i18n.changeLanguage(lng);
+    setIsLangOpen(false);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (langRef.current && !langRef.current.contains(event.target)) {
+        setIsLangOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div className={`relative ${className}`} ref={langRef}>
+      <button
+        onClick={() => setIsLangOpen(!isLangOpen)}
+        className="flex items-center space-x-1.5 bg-white border border-gray-200 text-gray-700 py-2 px-3 rounded-lg text-sm font-medium hover:border-[#B71C1C] hover:text-[#B71C1C] transition-all focus:outline-none shadow-sm"
+      >
+        <FaGlobe className="text-[#B71C1C]" />
+        <span>{languages.find((l) => l.code === i18n.language)?.label || "Language"}</span>
+        <FaChevronDown className={`text-[10px] transition-transform duration-200 ${isLangOpen ? 'rotate-180' : ''}`} />
+      </button>
+
+      {isLangOpen && (
+        <div className="absolute top-full right-0 mt-2 w-40 bg-white shadow-2xl rounded-xl border border-gray-100 py-2 z-[60] animate-in fade-in slide-in-from-top-2 duration-200">
+          {languages.map((lang) => (
+            <button
+              key={lang.code}
+              onClick={() => changeLanguage(lang.code)}
+              className={`w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-gray-50 ${
+                i18n.language === lang.code
+                  ? "text-[#B71C1C] font-bold bg-red-50/50"
+                  : "text-gray-700"
+              }`}
+            >
+              {lang.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const Navbar = () => {
+  const { t, i18n } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [isMoreOpen, setIsMoreOpen] = useState(false);
   const { pathname } = useLocation();
@@ -17,7 +81,7 @@ const Navbar = () => {
       animateNavBar();
     }, navRef);
     return () => ctx.revert();
-  }, []);
+  }, [i18n.language]);
 
   useLayoutEffect(() => {
     if (isOpen) {
@@ -42,16 +106,16 @@ const Navbar = () => {
   }, [isOpen]);
 
   const navLinks = [
-    { label: "About Us", href: "/about" },
-    { label: "Poor/Needy", href: "/poor-needy" },
-    { label: "Animal Rescue", href: "/animal-rescue" },
-    { label: "Wall of Fame", href: "/wall-of-fame" },
+    { label: t("nav.about_us"), href: "/about" },
+    { label: t("nav.poor_needy"), href: "/poor-needy" },
+    { label: t("nav.animal_rescue"), href: "/animal-rescue" },
+    { label: t("nav.wall_of_fame"), href: "/wall-of-fame" },
   ];
 
   const dropdownLinks = [
-    { label: "Donations Made", href: "/donations-made" },
+    { label: t("nav.donations_made"), href: "/donations-made" },
     {
-      label: "Contact Us",
+      label: t("nav.contact_us"),
       href: "#contact",
       onClick: (e) => {
         e.preventDefault();
@@ -67,7 +131,7 @@ const Navbar = () => {
 
   return (
     <nav className="sticky top-0 z-50 bg-white shadow-md" ref={navRef}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-none mx-auto px-[5%]">
         <div className="flex justify-between items-center h-20">
           {/* Logo */}
           <Link
@@ -88,97 +152,102 @@ const Navbar = () => {
           </Link>
 
           {/* Desktop Nav */}
-          <div className="hidden lg:flex items-center space-x-8">
-            {navLinks.map((link) => (
-              <Link
-                key={link.label}
-                to={link.href}
-                data-animation="nav-link"
-                className={`font-medium transition-colors text-sm rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-[#B71C1C] ${
-                  isActive(link.href)
-                    ? "text-[#B71C1C]"
-                    : "text-[#4A4A4A] hover:text-[#B71C1C]"
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
+          <div className="hidden lg:flex items-center space-x-1">
+            <div className="flex items-center space-x-4 mr-4">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.label}
+                  to={link.href}
+                  data-animation="nav-link"
+                  className={`font-medium transition-colors text-sm rounded px-3 py-2 focus:outline-none ${
+                    isActive(link.href)
+                      ? "text-[#B71C1C] bg-red-50/50"
+                      : "text-[#4A4A4A] hover:text-[#B71C1C] hover:bg-gray-50"
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              ))}
 
-            <div
-              className="relative"
-              onMouseEnter={() => setIsMoreOpen(true)}
-              onMouseLeave={() => setIsMoreOpen(false)}
-            >
-              <button
-                className={`font-medium flex items-center text-sm ${
-                  dropdownLinks.some((link) => isActive(link.href))
-                    ? "text-[#B71C1C]"
-                    : "text-[#4A4A4A] hover:text-[#B71C1C]"
-                }`}
-                data-animation="nav-link"
+              <div
+                className="relative"
+                onMouseEnter={() => setIsMoreOpen(true)}
+                onMouseLeave={() => setIsMoreOpen(false)}
               >
-                More <span className="ml-1 text-[10px] opacity-50">▼</span>
-              </button>
-              {isMoreOpen && (
-                <div className="absolute top-full left-0 w-48 bg-white shadow-xl border-t-4 border-[#B71C1C] py-2 animate-fade-in">
-                  {dropdownLinks.map((link) =>
-                    link.onClick ? (
-                      <button
-                        key={link.label}
-                        onClick={link.onClick}
-                        className="w-full text-left block px-4 py-3 text-sm text-[#4A4A4A] hover:bg-gray-50 hover:text-[#B71C1C] transition-colors focus:outline-none focus:ring-inset focus:ring-2 focus:ring-[#B71C1C]"
-                      >
-                        {link.label}
-                      </button>
-                    ) : (
-                      <Link
-                        key={link.label}
-                        to={link.href}
-                        className="block px-4 py-3 text-sm text-[#4A4A4A] hover:bg-gray-50 hover:text-[#B71C1C] transition-colors focus:outline-none focus:ring-inset focus:ring-2 focus:ring-[#B71C1C]"
-                      >
-                        {link.label}
-                      </Link>
-                    )
-                  )}
-                </div>
-              )}
+                <button
+                  className={`font-medium flex items-center text-sm px-3 py-2 rounded transition-colors ${
+                    dropdownLinks.some((link) => isActive(link.href))
+                      ? "text-[#B71C1C] bg-red-50/50"
+                      : "text-[#4A4A4A] hover:text-[#B71C1C] hover:bg-gray-50"
+                  }`}
+                  data-animation="nav-link"
+                >
+                  {t("nav.more")}{" "}
+                  <FaChevronDown className="ml-1.5 text-[10px] opacity-50" />
+                </button>
+                {isMoreOpen && (
+                  <div className="absolute top-full left-0 w-48 bg-white shadow-xl border-t-4 border-[#B71C1C] py-2 animate-fade-in rounded-b-xl">
+                    {dropdownLinks.map((link) =>
+                      link.onClick ? (
+                        <button
+                          key={link.label}
+                          onClick={link.onClick}
+                          className="w-full text-left block px-4 py-3 text-sm text-[#4A4A4A] hover:bg-gray-50 hover:text-[#B71C1C] transition-colors focus:outline-none"
+                        >
+                          {link.label}
+                        </button>
+                      ) : (
+                        <Link
+                          key={link.label}
+                          to={link.href}
+                          className="block px-4 py-3 text-sm text-[#4A4A4A] hover:bg-gray-50 hover:text-[#B71C1C] transition-colors focus:outline-none"
+                        >
+                          {link.label}
+                        </Link>
+                      )
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
 
-            <div className="flex space-x-4 ml-4 items-center">
+            <div className="flex items-center space-x-3 border-l pl-4 border-gray-100">
               <Link to="/request-donors">
                 <Button
                   variant={isActive("/request-donors") ? "primary" : "outline"}
-                  className="text-[12px] py-2.5 px-4 min-h-[40px]"
+                  className="text-[12px] py-2 px-3 min-h-[40px] font-semibold"
                   data-animation="cta-button"
                 >
-                  Request For Donors
+                  {t("nav.request_for_donors")}
                 </Button>
               </Link>
               <Link to="/donate">
                 <Button
-                  className={`text-[12px] py-2.5 px-4 shadow-md min-h-[40px] ${
+                  className={`text-[12px] py-2 px-3 shadow-md min-h-[40px] font-semibold ${
                     isActive("/donate") ? "bg-[#8E1616]" : ""
                   }`}
                   data-animation="cta-button"
                 >
-                  Donate Now
+                  {t("nav.donate_now")}
                 </Button>
               </Link>
+              <LanguageSelector className="ml-1" />
             </div>
           </div>
 
           {/* Mobile Menu Toggle */}
-          <div className="lg:hidden">
+          <div className="lg:hidden flex items-center space-x-3">
+            <LanguageSelector />
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="text-[#1A1A1A] p-2"
+              className="text-[#1A1A1A] p-2 hover:bg-gray-50 rounded-lg transition-colors"
               aria-label={
                 isOpen ? "Close navigation menu" : "Open navigation menu"
               }
               aria-expanded={isOpen}
             >
               <svg
-                className="w-8 h-8"
+                className="w-7 h-7"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -207,26 +276,26 @@ const Navbar = () => {
       {/* Mobile Menu */}
       {isOpen && (
         <div
-          className="lg:hidden bg-white border-t animate-fade-in pb-8"
+          className="lg:hidden bg-white border-t animate-fade-in pb-12 shadow-2xl"
           data-animation="mobile-menu"
         >
-          <div className="px-4 pt-2 space-y-1">
+          <div className="px-4 pt-4 space-y-1">
             {navLinks.map((link) => (
               <Link
                 key={link.label}
                 to={link.href}
-                className="block px-4 py-4 text-lg font-medium text-[#4A4A4A] hover:bg-gray-50 border-b border-gray-100 focus:outline-none focus:ring-inset focus:ring-2 focus:ring-[#B71C1C]"
+                className="block px-4 py-4 text-lg font-medium text-[#4A4A4A] hover:bg-gray-50 border-b border-gray-100 rounded-lg transition-colors"
                 onClick={() => setIsOpen(false)}
                 data-animation="mobile-link"
               >
                 {link.label}
               </Link>
             ))}
-            <div className="pt-4 px-4">
+            <div className="pt-6 px-4">
               <p className="text-xs uppercase text-[#9E9E9E] font-bold tracking-widest mb-4">
-                More Services
+                {t("nav.more_services")}
               </p>
-              <div className="grid grid-cols-1 gap-2">
+              <div className="grid grid-cols-1 gap-1">
                 {dropdownLinks.map((link) =>
                   link.onClick ? (
                     <button
@@ -235,7 +304,7 @@ const Navbar = () => {
                         link.onClick(e);
                         setIsOpen(false);
                       }}
-                      className="block py-2 text-base font-medium text-[#4A4A4A] text-left focus:outline-none focus:ring-inset focus:ring-2 focus:ring-[#B71C1C] rounded px-1"
+                      className="block py-3 text-base font-medium text-[#4A4A4A] text-left hover:bg-gray-50 rounded-lg px-4"
                     >
                       {link.label}
                     </button>
@@ -243,7 +312,7 @@ const Navbar = () => {
                     <Link
                       key={link.label}
                       to={link.href}
-                      className="block py-2 text-base font-medium text-[#4A4A4A] focus:outline-none focus:ring-inset focus:ring-2 focus:ring-[#B71C1C] rounded px-1"
+                      className="block py-3 text-base font-medium text-[#4A4A4A] hover:bg-gray-50 rounded-lg px-4"
                       onClick={() => setIsOpen(false)}
                     >
                       {link.label}
@@ -252,35 +321,35 @@ const Navbar = () => {
                 )}
               </div>
             </div>
-            <div className="flex flex-col space-y-3 pt-8 px-4">
+            <div className="flex flex-col space-y-3 pt-10 px-4">
               <Link to="/request-donors" onClick={() => setIsOpen(false)}>
                 <Button
                   variant="outline"
-                  className="w-full min-h-[48px] md:min-h-[44px]"
+                  className="w-full py-4 text-base font-bold"
                 >
-                  Request For Donors
+                  {t("nav.request_for_donors")}
                 </Button>
               </Link>
               <Link to="/donate" onClick={() => setIsOpen(false)}>
-                <Button className="w-full min-h-[48px] md:min-h-[44px]">
-                  Donate Now
+                <Button className="w-full py-4 text-base font-bold">
+                  {t("nav.donate_now")}
                 </Button>
               </Link>
             </div>
 
             {/* Mobile Social Icons */}
-            <div className="pt-10 px-4 border-t mt-8">
-              <p className="text-center text-xs text-[#9E9E9E] uppercase tracking-widest mb-6">
-                Stay Connected
+            <div className="pt-12 px-4 border-t mt-10">
+              <p className="text-center text-xs text-[#9E9E9E] uppercase tracking-widest mb-8 font-bold">
+                {t("nav.stay_connected")}
               </p>
-              <div className="flex justify-center space-x-6">
+              <div className="flex justify-center space-x-8">
                 {SOCIAL_LINKS.map((social) => (
                   <a
                     key={social.name}
                     href={social.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-[#9E9E9E] hover:text-[#B71C1C] transition-colors"
+                    className="text-[#9E9E9E] hover:text-[#B71C1C] transition-colors p-2 hover:bg-gray-50 rounded-full"
                   >
                     <social.icon className="w-6 h-6" />
                   </a>

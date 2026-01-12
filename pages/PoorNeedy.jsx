@@ -1,4 +1,5 @@
 import React, { useState, useLayoutEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import SEO from "../components/SEO";
@@ -9,6 +10,7 @@ import { redirectToWhatsApp } from "../utils/whatsapp";
 gsap.registerPlugin(ScrollTrigger);
 
 const PoorNeedy = () => {
+  const { t, i18n } = useTranslation();
   const containerRef = useRef(null);
 
   useLayoutEffect(() => {
@@ -96,7 +98,7 @@ const PoorNeedy = () => {
     }, containerRef);
 
     return () => ctx.revert();
-  }, []);
+  }, [i18n.language]);
   const [formData, setFormData] = useState({
     firstName: "",
     phone: "",
@@ -107,7 +109,7 @@ const PoorNeedy = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const msg = `Help Request (Poor/Needy):\n\nName: ${formData.firstName}\nPhone: ${formData.phone}\nEmail: ${formData.email}\nAddress: ${formData.address}\nMessage: ${formData.message}`;
+    const msg = `${t("poor_needy.whatsapp_request_header")}:\n\n${t("poor_needy.first_name")}: ${formData.firstName}\n${t("form.phone")}: ${formData.phone}\n${t("form.email")}: ${formData.email}\n${t("poor_needy.address_location")}: ${formData.address}\n${t("poor_needy.requirement_details")}: ${formData.message}`;
     redirectToWhatsApp(msg);
   };
 
@@ -118,11 +120,11 @@ const PoorNeedy = () => {
   return (
     <div className="bg-white pb-24" ref={containerRef}>
       <SEO
-        title="Supporting Poor & Needy | Humanity Calls NGO"
-        description="We provide essential support to the underprivileged including food distribution, education, and moral support. Help us build a better society."
+        title={`${t("poor_needy.seo_title")}`}
+        description={t("poor_needy.seo_desc")}
       />
 
-      <section className="py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-24 max-w-none mx-auto px-[5%]">
         <div className="flex flex-col items-center space-y-8">
           <img
             src="https://res.cloudinary.com/daokrum7i/image/upload/v1767814233/humanity_calls_poor_needy_oef47s.avif"
@@ -132,55 +134,31 @@ const PoorNeedy = () => {
           />
           <div className="space-y-8">
             <h1 className="text-4xl font-bold text-blood-red" data-animation="pn-title">
-              Supporting the Poor/Needy
+              {t("poor_needy.title")}
             </h1>
             <p className="text-lg text-gray-700 leading-relaxed" data-animation="pn-text">
-              One of the better ways to help the poor and needy people is to
-              give them a hand up rather than a hand out. Giving them moral
-              support, showing heartfelt humility and respect makes them aware
-              that someone really does care about them and trying to improve
-              their condition. By providing them with the opportunities to
-              improve their condition on their own would increase their
-              self-esteem and help them in overcoming barriers they face every
-              day. Work with the poor and needy people and help them discover
-              their own capabilities and capacity and putting them to use at the
-              right place at the right time. Support them and let them know that
-              they have something of value which can be used for meeting their
-              basic requirements. One cannot make such people opulent but can at
-              least help them achieve the essentials of life and lead a
-              prosperous life. Helping the poor and needy people is a good deed.
-              Caring for the poor and needy people and helping them is a noble
-              endeavor. The more you give to poor and needy people, the more you
-              strengthen their dependency. If you give them the chance or
-              opportunity, you will see an effective and long-lasting
-              improvement in their lives. Create a new system built on
-              inter-dependency which motivates them to work and move forward and
-              their dignity is maintained. Tossing out money or other kinds of
-              donation do help the poor and needy people but the need is to
-              direct your energies and efforts in raising them, building
-              relationship, teaching them and moreover, regaining their
-              self-confidence and selfesteem to work for themselves.
+              {t("poor_needy.main_text")}
             </p>
             <div className="p-8 bg-gray-50 rounded-2xl border-l-8 border-blood-red">
-              <h2 className="text-2xl font-bold mb-2">Direct Impact</h2>
+              <h2 className="text-2xl font-bold mb-2">{t("poor_needy.direct_impact_title")}</h2>
               <p className="text-gray-600">
-                Every donation reaches someone in real need.
+                {t("poor_needy.direct_impact_desc")}
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      <div className="max-w-3xl mx-auto px-4">
+      <div className="max-w-none mx-auto px-[5%]">
         <div className="bg-[#F5F5F5] p-8 md:p-12 rounded-3xl border border-gray-200" data-animation="pn-form">
           <h3 className="text-2xl font-bold mb-8 text-center">
-            Assistance Request Form
+            {t("poor_needy.form_title")}
           </h3>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <label className="text-xs font-bold text-gray-600 uppercase">
-                  First Name
+                  {t("poor_needy.first_name")}
                 </label>
                 <input
                   required
@@ -191,7 +169,7 @@ const PoorNeedy = () => {
               </div>
               <div className="space-y-2">
                 <label className="text-xs font-bold text-gray-600 uppercase">
-                  Phone
+                  {t("form.phone")}
                 </label>
                 <input
                   required
@@ -203,7 +181,7 @@ const PoorNeedy = () => {
             </div>
             <div className="space-y-2">
               <label className="text-xs font-bold text-gray-600 uppercase">
-                Email
+                {t("form.email")}
               </label>
               <input
                 required
@@ -215,7 +193,7 @@ const PoorNeedy = () => {
             </div>
             <div className="space-y-2">
               <label className="text-xs font-bold text-gray-600 uppercase">
-                Address / Location
+                {t("poor_needy.address_location")}
               </label>
               <input
                 required
@@ -226,7 +204,7 @@ const PoorNeedy = () => {
             </div>
             <div className="space-y-2">
               <label className="text-xs font-bold text-gray-600 uppercase">
-                Details about the requirement
+                {t("poor_needy.requirement_details")}
               </label>
               <textarea
                 required
@@ -237,7 +215,7 @@ const PoorNeedy = () => {
               ></textarea>
             </div>
             <Button type="submit" className="w-full py-4">
-              Submit
+              {t("poor_needy.submit")}
             </Button>
           </form>
         </div>

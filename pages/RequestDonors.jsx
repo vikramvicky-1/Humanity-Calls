@@ -1,4 +1,5 @@
 import React, { useState, useLayoutEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import SEO from "../components/SEO";
@@ -9,6 +10,7 @@ import { redirectToWhatsApp } from "../utils/whatsapp";
 gsap.registerPlugin(ScrollTrigger);
 
 const RequestDonors = () => {
+  const { t, i18n } = useTranslation();
   const containerRef = useRef(null);
 
   useLayoutEffect(() => {
@@ -58,7 +60,7 @@ const RequestDonors = () => {
     }, containerRef);
 
     return () => ctx.revert();
-  }, []);
+  }, [i18n.language]);
   const [formData, setFormData] = useState({
     verifiedPersonName: "",
     phone: "",
@@ -70,7 +72,7 @@ const RequestDonors = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const msg = `Blood Donor Request:\n\nVerified Person: ${formData.verifiedPersonName}\nPhone: ${formData.phone}\nEmail: ${formData.email}\nPatient: ${formData.patientName}\nGroup: ${formData.bloodGroup}\nHospital Address & Pincode: ${formData.hospitalAddressWithPincode}`;
+    const msg = `${t("request_donors.title")}:\n\n${t("request_donors.verified_person")}: ${formData.verifiedPersonName}\n${t("form.phone")}: ${formData.phone}\n${t("form.email")}: ${formData.email}\n${t("request_donors.patient_name")}: ${formData.patientName}\n${t("request_donors.blood_group")}: ${formData.bloodGroup}\n${t("request_donors.hospital_address")}: ${formData.hospitalAddressWithPincode}`;
     redirectToWhatsApp(msg);
   };
 
@@ -81,8 +83,8 @@ const RequestDonors = () => {
   return (
     <div className="bg-[#F5F5F5] min-h-screen" ref={containerRef}>
       <SEO
-        title="Request Blood Donors"
-        description="Submit a request for emergency blood donation. Our network of donors is here to help."
+        title={`${t("request_donors.title")} | Humanity Calls`}
+        description={t("request_donors.seo_desc")}
       />
 
       <div className="w-full relative h-[400px] md:h-[600px] mb-12">
@@ -93,20 +95,20 @@ const RequestDonors = () => {
         />
         <div className="absolute inset-0 bg-black/40 flex items-center justify-center" data-animation="req-title">
           <h1 className="text-4xl md:text-7xl font-black text-white text-center px-4 tracking-tighter">
-            HAVE A REQUIREMENT FOR{" "}
-            <span className="text-blood-red">BLOOD?</span>{" "}
+            {t("request_donors.hero_title_part1")}{" "}
+            <span className="text-blood-red">{t("request_donors.hero_title_part2")}</span>{" "}
           </h1>
         </div>
       </div>
 
-      <div className="max-w-3xl mx-auto px-4 pb-24">
+      <div className="max-w-none mx-auto px-[5%] pb-24">
         <div className="bg-white p-8 md:p-12 rounded-3xl shadow-xl border border-gray-100" data-animation="req-form">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-[#1A1A1A] mb-4">
-              Request For Donors
+              {t("request_donors.form_title")}
             </h2>
             <p className="text-gray-500">
-              Fill in the emergency details below to notify our donor network.
+              {t("request_donors.form_subtitle")}
             </p>
           </div>
 
@@ -114,7 +116,7 @@ const RequestDonors = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <label className="text-xs font-bold text-gray-600 uppercase tracking-widest">
-                  Verified Person Name
+                  {t("request_donors.verified_person")}
                 </label>
                 <input
                   required
@@ -125,7 +127,7 @@ const RequestDonors = () => {
               </div>
               <div className="space-y-2">
                 <label className="text-xs font-bold text-gray-600 uppercase tracking-widest">
-                  Phone
+                  {t("form.phone")}
                 </label>
                 <input
                   required
@@ -139,7 +141,7 @@ const RequestDonors = () => {
 
             <div className="space-y-2">
               <label className="text-xs font-bold text-gray-600 uppercase tracking-widest">
-                Email
+                {t("form.email")}
               </label>
               <input
                 required
@@ -153,7 +155,7 @@ const RequestDonors = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <label className="text-xs font-bold text-gray-600 uppercase tracking-widest">
-                  Patient Name
+                  {t("request_donors.patient_name")}
                 </label>
                 <input
                   required
@@ -164,7 +166,7 @@ const RequestDonors = () => {
               </div>
               <div className="space-y-2">
                 <label className="text-xs font-bold text-gray-600 uppercase tracking-widest">
-                  Blood Group Required
+                  {t("request_donors.blood_group")}
                 </label>
                 <select
                   required
@@ -172,7 +174,7 @@ const RequestDonors = () => {
                   onChange={handleChange}
                   className="w-full px-4 py-4 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blood-red outline-none transition-all"
                 >
-                  <option value="">Select Group</option>
+                  <option value="">{t("request_donors.select_group")}</option>
                   <option value="A+">A+</option>
                   <option value="A-">A-</option>
                   <option value="B+">B+</option>
@@ -187,14 +189,14 @@ const RequestDonors = () => {
 
             <div className="space-y-2">
               <label className="text-xs font-bold text-gray-600 uppercase tracking-widest">
-                Hospital Address with Pincode
+                {t("request_donors.hospital_address")}
               </label>
               <textarea
                 required
                 name="hospitalAddressWithPincode"
                 onChange={handleChange}
                 rows="3"
-                placeholder="Full address including pincode"
+                placeholder={t("request_donors.hospital_address_placeholder")}
                 className="w-full px-4 py-4 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blood-red outline-none transition-all"
               ></textarea>
             </div>
@@ -203,7 +205,7 @@ const RequestDonors = () => {
               type="submit"
               className="w-full py-5 text-lg shadow-lg shadow-blood-red/20"
             >
-              Submit Emergency Request
+              {t("request_donors.submit_request")}
             </Button>
           </form>
         </div>

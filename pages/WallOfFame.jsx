@@ -1,4 +1,5 @@
 import React, { useLayoutEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import SEO from "../components/SEO";
@@ -6,17 +7,20 @@ import SEO from "../components/SEO";
 gsap.registerPlugin(ScrollTrigger);
 
 const WallOfFame = () => {
+  const { t, i18n } = useTranslation();
   const containerRef = useRef(null);
 
   useLayoutEffect(() => {
     const isMobile = window.innerWidth < 768;
     const yOffset = isMobile ? 15 : 30;
-    
+
     const ctx = gsap.context(() => {
       const heading = document.querySelector('[data-animation="wof-heading"]');
       const story = document.querySelector('[data-animation="wof-story"]');
       const team = document.querySelector('[data-animation="wof-team"]');
-      const institutions = document.querySelectorAll('[data-animation="wof-inst"]');
+      const institutions = document.querySelectorAll(
+        '[data-animation="wof-inst"]'
+      );
 
       if (heading) {
         gsap.fromTo(
@@ -26,10 +30,10 @@ const WallOfFame = () => {
             opacity: 1,
             y: 0,
             duration: 0.7,
-            ease: 'power2.out',
+            ease: "power2.out",
             scrollTrigger: {
               trigger: heading,
-              start: 'top 80%',
+              start: "top 80%",
               once: true,
             },
           }
@@ -44,10 +48,10 @@ const WallOfFame = () => {
             opacity: 1,
             y: 0,
             duration: 0.7,
-            ease: 'power2.out',
+            ease: "power2.out",
             scrollTrigger: {
               trigger: story,
-              start: 'top 80%',
+              start: "top 80%",
               once: true,
             },
           }
@@ -62,10 +66,10 @@ const WallOfFame = () => {
             opacity: 1,
             y: 0,
             duration: 0.7,
-            ease: 'power2.out',
+            ease: "power2.out",
             scrollTrigger: {
               trigger: team,
-              start: 'top 80%',
+              start: "top 80%",
               once: true,
             },
           }
@@ -82,10 +86,10 @@ const WallOfFame = () => {
               scale: 1,
               duration: 0.6,
               delay: idx * 0.1,
-              ease: 'power2.out',
+              ease: "power2.out",
               scrollTrigger: {
                 trigger: inst,
-                start: 'top 80%',
+                start: "top 80%",
                 once: true,
               },
             }
@@ -95,7 +99,7 @@ const WallOfFame = () => {
     }, containerRef);
 
     return () => ctx.revert();
-  }, []);
+  }, [i18n.language]);
   const institutions = [
     {
       id: 1,
@@ -133,17 +137,20 @@ const WallOfFame = () => {
   return (
     <div className="bg-[#F5F5F5] min-h-screen" ref={containerRef}>
       <SEO
-        title="Wall of Fame | Our Hero Donors | Humanity Calls NGO"
-        description="Meet the heroes of Humanity Calls. Our Wall of Fame honors those who have contributed their time, blood, and resources to help others."
+        title={t("wall_of_fame.seo_title")}
+        description={t("wall_of_fame.seo_desc")}
       />
 
       {/* Heading on Top */}
-      <div className="pt-24 pb-12 text-center bg-white" data-animation="wof-heading">
+      <div
+        className="pt-24 pb-12 text-center bg-white"
+        data-animation="wof-heading"
+      >
         <h1 className="text-5xl font-bold text-[#1A1A1A] mb-4">
-          Wall of <span className="text-blood-red">Fame</span>
+          {t("wall_of_fame.title")}
         </h1>
         <p className="text-xl text-gray-600">
-          Honoring those who make our mission possible.
+          {t("wall_of_fame.hero_subtitle")}
         </p>
       </div>
 
@@ -158,20 +165,18 @@ const WallOfFame = () => {
         </a>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+      <div className="max-w-none mx-auto px-[5%] py-20">
         {/* Our Story Section */}
         <div className="mb-24 text-center" data-animation="wof-story">
-          <h2 className="text-4xl font-bold text-[#1A1A1A] mb-8">Our Story</h2>
-          <div className="max-w-4xl mx-auto space-y-6">
+          <h2 className="text-4xl font-bold text-[#1A1A1A] mb-8">
+            {t("wall_of_fame.story_title")}
+          </h2>
+          <div className="max-w-none mx-auto px-[5%] space-y-6">
             <p className="text-xl text-gray-700 leading-relaxed">
-              Being a human its our responsibility to protect our nation with
-              full of humanity to help people around us with requirements of
-              emergency blood requirements when a person is hospitalized seeking
-              for the help.
+              {t("wall_of_fame.story_para1")}
             </p>
             <p className="text-xl text-gray-700 leading-relaxed">
-              We are the people to letting them to know that we are family and
-              we will be there to support in all health related support.
+              {t("wall_of_fame.story_para2")}
             </p>
           </div>
         </div>
@@ -179,18 +184,16 @@ const WallOfFame = () => {
         {/* Meet The Team Section */}
         <div className="mb-16 text-center" data-animation="wof-team">
           <h2 className="text-4xl font-bold text-[#1A1A1A] mb-8">
-            Meet The Team
+            {t("wall_of_fame.team_title")}
           </h2>
-          <p className="text-xl text-gray-700 leading-relaxed max-w-4xl mx-auto">
-            Our team with full of Humanity and full fledged is working for
-            others when someone for extra mile without any limitations to see
-            happiness in others.
+          <p className="text-xl text-gray-700 leading-relaxed max-w-none mx-auto px-[5%]">
+            {t("wall_of_fame.team_para")}
           </p>
         </div>
 
         {/* 5 Institutions Side by Side */}
         <div className="mb-24">
-          <div className="flex justify-center items-center gap-2 max-w-4xl mx-auto">
+          <div className="flex justify-center items-center gap-2 max-w-none mx-auto px-[5%]">
             {institutions.map((inst) => (
               <a
                 key={inst.id}
@@ -225,10 +228,7 @@ const WallOfFame = () => {
         <hr className="my-20 border-gray-200" />
 
         <div className="mt-20 text-center">
-          <p className="text-gray-500 mb-8 italic">
-            "The best way to find yourself is to lose yourself in the service of
-            others."
-          </p>
+          <p className="text-gray-500 mb-8 italic">{t("wall_of_fame.quote")}</p>
           <div className="w-24 h-1 bg-blood-red mx-auto"></div>
         </div>
       </div>

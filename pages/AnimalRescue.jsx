@@ -1,4 +1,5 @@
 import React, { useState, useLayoutEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import SEO from "../components/SEO";
@@ -9,6 +10,7 @@ import { redirectToWhatsApp } from "../utils/whatsapp";
 gsap.registerPlugin(ScrollTrigger);
 
 const AnimalRescue = () => {
+  const { t, i18n } = useTranslation();
   const containerRef = useRef(null);
 
   useLayoutEffect(() => {
@@ -96,7 +98,7 @@ const AnimalRescue = () => {
     }, containerRef);
 
     return () => ctx.revert();
-  }, []);
+  }, [i18n.language]);
   const [formData, setFormData] = useState({
     firstName: "",
     phone: "",
@@ -107,7 +109,7 @@ const AnimalRescue = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const msg = `Animal Rescue Inquiry:\n\nName: ${formData.firstName}\nPhone: ${formData.phone}\nEmail: ${formData.email}\nAddress: ${formData.address}\nMessage: ${formData.message}`;
+    const msg = `${t("animal_rescue.whatsapp_inquiry_header")}:\n\n${t("poor_needy.first_name")}: ${formData.firstName}\n${t("form.phone")}: ${formData.phone}\n${t("form.email")}: ${formData.email}\n${t("animal_rescue.address_label")}: ${formData.address}\n${t("animal_rescue.situation_details")}: ${formData.message}`;
     redirectToWhatsApp(msg);
   };
 
@@ -118,11 +120,11 @@ const AnimalRescue = () => {
   return (
     <div className="bg-white pb-24" ref={containerRef}>
       <SEO
-        title="Animal Rescue | Help Stray Dogs & Animals | Humanity Calls"
-        description="Our animal rescue team saves abandoned and injured stray animals. Contact us for rescue operations and help us find homes for voiceless companions."
+        title={t("animal_rescue.seo_title")}
+        description={t("animal_rescue.seo_desc")}
       />
 
-      <section className="py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-24 max-w-none mx-auto px-[5%]">
         <div className="flex flex-col items-center space-y-8">
           <img
             src="https://res.cloudinary.com/daokrum7i/image/upload/v1767814232/humanity_calls_animal_resque_dxz9jb.avif"
@@ -131,41 +133,30 @@ const AnimalRescue = () => {
             data-animation="ar-image"
           />
           <div className="space-y-8">
-            <h1 className="text-4xl font-bold text-blood-red" data-animation="ar-title">Animal Rescue</h1>
+            <h1 className="text-4xl font-bold text-blood-red" data-animation="ar-title">{t("animal_rescue.title")}</h1>
             <p className="text-lg text-gray-700 leading-relaxed" data-animation="ar-text">
-              An animal rescue group or animal rescue organization are dedicated
-              to pet adoption. These groups take unwanted, abandoned, abused, or
-              stray pets and attempt to find suitable homes for them. Many
-              rescue groups are created by and run by volunteers, -Street -dogs
-              who take animals into their homes and care for them — including
-              training, playing, handling medical issues, and solving behavior
-              problems — until a suitable permanent home can be found.
-              organization is one that is dedicated to animal adoption. They
-              take in -stray -lost -abandoned and surrendered animals. Most
-              rescue groups are ran by volunteers that rely on donations for
-              funding. Some rescue groups have an adoption facility, and others
-              care for animals in their own homes.
+              {t("animal_rescue.main_text")}
             </p>
             <div className="p-8 bg-gray-50 rounded-2xl border-l-8 border-blood-red">
-              <h2 className="text-2xl font-bold mb-2">Be a Voice</h2>
+              <h2 className="text-2xl font-bold mb-2">{t("animal_rescue.voice_title")}</h2>
               <p className="text-gray-600">
-                Help us protect our stray companions.
+                {t("animal_rescue.voice_desc")}
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      <div className="max-w-3xl mx-auto px-4">
+      <div className="max-w-none mx-auto px-[5%]">
         <div className="bg-[#F5F5F5] p-8 md:p-12 rounded-3xl border border-gray-200" data-animation="ar-form">
           <h3 className="text-2xl font-bold mb-8 text-center">
-            Rescue / Help Form
+            {t("animal_rescue.form_title")}
           </h3>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <label className="text-xs font-bold text-gray-600 uppercase">
-                  First Name
+                  {t("poor_needy.first_name")}
                 </label>
                 <input
                   required
@@ -176,7 +167,7 @@ const AnimalRescue = () => {
               </div>
               <div className="space-y-2">
                 <label className="text-xs font-bold text-gray-600 uppercase">
-                  Phone
+                  {t("form.phone")}
                 </label>
                 <input
                   required
@@ -188,7 +179,7 @@ const AnimalRescue = () => {
             </div>
             <div className="space-y-2">
               <label className="text-xs font-bold text-gray-600 uppercase">
-                Email
+                {t("form.email")}
               </label>
               <input
                 required
@@ -200,7 +191,7 @@ const AnimalRescue = () => {
             </div>
             <div className="space-y-2">
               <label className="text-xs font-bold text-gray-600 uppercase">
-                Address / Location of Animal
+                {t("animal_rescue.address_label")}
               </label>
               <input
                 required
@@ -211,7 +202,7 @@ const AnimalRescue = () => {
             </div>
             <div className="space-y-2">
               <label className="text-xs font-bold text-gray-600 uppercase">
-                Details about the situation
+                {t("animal_rescue.situation_details")}
               </label>
               <textarea
                 required
@@ -222,7 +213,7 @@ const AnimalRescue = () => {
               ></textarea>
             </div>
             <Button type="submit" className="w-full py-4">
-              Submit
+              {t("poor_needy.submit")}
             </Button>
           </form>
         </div>
