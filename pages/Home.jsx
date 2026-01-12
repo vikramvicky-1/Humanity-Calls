@@ -446,7 +446,7 @@ const Home = () => {
             />
           </div>
           <div className="space-y-16" data-animation="help-text">
-            <h2 className="text-4xl font-bold text-[#1A1A1A]">
+            <h2 key={i18n.language} className="text-4xl font-bold text-[#1A1A1A]">
               {t("home.how_can_help_title")}
             </h2>
             <p className="text-lg text-[#4A4A4A] leading-relaxed">
