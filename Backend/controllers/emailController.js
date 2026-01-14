@@ -57,7 +57,7 @@ export const sendEmail = async (req, res) => {
     }
   }
 
-  const emailTo = process.env.EMAIL_TO || process.env.EMAIL_USER;
+  const emailTo = process.env.EMAIL_TO || process.env.SMTP_USER || process.env.EMAIL_USER;
 
   // Build HTML table for data with mobile responsiveness
   const dataRows = Object.entries(data)
@@ -139,7 +139,7 @@ export const sendEmail = async (req, res) => {
   `;
 
   const mailOptions = {
-    from: process.env.EMAIL_USER,
+    from: `"Humanity Calls" <${process.env.SMTP_USER || process.env.EMAIL_USER}>`,
     to: emailTo,
     subject: subject || `New ${type} Submission - Humanity Calls`,
     html: htmlTemplate,
