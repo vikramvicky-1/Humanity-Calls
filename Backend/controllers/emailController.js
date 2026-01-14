@@ -5,19 +5,29 @@ dotenv.config();
 
 // Create transporter using a function to ensure environment variables are loaded
 const getTransporter = () => {
-  const user = process.env.EMAIL_USER;
-  const pass = process.env.EMAIL_PASS ? process.env.EMAIL_PASS.replace(/\s/g, "") : "";
+  const host = process.env.SMTP_HOST || "smtp.gmail.com";
+  const port = parseInt(process.env.SMTP_PORT) || 465;
+  const user = process.env.SMTP_USER || process.env.EMAIL_USER;
+  const pass = process.env.SMTP_PASS || (process.env.EMAIL_PASS ? process.env.EMAIL_PASS.replace(/\s/g, "") : "");
 
   if (!user || !pass) {
-    console.error("Missing EMAIL_USER or EMAIL_PASS in environment variables");
+    console.error("DEBUG: SMTP credentials missing!");
+    console.log("DEBUG: SMTP_USER/EMAIL_USER:", user ? "Defined" : "Undefined");
+    console.log("DEBUG: SMTP_PASS/EMAIL_PASS:", pass ? "Defined" : "Undefined");
   }
 
   return nodemailer.createTransport({
-    service: "gmail",
+    host: host,
+    port: port,
+    secure: port === 465, // true for 465, false for other ports
     auth: {
       user: user,
       pass: pass,
     },
+    // Add timeout settings
+    connectionTimeout: 10000, // 10 seconds
+    greetingTimeout: 10000,
+    socketTimeout: 10000,
   });
 };
 
