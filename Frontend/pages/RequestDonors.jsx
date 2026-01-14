@@ -5,13 +5,14 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import SEO from "../components/SEO";
 import Button from "../components/Button";
 import { IMAGE_ALTS } from "../constants";
-import { redirectToWhatsApp } from "../utils/whatsapp";
+import { sendEmail } from "../utils/email";
 
 gsap.registerPlugin(ScrollTrigger);
 
 const RequestDonors = () => {
   const { t, i18n } = useTranslation();
   const containerRef = useRef(null);
+  const [loading, setLoading] = useState(false);
 
   useLayoutEffect(() => {
     const isMobile = window.innerWidth < 768;
@@ -70,10 +71,27 @@ const RequestDonors = () => {
     hospitalAddressWithPincode: "",
   });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const msg = `${t("request_donors.title")}:\n\n${t("request_donors.verified_person")}: ${formData.verifiedPersonName}\n${t("form.phone")}: ${formData.phone}\n${t("form.email")}: ${formData.email}\n${t("request_donors.patient_name")}: ${formData.patientName}\n${t("request_donors.blood_group")}: ${formData.bloodGroup}\n${t("request_donors.hospital_address")}: ${formData.hospitalAddressWithPincode}`;
-    redirectToWhatsApp(msg);
+    setLoading(true);
+    
+    const success = await sendEmail(
+      "Donor Request",
+      formData,
+      `New Blood Donor Request for ${formData.patientName}`
+    );
+
+    if (success) {
+      setFormData({
+        verifiedPersonName: "",
+        phone: "",
+        email: "",
+        patientName: "",
+        bloodGroup: "",
+        hospitalAddressWithPincode: "",
+      });
+    }
+    setLoading(false);
   };
 
   const handleChange = (e) => {
@@ -121,6 +139,7 @@ const RequestDonors = () => {
                 <input
                   required
                   name="verifiedPersonName"
+                  value={formData.verifiedPersonName}
                   onChange={handleChange}
                   className="w-full px-4 py-4 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blood-red outline-none transition-all"
                 />
@@ -133,7 +152,10 @@ const RequestDonors = () => {
                   required
                   type="tel"
                   name="phone"
+                  value={formData.phone}
                   onChange={handleChange}
+                  minLength={10}
+                  maxLength={10}
                   className="w-full px-4 py-4 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blood-red outline-none transition-all"
                 />
               </div>
@@ -147,6 +169,7 @@ const RequestDonors = () => {
                 required
                 type="email"
                 name="email"
+                value={formData.email}
                 onChange={handleChange}
                 className="w-full px-4 py-4 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blood-red outline-none transition-all"
               />
@@ -160,6 +183,7 @@ const RequestDonors = () => {
                 <input
                   required
                   name="patientName"
+                  value={formData.patientName}
                   onChange={handleChange}
                   className="w-full px-4 py-4 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blood-red outline-none transition-all"
                 />
@@ -171,6 +195,7 @@ const RequestDonors = () => {
                 <select
                   required
                   name="bloodGroup"
+                  value={formData.bloodGroup}
                   onChange={handleChange}
                   className="w-full px-4 py-4 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blood-red outline-none transition-all"
                 >
@@ -194,6 +219,7 @@ const RequestDonors = () => {
               <textarea
                 required
                 name="hospitalAddressWithPincode"
+                value={formData.hospitalAddressWithPincode}
                 onChange={handleChange}
                 rows="3"
                 placeholder={t("request_donors.hospital_address_placeholder")}
@@ -203,6 +229,7 @@ const RequestDonors = () => {
 
             <Button
               type="submit"
+              isLoading={loading}
               className="w-full py-5 text-lg shadow-lg shadow-blood-red/20"
             >
               {t("request_donors.submit_request")}

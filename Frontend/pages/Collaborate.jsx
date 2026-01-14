@@ -5,13 +5,14 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import SEO from "../components/SEO";
 import Button from "../components/Button";
 import { IMAGE_ALTS } from "../constants";
-import { redirectToWhatsApp } from "../utils/whatsapp";
+import { sendEmail } from "../utils/email";
 
 gsap.registerPlugin(ScrollTrigger);
 
 const Collaborate = () => {
   const { t, i18n } = useTranslation();
   const containerRef = useRef(null);
+  const [loading, setLoading] = useState(false);
 
   useLayoutEffect(() => {
     const isMobile = window.innerWidth < 768;
@@ -70,10 +71,27 @@ const Collaborate = () => {
     message: "",
   });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const msg = `${t("collaborate.form_title")}:\n\n${t("collaborate.institution_name")}: ${formData.institutionName}\n${t("collaborate.contact_person")}: ${formData.contactPerson}\n${t("collaborate.phone")}: ${formData.phone}\n${t("collaborate.email")}: ${formData.email}\n${t("collaborate.address")}: ${formData.address}\n${t("collaborate.message")}: ${formData.message}`;
-    redirectToWhatsApp(msg);
+    setLoading(true);
+    
+    const success = await sendEmail(
+      "Collaboration Inquiry",
+      formData,
+      `New Collaboration Inquiry from ${formData.institutionName}`
+    );
+
+    if (success) {
+      setFormData({
+        institutionName: "",
+        contactPerson: "",
+        email: "",
+        phone: "",
+        address: "",
+        message: "",
+      });
+    }
+    setLoading(false);
   };
 
   const handleChange = (e) => {
@@ -111,6 +129,7 @@ const Collaborate = () => {
                 <input
                   required
                   name="institutionName"
+                  value={formData.institutionName}
                   onChange={handleChange}
                   placeholder={t("collaborate.placeholders.institution_name")}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg"
@@ -123,6 +142,7 @@ const Collaborate = () => {
                 <input
                   required
                   name="contactPerson"
+                  value={formData.contactPerson}
                   onChange={handleChange}
                   placeholder={t("collaborate.placeholders.contact_person")}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg"
@@ -137,6 +157,7 @@ const Collaborate = () => {
                     required
                     type="email"
                     name="email"
+                    value={formData.email}
                     onChange={handleChange}
                     placeholder={t("collaborate.placeholders.email")}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg"
@@ -149,7 +170,10 @@ const Collaborate = () => {
                   <input
                     required
                     name="phone"
+                    value={formData.phone}
                     onChange={handleChange}
+                    minLength={10}
+                    maxLength={10}
                     placeholder={t("collaborate.placeholders.phone")}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg"
                   />
@@ -162,6 +186,7 @@ const Collaborate = () => {
                 <input
                   required
                   name="address"
+                  value={formData.address}
                   onChange={handleChange}
                   placeholder={t("collaborate.placeholders.address")}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg"
@@ -174,13 +199,14 @@ const Collaborate = () => {
                 <textarea
                   required
                   name="message"
+                  value={formData.message}
                   onChange={handleChange}
                   rows={3}
                   placeholder={t("collaborate.placeholders.message")}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg"
                 ></textarea>
               </div>
-              <Button type="submit" className="w-full py-4">
+              <Button type="submit" isLoading={loading} className="w-full py-4">
                 {t("collaborate.submit")}
               </Button>
             </form>

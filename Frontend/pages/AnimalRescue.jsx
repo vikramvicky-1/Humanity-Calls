@@ -5,13 +5,14 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import SEO from "../components/SEO";
 import Button from "../components/Button";
 import { IMAGE_ALTS } from "../constants";
-import { redirectToWhatsApp } from "../utils/whatsapp";
+import { sendEmail } from "../utils/email";
 
 gsap.registerPlugin(ScrollTrigger);
 
 const AnimalRescue = () => {
   const { t, i18n } = useTranslation();
   const containerRef = useRef(null);
+  const [loading, setLoading] = useState(false);
 
   useLayoutEffect(() => {
     const isMobile = window.innerWidth < 768;
@@ -107,10 +108,26 @@ const AnimalRescue = () => {
     message: "",
   });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const msg = `${t("animal_rescue.whatsapp_inquiry_header")}:\n\n${t("poor_needy.first_name")}: ${formData.firstName}\n${t("form.phone")}: ${formData.phone}\n${t("form.email")}: ${formData.email}\n${t("animal_rescue.address_label")}: ${formData.address}\n${t("animal_rescue.situation_details")}: ${formData.message}`;
-    redirectToWhatsApp(msg);
+    setLoading(true);
+    
+    const success = await sendEmail(
+      "Animal Rescue Inquiry",
+      formData,
+      `New Animal Rescue Inquiry from ${formData.firstName}`
+    );
+
+    if (success) {
+      setFormData({
+        firstName: "",
+        phone: "",
+        email: "",
+        address: "",
+        message: "",
+      });
+    }
+    setLoading(false);
   };
 
   const handleChange = (e) => {
@@ -161,6 +178,7 @@ const AnimalRescue = () => {
                 <input
                   required
                   name="firstName"
+                  value={formData.firstName}
                   onChange={handleChange}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg"
                 />
@@ -172,7 +190,10 @@ const AnimalRescue = () => {
                 <input
                   required
                   name="phone"
+                  value={formData.phone}
                   onChange={handleChange}
+                  minLength={10}
+                  maxLength={10}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg"
                 />
               </div>
@@ -185,6 +206,7 @@ const AnimalRescue = () => {
                 required
                 type="email"
                 name="email"
+                value={formData.email}
                 onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg"
               />
@@ -196,6 +218,7 @@ const AnimalRescue = () => {
               <input
                 required
                 name="address"
+                value={formData.address}
                 onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg"
               />
@@ -207,12 +230,13 @@ const AnimalRescue = () => {
               <textarea
                 required
                 name="message"
+                value={formData.message}
                 onChange={handleChange}
                 rows={4}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg"
               ></textarea>
             </div>
-            <Button type="submit" className="w-full py-4">
+            <Button type="submit" isLoading={loading} className="w-full py-4">
               {t("poor_needy.submit")}
             </Button>
           </form>

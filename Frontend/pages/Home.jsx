@@ -1,6 +1,6 @@
 import React, { useLayoutEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { useTranslation } from "react-i18next";
+import { useTranslation, Trans } from "react-i18next";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import SEO from "../components/SEO";
@@ -21,7 +21,7 @@ const Home = () => {
   useLayoutEffect(() => {
     const isMobile = window.innerWidth < 768;
     const yOffset = isMobile ? 20 : 40;
-    
+
     const ctx = gsap.context(() => {
       const heroTitle = document.querySelector('[data-animation="hero-title"]');
       const heroParagraph = document.querySelector(
@@ -165,7 +165,8 @@ const Home = () => {
               end: "bottom 60%",
               once: true,
             },
-            onComplete: () => gsap.set(bloodSectionImage, { willChange: "auto" }),
+            onComplete: () =>
+              gsap.set(bloodSectionImage, { willChange: "auto" }),
           }
         );
       }
@@ -296,7 +297,23 @@ const Home = () => {
             </p>
             <div className="flex flex-wrap gap-6 lg:gap-4">
               <Link to="/collaborate">
-                <Button data-animation="hero-button">
+                <Button
+                  className="
+    inline-flex
+    items-center
+    justify-center
+    min-h-[48px]
+    min-w-[48px]
+    px-8
+    py-4
+    rounded-md
+    focus:outline-none
+    focus:ring-4
+    focus:ring-blue-300
+    transition
+  "
+                  data-animation="hero-button"
+                >
                   {t("home.collaborate_with_us")}
                 </Button>
               </Link>
@@ -376,7 +393,10 @@ const Home = () => {
       >
         <div className="max-w-none mx-auto px-[5%] text-center">
           <p className="text-3xl md:text-4xl font-bold text-[#4A4A4A]">
-            {t("home.donors_count")}
+            <Trans
+              i18nKey="home.donors_count"
+              components={{ red: <span className="text-blood-red" /> }}
+            />
           </p>
         </div>
       </section>
@@ -389,7 +409,9 @@ const Home = () => {
               className="bg-white p-10 rounded-2xl shadow-sm hover:shadow-xl transition-all border-t-4 border-blood-red"
               data-animation="card"
             >
-              <h3 className="text-2xl font-bold mb-4">{t("home.donations_made_title")}</h3>
+              <h3 className="text-2xl font-bold mb-4">
+                {t("home.donations_made_title")}
+              </h3>
               <p className="text-[#9E9E9E] mb-8">
                 {t("home.donations_made_desc")}
               </p>
@@ -403,7 +425,9 @@ const Home = () => {
               className="bg-[#E0E0E0] p-10 rounded-2xl shadow-sm hover:shadow-xl transition-all"
               data-animation="card"
             >
-              <h3 className="text-2xl font-bold mb-4">{t("home.become_member_title")}</h3>
+              <h3 className="text-2xl font-bold mb-4">
+                {t("home.become_member_title")}
+              </h3>
               <p className="text-[#4A4A4A] mb-8">
                 {t("home.become_member_desc")}
               </p>
@@ -417,7 +441,9 @@ const Home = () => {
               className="bg-white p-10 rounded-2xl shadow-sm hover:shadow-xl transition-all border-t-4 border-gray-400"
               data-animation="card"
             >
-              <h3 className="text-2xl font-bold mb-4">{t("home.wall_of_fame_title")}</h3>
+              <h3 className="text-2xl font-bold mb-4">
+                {t("home.wall_of_fame_title")}
+              </h3>
               <p className="text-[#9E9E9E] mb-8">
                 {t("home.wall_of_fame_desc")}
               </p>
@@ -446,7 +472,10 @@ const Home = () => {
             />
           </div>
           <div className="space-y-16" data-animation="help-text">
-            <h2 key={i18n.language} className="text-4xl font-bold text-[#1A1A1A]">
+            <h2
+              key={i18n.language}
+              className="text-4xl font-bold text-[#1A1A1A]"
+            >
               {t("home.how_can_help_title")}
             </h2>
             <p className="text-lg text-[#4A4A4A] leading-relaxed">
@@ -465,10 +494,10 @@ const Home = () => {
         data-animation="newsletter-section"
       >
         <div className="max-w-none mx-auto px-[5%] text-center">
-          <h2 className="text-3xl font-bold mb-4">{t("home.join_the_movement")}</h2>
-          <p className="text-gray-600 mb-8">
-            {t("home.newsletter_desc")}
-          </p>
+          <h2 className="text-3xl font-bold mb-4">
+            {t("home.join_the_movement")}
+          </h2>
+          <p className="text-gray-600 mb-8">{t("home.newsletter_desc")}</p>
           <div className="flex flex-col sm:flex-row gap-2 max-w-md mx-auto">
             <input
               type="email"

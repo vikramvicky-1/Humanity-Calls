@@ -5,13 +5,14 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import SEO from "../components/SEO";
 import Button from "../components/Button";
 import { IMAGE_ALTS } from "../constants";
-import { redirectToWhatsApp } from "../utils/whatsapp";
+import { sendEmail } from "../utils/email";
 
 gsap.registerPlugin(ScrollTrigger);
 
 const PoorNeedy = () => {
   const { t, i18n } = useTranslation();
   const containerRef = useRef(null);
+  const [loading, setLoading] = useState(false);
 
   useLayoutEffect(() => {
     const isMobile = window.innerWidth < 768;
@@ -107,10 +108,26 @@ const PoorNeedy = () => {
     message: "",
   });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const msg = `${t("poor_needy.whatsapp_request_header")}:\n\n${t("poor_needy.first_name")}: ${formData.firstName}\n${t("form.phone")}: ${formData.phone}\n${t("form.email")}: ${formData.email}\n${t("poor_needy.address_location")}: ${formData.address}\n${t("poor_needy.requirement_details")}: ${formData.message}`;
-    redirectToWhatsApp(msg);
+    setLoading(true);
+    
+    const success = await sendEmail(
+      "Poor & Needy Support Request",
+      formData,
+      `New Support Request from ${formData.firstName}`
+    );
+
+    if (success) {
+      setFormData({
+        firstName: "",
+        phone: "",
+        email: "",
+        address: "",
+        message: "",
+      });
+    }
+    setLoading(false);
   };
 
   const handleChange = (e) => {
@@ -163,6 +180,7 @@ const PoorNeedy = () => {
                 <input
                   required
                   name="firstName"
+                  value={formData.firstName}
                   onChange={handleChange}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg"
                 />
@@ -174,7 +192,10 @@ const PoorNeedy = () => {
                 <input
                   required
                   name="phone"
+                  value={formData.phone}
                   onChange={handleChange}
+                  minLength={10}
+                  maxLength={10}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg"
                 />
               </div>
@@ -187,6 +208,7 @@ const PoorNeedy = () => {
                 required
                 type="email"
                 name="email"
+                value={formData.email}
                 onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg"
               />
@@ -198,6 +220,7 @@ const PoorNeedy = () => {
               <input
                 required
                 name="address"
+                value={formData.address}
                 onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg"
               />
@@ -209,12 +232,13 @@ const PoorNeedy = () => {
               <textarea
                 required
                 name="message"
+                value={formData.message}
                 onChange={handleChange}
                 rows={4}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg"
               ></textarea>
             </div>
-            <Button type="submit" className="w-full py-4">
+            <Button type="submit" isLoading={loading} className="w-full py-4">
               {t("poor_needy.submit")}
             </Button>
           </form>

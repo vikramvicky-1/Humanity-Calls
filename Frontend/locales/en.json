@@ -21,7 +21,7 @@
     "donate_blood_save_lives": "Donate Blood, Save Lives",
     "blood_donation_paragraph": "Blood is essential to help patients survive surgeries, cancer treatment, chronic illnesses, and traumatic injuries. This lifesaving care starts with one person making a generous donation. The need for blood is constant.",
     "donate_today": "Donate Today",
-    "donors_count": "1000+ donors and 1 purpose !",
+    "donors_count": "<red>1000+</red> donors and <red>1</red> purpose !",
     "donations_made_title": "Donations Made",
     "donations_made_desc": "Here is our precious donors who came forward to donate their blood save so many lives with unconditional timings and situations.",
     "become_member_title": "Become a Member",
@@ -281,7 +281,7 @@
       "use_data_title": "5. Use of Data",
       "security_data_title": "9. Security of Data",
       "contact_us_title": "Contact Us",
-      "contact_us_para": "Should you have any feedback, comments, requests for technical support or other inquiries, please contact us by email: humanitycalls20@gmail.com",
+      "contact_us_para": "Should you have any feedback, comments, requests for technical support or other inquiries, please contact us by email: humanitycallsnotify@gmail.com",
       "verify_identity_para": "Please note that we may ask you to verify your identity before responding to such requests. Please note, we may not able to provide Service without some necessary data.",
       "data_protection_authority_para": "You have the right to complain to a Data Protection Authority about our collection and use of your Personal Data. For more information, please contact your local data protection authority in the European Economic Area (EEA).",
       "caloppa_title": "11. Your Data Protection Rights under the California Privacy Protection Act (CalOPPA)",
@@ -291,7 +291,7 @@
         "Users can visit our site anonymously;",
         "Our Privacy Policy link includes the word \"Privacy\", and can easily be found on the home page of our website;",
         "Users will be notified of any privacy policy changes on our Privacy Policy Page;",
-        "Users are able to change their personal information by emailing us at humanitycalls20@gmail.com."
+        "Users are able to change their personal information by emailing us at humanitycallsnotify@gmail.com."
       ],
       "do_not_track_title": "Our Policy on \"Do Not Track\" Signals",
       "do_not_track_para1": "We honor Do Not Track signals and do not track, plant cookies, or use advertising when a Do Not Track browser mechanism is in place. Do Not Track is a preference you can set in your web browser to inform websites that you do not want to be tracked.",
@@ -316,7 +316,7 @@
       "ccpa_sell_para1": "We don't sell or rent your personal information to any third parties for any purpose. We do not sell your personal information for monetary consideration. However, under some circumstances, a transfer of personal information to a third party, or within our family of companies, without monetary consideration may be considered a \"sale\" under California law. You are the only owner of your Personal Data and can request disclosure or deletion at any time.",
       "ccpa_sell_para2": "If you submit a request to stop selling your personal information, we will stop making such transfers.",
       "ccpa_sell_para3": "Please note, if you ask us to delete or stop selling your data, it may impact your experience with us, and you may not be able to participate in certain programs or membership services which require the usage of your personal information to function. But in no circumstances, we will discriminate against you for exercising your rights.",
-      "ccpa_exercise_rights": "To exercise your California data protection rights described above, please send your request(s) by email: humanitycalls20@gmail.com.",
+      "ccpa_exercise_rights": "To exercise your California data protection rights described above, please send your request(s) by email: humanitycallsnotify@gmail.com.",
       "ccpa_footer": "Your data protection rights, described above, are covered by the CCPA, short for the California Consumer Privacy Act. To find out more, visit the official California Legislative Information website. The CCPA took effect on 01/01/2020.",
       "service_providers_title": "13. Service Providers",
       "service_providers_para1": "We may employ third party companies and individuals to facilitate our Service (\"Service Providers\"), provide Service on our behalf, perform Service-related services or assist us in analysing how our Service is used.",
@@ -390,7 +390,7 @@
       "intellectual_property_para": "Service and its original content (excluding content provided by users), features and functionality are and will remain the exclusive property of Humanity Calls and its licensors. Service is protected by copyright, trademark, and other laws of and foreign countries. Our trademarks may not be used in connection with any product or service without the prior written consent of Humanity Calls.",
       "copyright_policy_title": "10. Copyright Policy",
       "copyright_policy_para1": "We respect the intellectual property rights of others. It is our policy to respond to any claim that content posted on Service infringes on the copyright or other intellectual property rights (\"Infringement\") of any person or entity.",
-      "copyright_policy_para2": "If you are a copyright owner, or authorized on behalf of one, and you believe that the copyrighted work has been copied in a way that constitutes copyright infringement, please submit your claim via email to humanitycalls20@gmail.com, with the subject line: \"Copyright Infringement\" and include in your claim a detailed description of the alleged infringement as detailed below, under \"DMCA Notice and Procedure for Copyright Infringement Claims\"",
+      "copyright_policy_para2": "If you are a copyright owner, or authorized on behalf of one, and you believe that the copyrighted work has been copied in a way that constitutes copyright infringement, please submit your claim via email to humanitycallsnotify@gmail.com, with the subject line: \"Copyright Infringement\" and include in your claim a detailed description of the alleged infringement as detailed below, under \"DMCA Notice and Procedure for Copyright Infringement Claims\"",
       "copyright_policy_para3": "You may be held accountable for damages (including costs and attorneys' fees) for misrepresentation or bad-faith claims on the infringement of any content found on and/or through Service on your copyright.",
       "dmca_title": "11. DMCA Notice and Procedure for Copyright Infringement Claims",
       "dmca_para1": "You may submit a notification pursuant to the Digital Millennium Copyright Act (DMCA) by providing our Copyright Agent with the following information in writing (see 17 U.S.C 512(c)(3) for further detail):",
@@ -402,9 +402,9 @@
         "A statement by you that you have a good faith belief that the disputed use is not authorized by the copyright owner, its agent, or the law;",
         "A statement by you, made under penalty of perjury, that the above information in your notice is accurate and that you are the copyright owner or authorized to act on the copyright owner's behalf."
       ],
-      "dmca_para2": "You can contact our Copyright Agent via email at humanitycalls20@gmail.com.",
+      "dmca_para2": "You can contact our Copyright Agent via email at humanitycallsnotify@gmail.com.",
       "error_reporting_title": "12. Error Reporting and Feedback",
-      "error_reporting_para": "You may provide us either directly at humanitycalls20@gmail.com or via third party sites and tools with information and feedback concerning errors, suggestions for improvements, ideas, problems, complaints, and other matters related to our Service (\"Feedback\"). You acknowledge and agree that: (i) you shall not retain, acquire or assert any intellectual property right or other right, title or interest in or to the feedback; (ii) Company may have development ideas similar to the feedback; (iii) feedback does not contain confidential information or proprietary information from you or any third party; and (iv) Company is not under any obligation of confidentiality with respect to the feedback. In the event the transfer of the ownership to the feedback is not possible due to applicable mandatory laws, you grant Company and its affiliates an exclusive, transferable, irrevocable, free-of-charge, sub-licensable, unlimited and perpetual right to use (including copy, modify, create derivative works, publish, distribute and commercialize) feedback in any manner and for any purpose.",
+      "error_reporting_para": "You may provide us either directly at humanitycallsnotify@gmail.com or via third party sites and tools with information and feedback concerning errors, suggestions for improvements, ideas, problems, complaints, and other matters related to our Service (\"Feedback\"). You acknowledge and agree that: (i) you shall not retain, acquire or assert any intellectual property right or other right, title or interest in or to the feedback; (ii) Company may have development ideas similar to the feedback; (iii) feedback does not contain confidential information or proprietary information from you or any third party; and (iv) Company is not under any obligation of confidentiality with respect to the feedback. In the event the transfer of the ownership to the feedback is not possible due to applicable mandatory laws, you grant Company and its affiliates an exclusive, transferable, irrevocable, free-of-charge, sub-licensable, unlimited and perpetual right to use (including copy, modify, create derivative works, publish, distribute and commercialize) feedback in any manner and for any purpose.",
       "links_to_other_sites_title": "13. Links To Other Web Sites",
       "links_to_other_sites_para1": "Our Service may contain links to third party web sites or services that are not owned or controlled by Humanity Calls.",
       "links_to_other_sites_para2": "Humanity Calls has no control over, and assumes no responsibility for the content, privacy policies, or practices of any third party web sites or services. We do not warrant the offerings of any of these entities/individuals or their websites.",
@@ -455,7 +455,7 @@
       "testimonials_title": "Testimonials Disclaimer",
       "testimonials_para1": "The Site may contain testimonials by users of our services. These testimonials reflect the real-life experiences and opinions of such users. However, the experiences are personal to those particular users, and may not necessarily be representative of all users of our services.",
       "contact_us_title": "Contact Us",
-      "contact_us_para": "Should you have any feedback, comments, requests for technical support or other inquiries, please contact us by email: humanitycalls20@gmail.com"
+      "contact_us_para": "Should you have any feedback, comments, requests for technical support or other inquiries, please contact us by email: humanitycallsnotify@gmail.com"
     }
   },
   "not_found": {

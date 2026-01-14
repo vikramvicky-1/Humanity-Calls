@@ -4,13 +4,14 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import SEO from "../components/SEO";
 import Button from "../components/Button";
-import { redirectToWhatsApp } from "../utils/whatsapp";
+import { sendEmail } from "../utils/email";
 
 gsap.registerPlugin(ScrollTrigger);
 
 const Donate = () => {
   const { t, i18n } = useTranslation();
   const containerRef = useRef(null);
+  const [loading, setLoading] = useState(false);
 
   useLayoutEffect(() => {
     const isMobile = window.innerWidth < 768;
@@ -71,10 +72,25 @@ const Donate = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const message = `${t("donate.whatsapp_message_header")}\n\n${t("donate.details")}:\n${t("donate.full_name")}: ${formData.name}\n${t("donate.email_address")}: ${formData.email}\n${t("donate.phone_number")}: ${formData.phone}\n${t("donate.donation_amount")}: ${formData.amount}`;
-    redirectToWhatsApp(message);
+    setLoading(true);
+    
+    const success = await sendEmail(
+      "Donation Inquiry",
+      formData,
+      `New Donation Inquiry from ${formData.name}`
+    );
+
+    if (success) {
+      setFormData({
+        name: "",
+        email: "",
+        phone: "",
+        amount: "",
+      });
+    }
+    setLoading(false);
   };
 
   return (
@@ -134,6 +150,8 @@ const Donate = () => {
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
+                minLength={10}
+                maxLength={10}
                 placeholder={t("donate.placeholders.phone")}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blood-red focus:border-transparent outline-none transition-all"
               />
@@ -148,12 +166,9 @@ const Donate = () => {
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blood-red focus:border-transparent outline-none transition-all"
               />
             </div>
-            <Button type="submit" className="w-full py-4 text-lg font-semibold mt-4">
-              {t("donate.submit_whatsapp")}
+            <Button type="submit" isLoading={loading} className="w-full py-4 text-lg font-semibold mt-4">
+              {t("donate.form_title")}
             </Button>
-            <p className="text-xs text-gray-500 text-center mt-4">
-              {t("donate.whatsapp_note")}
-            </p>
           </form>
         </div>
       </div>

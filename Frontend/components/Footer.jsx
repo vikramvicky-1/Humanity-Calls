@@ -1,21 +1,15 @@
-import React, { useState, useLayoutEffect, useRef } from "react";
+import React, { useLayoutEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import gsap from "gsap";
 import Button from "./Button";
-import { redirectToWhatsApp } from "../utils/whatsapp";
+import ContactForm from "./ContactForm";
 import { SOCIAL_LINKS } from "../constants";
 import { animateFooterElements } from "../utils/animations";
 
 const Footer = () => {
   const { t, i18n } = useTranslation();
   const footerRef = useRef(null);
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    message: "",
-  });
 
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
@@ -28,20 +22,6 @@ const Footer = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const msg = `${t("footer.whatsapp_inquiry_header")}:\n\n${t(
-      "form.name"
-    )}: ${formData.name}\n${t("form.email")}: ${formData.email}\n${t(
-      "form.phone"
-    )}: ${formData.phone}\n${t("form.message")}: ${formData.message}`;
-    redirectToWhatsApp(msg);
-  };
-
   return (
     <footer className="bg-[#1A1A1A] text-white pt-20 pb-10" ref={footerRef}>
       <div className="max-w-none mx-auto px-[5%]">
@@ -52,53 +32,7 @@ const Footer = () => {
               {t("footer.contact_us")}
               <span className="absolute -bottom-2 left-0 w-12 h-1 bg-[#B71C1C]"></span>
             </h3>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <input
-                required
-                name="name"
-                onChange={handleChange}
-                type="text"
-                placeholder={t("form.name")}
-                aria-label={t("form.aria_name")}
-                className="w-full px-4 py-4 bg-[#2A2A2A] border border-transparent rounded-md focus:border-[#B71C1C] focus:bg-[#333333] outline-none transition-all"
-              />
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <input
-                  required
-                  name="email"
-                  onChange={handleChange}
-                  type="email"
-                  placeholder={t("form.email")}
-                  aria-label={t("form.aria_email")}
-                  className="w-full px-4 py-4 bg-[#2A2A2A] border border-transparent rounded-md focus:border-[#B71C1C] focus:bg-[#333333] outline-none transition-all"
-                />
-                <input
-                  required
-                  name="phone"
-                  onChange={handleChange}
-                  type="tel"
-                  placeholder={t("form.phone")}
-                  aria-label={t("form.aria_phone")}
-                  className="w-full px-4 py-4 bg-[#2A2A2A] border border-transparent rounded-md focus:border-[#B71C1C] focus:bg-[#333333] outline-none transition-all"
-                />
-              </div>
-              <textarea
-                required
-                name="message"
-                onChange={handleChange}
-                placeholder={t("form.message")}
-                aria-label={t("form.aria_message")}
-                rows={4}
-                className="w-full px-4 py-4 bg-[#2A2A2A] border border-transparent rounded-md focus:border-[#B71C1C] focus:bg-[#333333] outline-none transition-all resize-none"
-              ></textarea>
-              <Button
-                type="submit"
-                className="w-full py-4 text-lg"
-                aria-label={t("form.aria_send")}
-              >
-                {t("form.send_message")}
-              </Button>
-            </form>
+            <ContactForm />
           </div>
 
           {/* Quick Links & Info */}
@@ -176,10 +110,10 @@ const Footer = () => {
                     {t("footer.email_inquiries")}
                   </p>
                   <a
-                    href="mailto:humanitycalls20@gmail.com"
+                    href="mailto:humanitycallsnotify@gmail.com"
                     className="text-white hover:text-[#B71C1C] transition-colors"
                   >
-                    humanitycalls20@gmail.com
+                    humanitycallsnotify@gmail.com
                   </a>
                 </div>
                 <div>

@@ -4,13 +4,14 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import SEO from "../components/SEO";
 import Button from "../components/Button";
-import { redirectToWhatsApp } from "../utils/whatsapp";
+import { sendEmail } from "../utils/email";
 
 gsap.registerPlugin(ScrollTrigger);
 
 const Volunteer = () => {
   const { t, i18n } = useTranslation();
   const containerRef = useRef(null);
+  const [loading, setLoading] = useState(false);
 
   useLayoutEffect(() => {
     const isMobile = window.innerWidth < 768;
@@ -68,10 +69,26 @@ const Volunteer = () => {
     interest: "",
   });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const msg = `${t("volunteer.form_title")}:\n\n${t("volunteer.first_name")}: ${formData.firstName}\n${t("volunteer.last_name")}: ${formData.lastName}\n${t("volunteer.phone")}: ${formData.phone}\n${t("volunteer.email")}: ${formData.email}\n${t("volunteer.interest_area")}: ${formData.interest}`;
-    redirectToWhatsApp(msg);
+    setLoading(true);
+    
+    const success = await sendEmail(
+      "Volunteer Application",
+      formData,
+      `New Volunteer Application from ${formData.firstName} ${formData.lastName}`
+    );
+
+    if (success) {
+      setFormData({
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: "",
+        interest: "",
+      });
+    }
+    setLoading(false);
   };
 
   const handleChange = (e) => {
@@ -108,6 +125,7 @@ const Volunteer = () => {
               <input
                 required
                 name="firstName"
+                value={formData.firstName}
                 onChange={handleChange}
                 placeholder={t("volunteer.first_name")}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg"
@@ -115,6 +133,7 @@ const Volunteer = () => {
               <input
                 required
                 name="lastName"
+                value={formData.lastName}
                 onChange={handleChange}
                 placeholder={t("volunteer.last_name")}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg"
@@ -124,6 +143,7 @@ const Volunteer = () => {
               required
               type="email"
               name="email"
+              value={formData.email}
               onChange={handleChange}
               placeholder={t("volunteer.email")}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg"
@@ -132,13 +152,17 @@ const Volunteer = () => {
               required
               type="tel"
               name="phone"
+              value={formData.phone}
               onChange={handleChange}
+              minLength={10}
+              maxLength={10}
               placeholder={t("volunteer.phone")}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg"
             />
             <select
               required
               name="interest"
+              value={formData.interest}
               onChange={handleChange}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-500"
             >
@@ -148,7 +172,7 @@ const Volunteer = () => {
               <option value="Animal Rescue">{t("volunteer.interests.animal")}</option>
               <option value="Event Organizing">{t("volunteer.interests.event")}</option>
             </select>
-            <Button type="submit" className="w-full py-4">
+            <Button type="submit" isLoading={loading} className="w-full py-4">
               {t("volunteer.join_now")}
             </Button>
           </form>

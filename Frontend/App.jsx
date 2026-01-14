@@ -5,8 +5,10 @@ import {
   Route,
   useLocation,
 } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import Navbar from "./components/Navbar";
-import WhatsAppButton from "./components/WhatsAppButton";
+import ContactFloatingButton from "./components/WhatsAppButton";
 import Home from "./pages/Home";
 
 // Lazy load Footer and other pages
@@ -44,6 +46,7 @@ const ScrollToTop = () => {
 const App = () => {
   return (
     <Router>
+      <ToastContainer theme="dark" position="top-center" />
       <ScrollToTop />
       <div className="flex flex-col min-h-screen">
         <Navbar />
@@ -70,7 +73,7 @@ const App = () => {
         <Suspense fallback={null}>
           <Footer />
         </Suspense>
-        <WhatsAppButton />
+        <ContactFloatingButton />
       </div>
     </Router>
   );
