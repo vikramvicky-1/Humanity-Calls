@@ -1,35 +1,6 @@
-import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 
 dotenv.config();
-
-// Create transporter using a function to ensure environment variables are loaded
-const getTransporter = () => {
-  const host = process.env.SMTP_HOST || "smtp.gmail.com";
-  const port = parseInt(process.env.SMTP_PORT) || 465;
-  const user = process.env.SMTP_USER || process.env.EMAIL_USER;
-  const pass = process.env.SMTP_PASS || (process.env.EMAIL_PASS ? process.env.EMAIL_PASS.replace(/\s/g, "") : "");
-
-  if (!user || !pass) {
-    console.error("DEBUG: SMTP credentials missing!");
-    console.log("DEBUG: SMTP_USER/EMAIL_USER:", user ? "Defined" : "Undefined");
-    console.log("DEBUG: SMTP_PASS/EMAIL_PASS:", pass ? "Defined" : "Undefined");
-  }
-
-  return nodemailer.createTransport({
-    host: host,
-    port: port,
-    secure: port === 465, // true for 465, false for other ports
-    auth: {
-      user: user,
-      pass: pass,
-    },
-    // Add timeout settings
-    connectionTimeout: 10000, // 10 seconds
-    greetingTimeout: 10000,
-    socketTimeout: 10000,
-  });
-};
 
 export const sendEmail = async (req, res) => {
   const { type, data, subject } = req.body;
@@ -57,7 +28,15 @@ export const sendEmail = async (req, res) => {
     }
   }
 
-  const emailTo = process.env.EMAIL_TO || process.env.SMTP_USER || process.env.EMAIL_USER;
+  const emailTo = process.env.EMAIL_TO;
+  const brevoApiKey = process.env.BREVO_API_KEY;
+  const senderEmail = process.env.BREVO_SENDER_EMAIL;
+  const senderName = process.env.BREVO_SENDER_NAME || "Humanity Calls";
+
+  if (!brevoApiKey) {
+    console.error("BREVO_API_KEY is missing in environment variables");
+    return res.status(500).json({ message: "Email service configuration error" });
+  }
 
   // Build HTML table for data with mobile responsiveness
   const dataRows = Object.entries(data)
@@ -138,23 +117,47 @@ export const sendEmail = async (req, res) => {
     </html>
   `;
 
-  const mailOptions = {
-    from: `"Humanity Calls" <${process.env.SMTP_USER || process.env.EMAIL_USER}>`,
-    to: emailTo,
+  const emailPayload = {
+    sender: {
+      name: senderName,
+      email: senderEmail,
+    },
+    to: [
+      {
+        email: emailTo,
+      },
+    ],
     subject: subject || `New ${type} Submission - Humanity Calls`,
-    html: htmlTemplate,
+    htmlContent: htmlTemplate,
   };
 
   try {
-    const transporter = getTransporter();
-    await transporter.sendMail(mailOptions);
-    res.status(200).json({ message: "Email sent successfully" });
+    const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        accept: "application/json",
+        "api-key": brevoApiKey,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify(emailPayload),
+    });
+
+    if (response.ok) {
+      const result = await response.json();
+      res.status(200).json({ message: "Email sent successfully", messageId: result.messageId });
+    } else {
+      const errorData = await response.json();
+      console.error("Brevo API Error:", errorData);
+      res.status(response.status).json({
+        message: "Failed to send email via Brevo",
+        error: errorData.message || response.statusText,
+      });
+    }
   } catch (error) {
     console.error("Error sending email:", error);
-    res.status(500).json({ 
-      message: "Failed to send email", 
+    res.status(500).json({
+      message: "Failed to send email",
       error: error.message,
-      code: error.code
     });
   }
 };

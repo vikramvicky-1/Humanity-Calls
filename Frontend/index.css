@@ -11,7 +11,8 @@
     @apply bg-[#F5F5F5] text-[#1A1A1A] scroll-smooth;
   }
 
-  button, a {
+  button,
+  a {
     @apply cursor-pointer;
   }
 }

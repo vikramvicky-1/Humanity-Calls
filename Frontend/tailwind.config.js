@@ -15,7 +15,9 @@ export default {
         mono: ["Montserrat", "monospace"],
       },
       colors: {
-        "blood-red": "#B71C1C",
+        "primary": "var(--primary-color)",
+        "secondary": "var(--secondary-color)",
+        "blood-red": "var(--primary-color)",
       },
     },
   },
