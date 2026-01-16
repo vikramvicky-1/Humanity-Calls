@@ -5,6 +5,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import SEO from "../components/SEO";
 import Button from "../components/Button";
+import HeroCarousel from "../components/HeroCarousel";
 import hclogo from "../assets/humanitycallslogo.avif";
 import { IMAGE_ALTS } from "../constants";
 import {
@@ -267,24 +268,29 @@ const Home = () => {
       />
 
       {/* Hero Section */}
-      <section className="relative min-h-[85vh] flex items-center bg-bg overflow-hidden">
-        <div className="max-w-none mx-auto px-[5%] grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <div className="space-y-8 z-10">
+      <section className="relative h-screen flex items-center overflow-hidden">
+        <HeroCarousel />
+        <div className="max-w-none mx-auto px-[5%] w-full relative z-10">
+          <div className="max-w-3xl space-y-8">
             <h1
               key={i18n.language}
-              className="text-5xl md:text-7xl font-bold text-primary leading-tight"
+              className="text-5xl md:text-7xl font-bold text-secondary leading-tight"
               data-animation="hero-title"
             >
               {t("home.hero_title_help")}{" "}
-              <span className="text-secondary inline-flex items-center">
+              <span className="text-primary inline-flex items-center">
                 {t("home.hero_title_humanity")}
                 <span className="inline-block ml-2 animate-bounce">
-                  <img src={hclogo} alt="logo" className="w-8 h-8 md:w-12 md:h-12" />
+                  <img
+                    src={hclogo}
+                    alt="logo"
+                    className="w-8 h-8 md:w-12 md:h-12"
+                  />
                 </span>
               </span>
             </h1>
             <p
-              className="text-xl text-text-body max-w-lg leading-relaxed"
+              className="text-xl text-white/90 max-w-lg leading-relaxed"
               data-animation="hero-paragraph"
             >
               {t("home.hero_paragraph")}
@@ -299,38 +305,15 @@ const Home = () => {
                 </Button>
               </Link>
               <Link to="/volunteer">
-                <Button variant="secondary" data-animation="hero-button">
+                <Button
+                  variant="white"
+                  data-animation="hero-button"
+                  className="bg-secondary !hover:bg-transparent !text-primary"
+                >
                   {t("home.volunteer_with_us")}
                 </Button>
               </Link>
             </div>
-          </div>
-          <div className="relative">
-            <div
-              className="absolute blur-3xl bg-primary/5 -z-10"
-              style={{
-                width: "400px",
-                height: "400px",
-                top: "-80px",
-                left: "-80px",
-              }}
-              data-animation="hero-glow"
-            ></div>
-            <img
-              src="https://res.cloudinary.com/daokrum7i/image/upload/f_auto,q_auto,w_900/v1767814232/hc_landing_page_xrcmny.png"
-              srcSet="
-                https://res.cloudinary.com/daokrum7i/image/upload/f_auto,q_auto,w_400/v1767814232/hc_landing_page_xrcmny.png 400w,
-                https://res.cloudinary.com/daokrum7i/image/upload/f_auto,q_auto,w_600/v1767814232/hc_landing_page_xrcmny.png 600w,
-                https://res.cloudinary.com/daokrum7i/image/upload/f_auto,q_auto,w_900/v1767814232/hc_landing_page_xrcmny.png 900w
-              "
-              sizes="(max-width: 640px) 90vw, 900px"
-              alt={IMAGE_ALTS.hero}
-              className="z-10 w-full object-cover aspect-[4/3.5] rounded-2xl"
-              data-animation="hero-image"
-              width="1000"
-              height="875"
-              fetchPriority="high"
-            />
           </div>
         </div>
       </section>
