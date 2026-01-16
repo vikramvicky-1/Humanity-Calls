@@ -3,12 +3,16 @@
 
 @layer base {
   body {
-    font-family: "Poppins", system-ui, -apple-system, BlinkMacSystemFont,
+    font-family: "Montserrat", system-ui, -apple-system, BlinkMacSystemFont,
       sans-serif;
   }
 
   body {
-    @apply bg-[#F5F5F5] text-[#1A1A1A] scroll-smooth;
+    @apply bg-bg text-text-body scroll-smooth;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply text-text-heading font-bold;
   }
 
   button,
@@ -18,15 +22,6 @@
 }
 
 @layer utilities {
-  .bg-blood-red {
-    background-color: #b71c1c;
-  }
-  .text-blood-red {
-    color: #b71c1c;
-  }
-  .border-blood-red {
-    border-color: #b71c1c;
-  }
 }
 
 @keyframes fade-in {

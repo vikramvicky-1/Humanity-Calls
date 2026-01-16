@@ -135,28 +135,28 @@ const AnimalRescue = () => {
   };
 
   return (
-    <div className="bg-white pb-24" ref={containerRef}>
+    <div className="bg-bg pb-24" ref={containerRef}>
       <SEO
         title={t("animal_rescue.seo_title")}
         description={t("animal_rescue.seo_desc")}
       />
 
-      <section className="py-24 max-w-none mx-auto px-[5%]">
+      <section className="py-24 max-w-none mx-auto px-[5%] bg-white">
         <div className="flex flex-col items-center space-y-8">
           <img
             src="https://res.cloudinary.com/daokrum7i/image/upload/v1767814232/humanity_calls_animal_resque_dxz9jb.avif"
             alt={IMAGE_ALTS.animalRescue}
-            className="rounded-2xl shadow-xl"
+            className="rounded-2xl"
             data-animation="ar-image"
           />
           <div className="space-y-8">
-            <h1 className="text-4xl font-bold text-blood-red" data-animation="ar-title">{t("animal_rescue.title")}</h1>
-            <p className="text-lg text-gray-700 leading-relaxed" data-animation="ar-text">
+            <h1 className="text-4xl font-bold text-primary" data-animation="ar-title">{t("animal_rescue.title")}</h1>
+            <p className="text-lg text-text-body leading-relaxed" data-animation="ar-text">
               {t("animal_rescue.main_text")}
             </p>
-            <div className="p-8 bg-gray-50 rounded-2xl border-l-8 border-blood-red">
-              <h2 className="text-2xl font-bold mb-2">{t("animal_rescue.voice_title")}</h2>
-              <p className="text-gray-600">
+            <div className="p-8 bg-bg rounded-2xl border-l-8 border-primary">
+              <h2 className="text-2xl font-bold mb-2 text-primary">{t("animal_rescue.voice_title")}</h2>
+              <p className="text-text-body/80">
                 {t("animal_rescue.voice_desc")}
               </p>
             </div>
@@ -164,15 +164,15 @@ const AnimalRescue = () => {
         </div>
       </section>
 
-      <div className="max-w-none mx-auto px-[5%]">
-        <div className="bg-[#F5F5F5] p-8 md:p-12 rounded-3xl border border-gray-200" data-animation="ar-form">
-          <h3 className="text-2xl font-bold mb-8 text-center">
+      <div className="max-w-none mx-auto px-[5%] mt-12">
+        <div className="bg-white p-8 md:p-12 rounded-3xl border border-border shadow-xl" data-animation="ar-form">
+          <h3 className="text-2xl font-bold mb-8 text-center text-primary">
             {t("animal_rescue.form_title")}
           </h3>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-600 uppercase">
+                <label className="text-xs font-bold text-text-body uppercase">
                   {t("poor_needy.first_name")}
                 </label>
                 <input
@@ -180,11 +180,11 @@ const AnimalRescue = () => {
                   name="firstName"
                   value={formData.firstName}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                  className="w-full px-4 py-3 border border-border bg-white rounded-lg focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all shadow-sm"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-600 uppercase">
+                <label className="text-xs font-bold text-text-body uppercase">
                   {t("form.phone")}
                 </label>
                 <input
@@ -194,12 +194,12 @@ const AnimalRescue = () => {
                   onChange={handleChange}
                   minLength={10}
                   maxLength={10}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                  className="w-full px-4 py-3 border border-border bg-white rounded-lg focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all shadow-sm"
                 />
               </div>
             </div>
             <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-600 uppercase">
+              <label className="text-xs font-bold text-text-body uppercase">
                 {t("form.email")}
               </label>
               <input
@@ -208,11 +208,11 @@ const AnimalRescue = () => {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                className="w-full px-4 py-3 border border-border bg-white rounded-lg focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all shadow-sm"
               />
             </div>
             <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-600 uppercase">
+              <label className="text-xs font-bold text-text-body uppercase">
                 {t("animal_rescue.address_label")}
               </label>
               <input
@@ -220,11 +220,11 @@ const AnimalRescue = () => {
                 name="address"
                 value={formData.address}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                className="w-full px-4 py-3 border border-border bg-white rounded-lg focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all shadow-sm"
               />
             </div>
             <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-600 uppercase">
+              <label className="text-xs font-bold text-text-body uppercase">
                 {t("animal_rescue.situation_details")}
               </label>
               <textarea
@@ -233,10 +233,10 @@ const AnimalRescue = () => {
                 value={formData.message}
                 onChange={handleChange}
                 rows={4}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                className="w-full px-4 py-3 border border-border bg-white rounded-lg focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all shadow-sm"
               ></textarea>
             </div>
-            <Button type="submit" isLoading={loading} className="w-full py-4">
+            <Button type="submit" variant="primary" isLoading={loading} className="w-full py-4">
               {t("poor_needy.submit")}
             </Button>
           </form>

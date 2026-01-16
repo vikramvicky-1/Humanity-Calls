@@ -150,14 +150,14 @@ const PoorNeedy = () => {
             data-animation="pn-image"
           />
           <div className="space-y-8">
-            <h1 className="text-4xl font-bold text-blood-red" data-animation="pn-title">
+            <h1 className="text-4xl font-bold text-primary" data-animation="pn-title">
               {t("poor_needy.title")}
             </h1>
             <p className="text-lg text-gray-700 leading-relaxed" data-animation="pn-text">
               {t("poor_needy.main_text")}
             </p>
-            <div className="p-8 bg-gray-50 rounded-2xl border-l-8 border-blood-red">
-              <h2 className="text-2xl font-bold mb-2">{t("poor_needy.direct_impact_title")}</h2>
+            <div className="p-8 bg-white rounded-2xl border-l-8 border-primary shadow-sm border border-gray-100">
+              <h2 className="text-2xl font-bold mb-2 text-primary">{t("poor_needy.direct_impact_title")}</h2>
               <p className="text-gray-600">
                 {t("poor_needy.direct_impact_desc")}
               </p>
@@ -167,8 +167,8 @@ const PoorNeedy = () => {
       </section>
 
       <div className="max-w-none mx-auto px-[5%]">
-        <div className="bg-[#F5F5F5] p-8 md:p-12 rounded-3xl border border-gray-200" data-animation="pn-form">
-          <h3 className="text-2xl font-bold mb-8 text-center">
+        <div className="bg-white p-8 md:p-12 rounded-3xl border border-border shadow-xl" data-animation="pn-form">
+          <h3 className="text-2xl font-bold mb-8 text-center text-primary">
             {t("poor_needy.form_title")}
           </h3>
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -182,7 +182,7 @@ const PoorNeedy = () => {
                   name="firstName"
                   value={formData.firstName}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                  className="w-full px-4 py-3 border border-border bg-white rounded-lg focus:ring-2 focus:ring-primary outline-none transition-all shadow-sm"
                 />
               </div>
               <div className="space-y-2">
@@ -196,7 +196,7 @@ const PoorNeedy = () => {
                   onChange={handleChange}
                   minLength={10}
                   maxLength={10}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                  className="w-full px-4 py-3 border border-border bg-white rounded-lg focus:ring-2 focus:ring-primary outline-none transition-all shadow-sm"
                 />
               </div>
             </div>
@@ -210,7 +210,7 @@ const PoorNeedy = () => {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                className="w-full px-4 py-3 border border-border bg-white rounded-lg focus:ring-2 focus:ring-primary outline-none transition-all shadow-sm"
               />
             </div>
             <div className="space-y-2">
@@ -222,7 +222,7 @@ const PoorNeedy = () => {
                 name="address"
                 value={formData.address}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                className="w-full px-4 py-3 border border-border bg-white rounded-lg focus:ring-2 focus:ring-primary outline-none transition-all shadow-sm"
               />
             </div>
             <div className="space-y-2">
@@ -235,7 +235,7 @@ const PoorNeedy = () => {
                 value={formData.message}
                 onChange={handleChange}
                 rows={4}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                className="w-full px-4 py-3 border border-border bg-white rounded-lg focus:ring-2 focus:ring-primary outline-none transition-all shadow-sm"
               ></textarea>
             </div>
             <Button type="submit" isLoading={loading} className="w-full py-4">

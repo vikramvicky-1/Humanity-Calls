@@ -1,53 +1,59 @@
+import axios from "axios";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-export const sendEmail = async (req, res) => {
+// Reusable Axios client for Brevo
+const brevoClient = axios.create({
+  baseURL: "https://api.brevo.com/v3",
+  headers: {
+    "api-key": process.env.BREVO_API_KEY,
+    "content-type": "application/json",
+    accept: "application/json",
+  },
+  timeout: 5000,
+});
+
+/**
+ * Fire-and-forget email sender
+ */
+const triggerEmail = async (emailPayload) => {
+  try {
+    const response = await brevoClient.post("/smtp/email", emailPayload);
+    console.log(`Email sent successfully: ${response.data.messageId}`);
+  } catch (error) {
+    console.error("Brevo API Error:", error.response?.data || error.message);
+  }
+};
+
+export const sendEmail = (req, res) => {
   const { type, data, subject } = req.body;
 
+  // Essential safety checks
   if (!type || !data || Object.keys(data).length === 0) {
-    return res.status(400).json({ message: "Invalid submission data" });
-  }
-
-  // Server-side validation
-  const entries = Object.entries(data);
-  const isEmpty = entries.some(
-    ([key, value]) => !value || value.toString().trim() === ""
-  );
-  if (isEmpty) {
-    return res.status(400).json({ message: "All fields are required" });
-  }
-
-  // Phone number validation (exactly 10 digits)
-  if (data.phone) {
-    const phoneRegex = /^[0-9]{10}$/;
-    if (!phoneRegex.test(data.phone.toString().trim())) {
-      return res
-        .status(400)
-        .json({ message: "Phone number must be exactly 10 digits" });
-    }
+    return res.status(200).json({ message: "Acknowledged with missing data" });
   }
 
   const emailTo = process.env.EMAIL_TO;
-  const brevoApiKey = process.env.BREVO_API_KEY;
   const senderEmail = process.env.BREVO_SENDER_EMAIL;
   const senderName = process.env.BREVO_SENDER_NAME || "Humanity Calls";
 
-  if (!brevoApiKey) {
-    console.error("BREVO_API_KEY is missing in environment variables");
-    return res.status(500).json({ message: "Email service configuration error" });
+  if (!process.env.BREVO_API_KEY || !emailTo || !senderEmail) {
+    console.error("Missing required environment variables for email");
+    return res.status(200).json({ message: "Acknowledged (Config Error)" });
   }
 
-  // Build HTML table for data with mobile responsiveness
+  // Lightweight HTML table for data
   const dataRows = Object.entries(data)
     .map(
       ([key, value]) => `
       <tr>
-        <td class="label">${key
-          .replace(/([A-Z])/g, " $1")
-          .replace(/_/g, " ")
-          .trim()}</td>
-        <td class="value">${value}</td>
+        <td style="padding: 12px; border-bottom: 1px solid #E6E1DC; font-weight: 600; color: #4A4A68; font-size: 14px; width: 40%; text-transform: capitalize;">
+          ${key.replace(/([A-Z])/g, " $1").replace(/_/g, " ").trim()}
+        </td>
+        <td style="padding: 12px; border-bottom: 1px solid #E6E1DC; color: #1E1E2F; font-size: 14px; word-break: break-word;">
+          ${value}
+        </td>
       </tr>
     `
     )
@@ -59,105 +65,76 @@ export const sendEmail = async (req, res) => {
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <style>
-        body { margin: 0; padding: 0; background-color: #f4f4f4; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
-        table { border-spacing: 0; mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
-        img { border: 0; line-height: 100%; outline: none; text-decoration: none; }
-        
-        .container { width: 100%; max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .header { background-color: #ffffff; padding: 25px; border-bottom: 4px solid #B71C1C; text-align: left; }
-        .logo-text { color: #B71C1C; font-size: 24px; font-weight: bold; font-family: 'Helvetica Neue', Arial, sans-serif; display: inline-block; vertical-align: middle; margin-left: 10px; }
-        
-        .content { padding: 30px 20px; font-family: 'Segoe UI', Arial, sans-serif; color: #333333; }
-        .badge { display: inline-block; background-color: #fff1f0; color: #B71C1C; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: bold; margin-bottom: 20px; border: 1px solid #ffa39e; text-transform: uppercase; }
-        
-        .data-table { width: 100%; border-collapse: collapse; margin: 20px 0; border: 1px solid #f0f0f0; }
-        .label { padding: 12px; background-color: #fcfcfc; border-bottom: 1px solid #eeeeee; font-weight: 600; font-size: 14px; width: 35%; text-transform: capitalize; color: #555555; }
-        .value { padding: 12px; border-bottom: 1px solid #eeeeee; font-size: 14px; color: #333333; word-break: break-word; }
-        
-        .footer { background-color: #f9f9f9; padding: 30px 20px; text-align: center; font-family: Arial, sans-serif; border-top: 1px solid #eeeeee; }
-        .footer-text { font-size: 13px; color: #777777; margin: 5px 0; }
-        .footer-brand { color: #B71C1C; font-weight: bold; text-decoration: none; }
-        
-        @media only screen and (max-width: 480px) {
-          .label { width: 100%; display: block; border-bottom: 0; padding-bottom: 4px; }
-          .value { width: 100%; display: block; padding-top: 0; padding-bottom: 15px; }
-          .header { text-align: center; }
-          .logo-text { display: block; margin-left: 0; margin-top: 10px; }
-        }
-      </style>
     </head>
-    <body>
-      <div style="background-color: #f4f4f4; padding: 20px 0;">
-        <div class="container">
-          <div class="header">
-            <img src="https://res.cloudinary.com/daokrum7i/image/upload/v1767814230/humanitycallslogo_lazfn3.avif" alt="Logo" width="40" height="40" style="vertical-align: middle; border-radius: 5px;">
-            <span class="logo-text">Humanity Calls</span>
-          </div>
-          
-          <div class="content">
-            <div class="badge">${type}</div>
-            <p style="font-size: 16px; line-height: 1.5;">You have received a new <strong>${type.toLowerCase()}</strong> submission via the website.</p>
-            
-            <table class="data-table">
-              ${dataRows}
+    <body style="margin: 0; padding: 0; background-color: #FBF7F4; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;">
+      <table width="100%" border="0" cellspacing="0" cellpadding="0" bgcolor="#FBF7F4">
+        <tr>
+          <td align="center" style="padding: 20px 10px;">
+            <table border="0" cellspacing="0" cellpadding="0" style="width: 100%; max-width: 600px; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
+              <!-- Header -->
+              <tr>
+                <td style="padding: 25px; border-bottom: 1px solid #E6E1DC; text-align: left; background-color: #ffffff;">
+                  <table border="0" cellspacing="0" cellpadding="0">
+                    <tr>
+                      <td style="vertical-align: middle;">
+                        <img src="https://res.cloudinary.com/daokrum7i/image/upload/v1768550123/favicon-32x32_kca2tb.png" alt="HC" width="32" height="32" style="display: block; border-radius: 4px;">
+                      </td>
+                      <td style="vertical-align: middle; padding-left: 12px;">
+                        <span style="font-size: 22px; font-weight: bold; color: #C62828; letter-spacing: -0.5px; display: block;">Humanity Calls</span>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              <!-- Content -->
+              <tr>
+                <td style="padding: 35px 25px 15px 25px;">
+                  <div style="display: inline-block; background-color: #020887; color: #ffffff; padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: bold; text-transform: uppercase; margin-bottom: 20px;">
+                    ${type}
+                  </div>
+                  <h2 style="margin: 0; color: #1E1E2F; font-size: 22px; line-height: 1.2;">New Website Submission</h2>
+                  <p style="color: #4A4A68; font-size: 16px; line-height: 1.6; margin-top: 12px;">You have received a new inquiry via the <strong>Humanity Calls</strong> platform. Details are provided below:</p>
+                </td>
+              </tr>
+              <!-- Data Table -->
+              <tr>
+                <td style="padding: 0 25px 40px 25px;">
+                  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border: 1px solid #E6E1DC; border-radius: 10px; overflow: hidden;">
+                    ${dataRows}
+                  </table>
+                </td>
+              </tr>
+              <!-- Footer -->
+              <tr>
+                <td bgcolor="#1A1A1A" style="padding: 35px 25px; text-align: center;">
+                  <p style="margin: 0; color: #ffffff; font-size: 15px; font-weight: bold; letter-spacing: 0.5px;">Humanity Calls Trust&reg;</p>
+                  <p style="margin: 8px 0 0 0; color: #6C9A8B; font-size: 13px; font-style: italic;">"Helping Humanity, Saving Lives"</p>
+                  <div style="margin-top: 25px; border-top: 1px solid #333333; padding-top: 25px;">
+                    <p style="margin: 0; color: #999999; font-size: 11px; line-height: 1.4;">
+                      &copy; ${new Date().getFullYear()} Humanity Calls. All Rights Reserved.<br>
+                      This is an automated notification. Please do not reply directly to this email.
+                    </p>
+                  </div>
+                </td>
+              </tr>
             </table>
-            
-            <p style="font-size: 14px; color: #888; margin-top: 30px; line-height: 1.6;">
-              This is an automated notification from the Humanity Calls website. Please respond directly to the sender's contact details provided above.
-            </p>
-          </div>
-          
-          <div class="footer">
-            <p class="footer-text">© 2026 <a href="https://www.humanitycalls.org/" class="footer-brand">Humanity Calls Trust®</a>. All Rights Reserved.</p>
-          </div>
-        </div>
-      </div>
+          </td>
+        </tr>
+      </table>
     </body>
     </html>
   `;
 
   const emailPayload = {
-    sender: {
-      name: senderName,
-      email: senderEmail,
-    },
-    to: [
-      {
-        email: emailTo,
-      },
-    ],
+    sender: { name: senderName, email: senderEmail },
+    to: [{ email: emailTo }],
     subject: subject || `New ${type} Submission - Humanity Calls`,
     htmlContent: htmlTemplate,
   };
 
-  try {
-    const response = await fetch("https://api.brevo.com/v3/smtp/email", {
-      method: "POST",
-      headers: {
-        accept: "application/json",
-        "api-key": brevoApiKey,
-        "content-type": "application/json",
-      },
-      body: JSON.stringify(emailPayload),
-    });
+  // 1. Send immediate response to client
+  res.status(200).json({ message: "Submission received" });
 
-    if (response.ok) {
-      const result = await response.json();
-      res.status(200).json({ message: "Email sent successfully", messageId: result.messageId });
-    } else {
-      const errorData = await response.json();
-      console.error("Brevo API Error:", errorData);
-      res.status(response.status).json({
-        message: "Failed to send email via Brevo",
-        error: errorData.message || response.statusText,
-      });
-    }
-  } catch (error) {
-    console.error("Error sending email:", error);
-    res.status(500).json({
-      message: "Failed to send email",
-      error: error.message,
-    });
-  }
+  // 2. Trigger email in background (fire-and-forget)
+  triggerEmail(emailPayload);
 };

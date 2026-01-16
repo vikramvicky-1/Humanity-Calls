@@ -5,6 +5,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import SEO from "../components/SEO";
 import Button from "../components/Button";
+import hclogo from "../assets/humanitycallslogo.avif";
 import { IMAGE_ALTS } from "../constants";
 import {
   animateTitleIn,
@@ -266,31 +267,24 @@ const Home = () => {
       />
 
       {/* Hero Section */}
-      <section className="relative min-h-[85vh] flex items-center bg-white overflow-hidden">
+      <section className="relative min-h-[85vh] flex items-center bg-bg overflow-hidden">
         <div className="max-w-none mx-auto px-[5%] grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div className="space-y-8 z-10">
             <h1
               key={i18n.language}
-              className="text-5xl md:text-7xl font-bold text-[#1A1A1A] leading-tight"
+              className="text-5xl md:text-7xl font-bold text-primary leading-tight"
               data-animation="hero-title"
             >
               {t("home.hero_title_help")}{" "}
-              <span className="text-blood-red inline-flex items-center">
+              <span className="text-secondary inline-flex items-center">
                 {t("home.hero_title_humanity")}
-                <span className="inline-block ml-2 drop-shadow-md animate-bounce">
-                  <svg
-                    className="w-8 h-8 md:w-12 md:h-12"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path d="M12 0C12 0 6 13 6 18.5C6 21.54 8.69 24 12 24C15.31 24 18 21.54 18 18.5C18 13 12 0 12 0Z" />
-                  </svg>
+                <span className="inline-block ml-2 animate-bounce">
+                  <img src={hclogo} alt="logo" className="w-8 h-8 md:w-12 md:h-12" />
                 </span>
               </span>
             </h1>
             <p
-              className="text-xl text-[#4A4A4A] max-w-lg leading-relaxed"
+              className="text-xl text-text-body max-w-lg leading-relaxed"
               data-animation="hero-paragraph"
             >
               {t("home.hero_paragraph")}
@@ -298,27 +292,14 @@ const Home = () => {
             <div className="flex flex-wrap gap-6 lg:gap-4">
               <Link to="/collaborate">
                 <Button
-                  className="
-    inline-flex
-    items-center
-    justify-center
-    min-h-[48px]
-    min-w-[48px]
-    px-8
-    py-4
-    rounded-md
-    focus:outline-none
-    focus:ring-4
-    focus:ring-blue-300
-    transition
-  "
+                  className="inline-flex items-center justify-center min-h-[48px] px-8 py-4 rounded-md focus:outline-none focus:ring-4 focus:ring-primary/20 transition shadow-lg"
                   data-animation="hero-button"
                 >
                   {t("home.collaborate_with_us")}
                 </Button>
               </Link>
               <Link to="/volunteer">
-                <Button variant="outline" data-animation="hero-button">
+                <Button variant="secondary" data-animation="hero-button">
                   {t("home.volunteer_with_us")}
                 </Button>
               </Link>
@@ -326,7 +307,7 @@ const Home = () => {
           </div>
           <div className="relative">
             <div
-              className="absolute blur-3xl bg-blood-red/5 -z-10"
+              className="absolute blur-3xl bg-primary/5 -z-10"
               style={{
                 width: "400px",
                 height: "400px",
@@ -344,7 +325,7 @@ const Home = () => {
               "
               sizes="(max-width: 640px) 90vw, 900px"
               alt={IMAGE_ALTS.hero}
-              className="z-10 w-full object-cover aspect-[4/3.5]"
+              className="z-10 w-full object-cover aspect-[4/3.5] rounded-2xl"
               data-animation="hero-image"
               width="1000"
               height="875"
@@ -356,13 +337,13 @@ const Home = () => {
 
       {/* Blood Donation Section */}
       <section
-        className="bg-blood-red text-white py-24 overflow-hidden"
+        className="bg-blood text-white py-24 overflow-hidden border-y border-border"
         data-animation="blood-section"
       >
         <div className="max-w-none mx-auto px-[5%]">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div className="space-y-6">
-              <h2 className="text-4xl md:text-5xl font-bold">
+              <h2 className="text-4xl md:text-5xl font-bold text-white">
                 {t("home.donate_blood_save_lives")}
               </h2>
               <p className="text-lg text-white/90 leading-relaxed">
@@ -372,11 +353,13 @@ const Home = () => {
                 <Button variant="white">{t("home.donate_today")}</Button>
               </Link>
             </div>
-            <div className="">
+            <div className="relative">
+              <div className="absolute inset-0 bg-white/10 blur-3xl rounded-full -z-10"></div>
               <img
                 src="https://res.cloudinary.com/daokrum7i/image/upload/f_auto,q_auto,w_800/v1767814232/hc_blood_donation_mfwveo.png"
                 alt={IMAGE_ALTS.bloodDonation}
                 data-animation="blood-image"
+                className="rounded-2xl border border-white/20"
                 width="800"
                 height="533"
                 loading="lazy"
@@ -388,31 +371,31 @@ const Home = () => {
 
       {/* Stats Section */}
       <section
-        className="bg-white py-20 border-b"
+        className="bg-bg py-20 border-b border-border"
         data-animation="stat-section"
       >
         <div className="max-w-none mx-auto px-[5%] text-center">
-          <p className="text-3xl md:text-4xl font-bold text-[#4A4A4A]">
+          <p className="text-3xl md:text-4xl font-bold text-primary">
             <Trans
               i18nKey="home.donors_count"
-              components={{ red: <span className="text-blood-red" /> }}
+              components={{ red: <span className="text-blood" /> }}
             />
           </p>
         </div>
       </section>
 
       {/* Cards Section */}
-      <section className="py-24 bg-[#F5F5F5]">
+      <section className="py-24 bg-white">
         <div className="max-w-none mx-auto px-[5%]">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div
-              className="bg-white p-10 rounded-2xl shadow-sm hover:shadow-xl transition-all border-t-4 border-blood-red"
+              className="bg-white p-10 rounded-2xl shadow-md hover:shadow-xl transition-all border-t-4 border-blood"
               data-animation="card"
             >
               <h3 className="text-2xl font-bold mb-4">
                 {t("home.donations_made_title")}
               </h3>
-              <p className="text-[#9E9E9E] mb-8">
+              <p className="text-text-body mb-8">
                 {t("home.donations_made_desc")}
               </p>
               <Link to="/donations-made">
@@ -422,13 +405,13 @@ const Home = () => {
               </Link>
             </div>
             <div
-              className="bg-[#E0E0E0] p-10 rounded-2xl shadow-sm hover:shadow-xl transition-all"
+              className="bg-white p-10 rounded-2xl shadow-md hover:shadow-xl transition-all border border-gray-100"
               data-animation="card"
             >
               <h3 className="text-2xl font-bold mb-4">
                 {t("home.become_member_title")}
               </h3>
-              <p className="text-[#4A4A4A] mb-8">
+              <p className="text-text-body mb-8">
                 {t("home.become_member_desc")}
               </p>
               <Link to="/volunteer">
@@ -438,13 +421,13 @@ const Home = () => {
               </Link>
             </div>
             <div
-              className="bg-white p-10 rounded-2xl shadow-sm hover:shadow-xl transition-all border-t-4 border-gray-400"
+              className="bg-white p-10 rounded-2xl shadow-md hover:shadow-xl transition-all border-t-4 border-primary"
               data-animation="card"
             >
               <h3 className="text-2xl font-bold mb-4">
                 {t("home.wall_of_fame_title")}
               </h3>
-              <p className="text-[#9E9E9E] mb-8">
+              <p className="text-text-body mb-8">
                 {t("home.wall_of_fame_desc")}
               </p>
               <Link to="/wall-of-fame">
@@ -490,7 +473,7 @@ const Home = () => {
 
       {/* Newsletter Section */}
       <section
-        className="py-20 bg-gray-100"
+        className="py-20 bg-white border-t border-gray-100"
         data-animation="newsletter-section"
       >
         <div className="max-w-none mx-auto px-[5%] text-center">
@@ -502,7 +485,7 @@ const Home = () => {
             <input
               type="email"
               placeholder={t("home.email_placeholder")}
-              className="flex-1 px-6 py-3 rounded-md outline-none border focus:border-blood-red"
+              className="flex-1 px-6 py-3 rounded-md outline-none border focus:border-blood"
             />
             <Button>{t("home.subscribe")}</Button>
           </div>

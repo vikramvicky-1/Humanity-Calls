@@ -135,7 +135,7 @@ const WallOfFame = () => {
   ];
 
   return (
-    <div className="bg-[#F5F5F5] min-h-screen" ref={containerRef}>
+    <div className="bg-white min-h-screen" ref={containerRef}>
       <SEO
         title={t("wall_of_fame.seo_title")}
         description={t("wall_of_fame.seo_desc")}
@@ -146,7 +146,7 @@ const WallOfFame = () => {
         className="pt-24 pb-12 text-center bg-white"
         data-animation="wof-heading"
       >
-        <h1 className="text-5xl font-bold text-[#1A1A1A] mb-4">
+        <h1 className="text-5xl font-bold text-primary mb-4">
           {t("wall_of_fame.title")}
         </h1>
         <p className="text-xl text-gray-600">
@@ -168,7 +168,7 @@ const WallOfFame = () => {
       <div className="max-w-none mx-auto px-[5%] py-20">
         {/* Our Story Section */}
         <div className="mb-24 text-center" data-animation="wof-story">
-          <h2 className="text-4xl font-bold text-[#1A1A1A] mb-8">
+          <h2 className="text-4xl font-bold text-primary mb-8">
             {t("wall_of_fame.story_title")}
           </h2>
           <div className="max-w-none mx-auto px-[5%] space-y-6">
@@ -183,7 +183,7 @@ const WallOfFame = () => {
 
         {/* Meet The Team Section */}
         <div className="mb-16 text-center" data-animation="wof-team">
-          <h2 className="text-4xl font-bold text-[#1A1A1A] mb-8">
+          <h2 className="text-4xl font-bold text-primary mb-8">
             {t("wall_of_fame.team_title")}
           </h2>
           <p className="text-xl text-gray-700 leading-relaxed max-w-none mx-auto px-[5%]">
@@ -229,7 +229,7 @@ const WallOfFame = () => {
 
         <div className="mt-20 text-center">
           <p className="text-gray-500 mb-8 italic">{t("wall_of_fame.quote")}</p>
-          <div className="w-24 h-1 bg-blood-red mx-auto"></div>
+          <div className="w-24 h-1 bg-primary mx-auto"></div>
         </div>
       </div>
     </div>

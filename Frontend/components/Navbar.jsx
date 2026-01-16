@@ -41,23 +41,23 @@ const LanguageSelector = ({ className }) => {
     <div className={`relative ${className}`} ref={langRef}>
       <button
         onClick={() => setIsLangOpen(!isLangOpen)}
-        className="flex items-center space-x-1.5 bg-white border border-gray-200 text-gray-700 py-2 px-3 rounded-lg text-sm font-medium hover:border-[#B71C1C] hover:text-[#B71C1C] transition-all focus:outline-none shadow-sm"
+        className="flex items-center space-x-1.5 bg-bg border border-border text-text-body py-2 px-3 rounded-lg text-sm font-medium hover:border-primary hover:text-primary transition-all focus:outline-none shadow-sm"
       >
-        <FaGlobe className="text-[#B71C1C]" />
+        <FaGlobe className="text-primary" />
         <span>{languages.find((l) => l.code === i18n.language)?.label || "Language"}</span>
         <FaChevronDown className={`text-[10px] transition-transform duration-200 ${isLangOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {isLangOpen && (
-        <div className="absolute top-full right-0 mt-2 w-40 bg-white shadow-2xl rounded-xl border border-gray-100 py-2 z-[60] animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="absolute top-full right-0 mt-2 w-40 bg-white shadow-2xl rounded-xl border border-border py-2 z-[60] animate-in fade-in slide-in-from-top-2 duration-200">
           {languages.map((lang) => (
             <button
               key={lang.code}
               onClick={() => changeLanguage(lang.code)}
               className={`w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-gray-50 ${
                 i18n.language === lang.code
-                  ? "text-[#B71C1C] font-bold bg-red-50/50"
-                  : "text-gray-700"
+                  ? "text-primary font-bold bg-blue-50/50"
+                  : "text-text-body"
               }`}
             >
               {lang.label}
@@ -130,13 +130,13 @@ const Navbar = () => {
   const isActive = (path) => pathname === path;
 
   return (
-    <nav className="sticky top-0 z-50 bg-white shadow-md" ref={navRef}>
+    <nav className="sticky top-0 z-50 bg-bg border-b border-border shadow-sm" ref={navRef}>
       <div className="max-w-none mx-auto px-[5%]">
         <div className="flex justify-between items-center h-20">
           {/* Logo */}
           <Link
             to="/"
-            className="flex items-center space-x-2"
+            className="flex items-center space-x-2 outline-none"
             data-animation="logo"
           >
             <img
@@ -146,7 +146,7 @@ const Navbar = () => {
               style={{ minWidth: 50, minHeight: 50 }}
               alt="Humanity Calls logo"
             />
-            <span className="text-xl font-bold text-[#B71C1C] tracking-tight">
+            <span className="text-xl font-bold text-blood tracking-tight">
               Humanity Calls
             </span>
           </Link>
@@ -159,10 +159,10 @@ const Navbar = () => {
                   key={link.label}
                   to={link.href}
                   data-animation="nav-link"
-                  className={`font-medium transition-colors text-sm rounded px-3 py-2 focus:outline-none ${
+                  className={`font-medium transition-colors text-sm px-3 py-2 focus:outline-none ${
                     isActive(link.href)
-                      ? "text-[#B71C1C] bg-red-50/50"
-                      : "text-[#4A4A4A] hover:text-[#B71C1C] hover:bg-gray-50"
+                      ? "text-primary border-b-4 border-primary"
+                      : "text-primary hover:text-secondary"
                   }`}
                 >
                   {link.label}
@@ -175,10 +175,10 @@ const Navbar = () => {
                 onMouseLeave={() => setIsMoreOpen(false)}
               >
                 <button
-                  className={`font-medium flex items-center text-sm px-3 py-2 rounded transition-colors ${
+                  className={`font-medium flex items-center text-sm px-3 py-2 rounded-md transition-colors focus:outline-none ${
                     dropdownLinks.some((link) => isActive(link.href))
-                      ? "text-[#B71C1C] bg-red-50/50"
-                      : "text-[#4A4A4A] hover:text-[#B71C1C] hover:bg-gray-50"
+                      ? "text-primary border-b-4 border-primary"
+                      : "text-primary hover:text-secondary"
                   }`}
                   data-animation="nav-link"
                 >
@@ -186,13 +186,13 @@ const Navbar = () => {
                   <FaChevronDown className="ml-1.5 text-[10px] opacity-50" />
                 </button>
                 {isMoreOpen && (
-                  <div className="absolute top-full left-0 w-48 bg-white shadow-xl border-t-4 border-[#B71C1C] py-2 animate-fade-in rounded-b-xl">
+                  <div className="absolute top-full left-0 w-48 bg-white shadow-xl border-t-4 border-primary py-2 animate-fade-in rounded-b-xl">
                     {dropdownLinks.map((link) =>
                       link.onClick ? (
                         <button
                           key={link.label}
                           onClick={link.onClick}
-                          className="w-full text-left block px-4 py-3 text-sm text-[#4A4A4A] hover:bg-gray-50 hover:text-[#B71C1C] transition-colors focus:outline-none"
+                          className="w-full text-left block px-4 py-3 text-sm text-text-body hover:bg-bg hover:text-secondary transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
                         >
                           {link.label}
                         </button>
@@ -200,7 +200,7 @@ const Navbar = () => {
                         <Link
                           key={link.label}
                           to={link.href}
-                          className="block px-4 py-3 text-sm text-[#4A4A4A] hover:bg-gray-50 hover:text-[#B71C1C] transition-colors focus:outline-none"
+                          className="block px-4 py-3 text-sm text-text-body hover:bg-bg hover:text-secondary transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
                         >
                           {link.label}
                         </Link>
@@ -211,10 +211,10 @@ const Navbar = () => {
               </div>
             </div>
 
-            <div className="flex items-center space-x-3 border-l pl-4 border-gray-100">
+            <div className="flex items-center space-x-3 border-l pl-4 border-border">
               <Link to="/request-donors">
                 <Button
-                  variant={isActive("/request-donors") ? "primary" : "outline"}
+                  variant="blood"
                   className="text-[12px] py-2 px-3 min-h-[40px] font-semibold"
                   data-animation="cta-button"
                 >
@@ -224,7 +224,7 @@ const Navbar = () => {
               <Link to="/donate">
                 <Button
                   className={`text-[12px] py-2 px-3 shadow-md min-h-[40px] font-semibold ${
-                    isActive("/donate") ? "bg-[#8E1616]" : ""
+                    isActive("/donate") ? "brightness-110" : ""
                   }`}
                   data-animation="cta-button"
                 >
@@ -240,7 +240,7 @@ const Navbar = () => {
             <LanguageSelector />
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="text-[#1A1A1A] p-2 hover:bg-gray-50 rounded-lg transition-colors"
+              className="text-primary p-2 hover:bg-border/20 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
               aria-label={
                 isOpen ? "Close navigation menu" : "Open navigation menu"
               }
@@ -276,7 +276,7 @@ const Navbar = () => {
       {/* Mobile Menu */}
       {isOpen && (
         <div
-          className="lg:hidden bg-white border-t animate-fade-in pb-12 shadow-2xl"
+          className="lg:hidden bg-bg border-t border-border animate-fade-in pb-12 shadow-2xl"
           data-animation="mobile-menu"
         >
           <div className="px-4 pt-4 space-y-1">
@@ -284,7 +284,9 @@ const Navbar = () => {
               <Link
                 key={link.label}
                 to={link.href}
-                className="block px-4 py-4 text-lg font-medium text-[#4A4A4A] hover:bg-gray-50 border-b border-gray-100 rounded-lg transition-colors"
+                className={`block px-4 py-4 text-lg font-medium border-b border-border rounded-lg transition-colors ${
+                  isActive(link.href) ? "text-primary bg-white" : "text-text-body hover:bg-white hover:text-secondary"
+                }`}
                 onClick={() => setIsOpen(false)}
                 data-animation="mobile-link"
               >
@@ -292,7 +294,7 @@ const Navbar = () => {
               </Link>
             ))}
             <div className="pt-6 px-4">
-              <p className="text-xs uppercase text-[#9E9E9E] font-bold tracking-widest mb-4">
+              <p className="text-xs uppercase text-text-body/60 font-bold tracking-widest mb-4">
                 {t("nav.more_services")}
               </p>
               <div className="grid grid-cols-1 gap-1">
@@ -304,7 +306,7 @@ const Navbar = () => {
                         link.onClick(e);
                         setIsOpen(false);
                       }}
-                      className="block py-3 text-base font-medium text-[#4A4A4A] text-left hover:bg-gray-50 rounded-lg px-4"
+                      className="block py-3 text-base font-medium text-text-body text-left hover:bg-white hover:text-secondary rounded-lg px-4 transition-colors"
                     >
                       {link.label}
                     </button>
@@ -312,7 +314,7 @@ const Navbar = () => {
                     <Link
                       key={link.label}
                       to={link.href}
-                      className="block py-3 text-base font-medium text-[#4A4A4A] hover:bg-gray-50 rounded-lg px-4"
+                      className="block py-3 text-base font-medium text-text-body hover:bg-white hover:text-secondary rounded-lg px-4 transition-colors"
                       onClick={() => setIsOpen(false)}
                     >
                       {link.label}
@@ -324,7 +326,7 @@ const Navbar = () => {
             <div className="flex flex-col space-y-3 pt-10 px-4">
               <Link to="/request-donors" onClick={() => setIsOpen(false)}>
                 <Button
-                  variant="outline"
+                  variant="blood"
                   className="w-full py-4 text-base font-bold"
                 >
                   {t("nav.request_for_donors")}
@@ -338,8 +340,8 @@ const Navbar = () => {
             </div>
 
             {/* Mobile Social Icons */}
-            <div className="pt-12 px-4 border-t mt-10">
-              <p className="text-center text-xs text-[#9E9E9E] uppercase tracking-widest mb-8 font-bold">
+            <div className="pt-12 px-4 border-t border-border mt-10">
+              <p className="text-center text-xs text-text-body/60 uppercase tracking-widest mb-8 font-bold">
                 {t("nav.stay_connected")}
               </p>
               <div className="flex justify-center space-x-8">
@@ -349,7 +351,7 @@ const Navbar = () => {
                     href={social.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-[#9E9E9E] hover:text-[#B71C1C] transition-colors p-2 hover:bg-gray-50 rounded-full"
+                    className="text-text-body/60 hover:text-primary transition-colors p-2 hover:bg-white rounded-full focus:outline-none focus:ring-2 focus:ring-primary"
                   >
                     <social.icon className="w-6 h-6" />
                   </a>

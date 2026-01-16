@@ -70,7 +70,7 @@ const ContactFloatingButton = () => {
       <button
         ref={buttonRef}
         onClick={scrollToTop}
-        className="fixed bottom-6 left-6 z-50 p-4 bg-[#B71C1C] rounded-full shadow-2xl hover:bg-[#8E1616] transition-all duration-300 flex items-center justify-center group opacity-0"
+        className="fixed bottom-6 left-6 z-50 p-4 bg-primary rounded-full shadow-2xl hover:bg-secondary transition-all duration-300 flex items-center justify-center group opacity-0"
         style={{ pointerEvents: 'none' }}
         aria-label="Back to Top"
       >
@@ -98,7 +98,7 @@ const ContactFloatingButton = () => {
           e.stopPropagation();
           setIsPopupOpen(!isPopupOpen);
         }}
-        className={`fixed bottom-6 right-6 z-[110] p-4 rounded-full shadow-2xl transition-all duration-300 flex items-center justify-center group ${isPopupOpen ? 'bg-[#1A1A1A] rotate-90' : 'bg-[#B71C1C] hover:scale-110'}`}
+        className={`fixed bottom-6 right-6 z-[110] p-4 rounded-full shadow-2xl transition-all duration-300 flex items-center justify-center group ${isPopupOpen ? 'bg-[#1A1A1A] rotate-90' : 'bg-primary hover:scale-110'}`}
         aria-label={t("footer.contact_us")}
       >
         {isPopupOpen ? (

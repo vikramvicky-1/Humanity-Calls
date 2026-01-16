@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import Button from "./Button";
 import { sendEmail } from "../utils/email";
 
-const ContactForm = ({ className = "" }) => {
+const ContactForm = ({ className = "", dark = false }) => {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -20,7 +20,7 @@ const ContactForm = ({ className = "" }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    
+
     const success = await sendEmail(
       "Contact Inquiry",
       formData,
@@ -33,6 +33,12 @@ const ContactForm = ({ className = "" }) => {
     setLoading(false);
   };
 
+  const inputClasses = `w-full px-4 py-4 ${
+    dark
+      ? "bg-[#2A2A2A] border-white/10 text-white placeholder-gray-500"
+      : "bg-white border-border text-text-body"
+  } border rounded-md focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all`;
+
   return (
     <form onSubmit={handleSubmit} className={`space-y-4 ${className}`}>
       <input
@@ -43,7 +49,7 @@ const ContactForm = ({ className = "" }) => {
         type="text"
         placeholder={t("form.name")}
         aria-label={t("form.aria_name")}
-        className="w-full px-4 py-4 bg-[#2A2A2A] border border-transparent rounded-md focus:border-[#B71C1C] focus:bg-[#333333] outline-none transition-all text-white"
+        className={inputClasses}
       />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <input
@@ -54,7 +60,7 @@ const ContactForm = ({ className = "" }) => {
           type="email"
           placeholder={t("form.email")}
           aria-label={t("form.aria_email")}
-          className="w-full px-4 py-4 bg-[#2A2A2A] border border-transparent rounded-md focus:border-[#B71C1C] focus:bg-[#333333] outline-none transition-all text-white"
+          className={inputClasses}
         />
         <input
           required
@@ -66,7 +72,7 @@ const ContactForm = ({ className = "" }) => {
           maxLength={10}
           placeholder={t("form.phone")}
           aria-label={t("form.aria_phone")}
-          className="w-full px-4 py-4 bg-[#2A2A2A] border border-transparent rounded-md focus:border-[#B71C1C] focus:bg-[#333333] outline-none transition-all text-white"
+          className={inputClasses}
         />
       </div>
       <textarea
@@ -77,7 +83,7 @@ const ContactForm = ({ className = "" }) => {
         placeholder={t("form.message")}
         aria-label={t("form.aria_message")}
         rows={4}
-        className="w-full px-4 py-4 bg-[#2A2A2A] border border-transparent rounded-md focus:border-[#B71C1C] focus:bg-[#333333] outline-none transition-all resize-none text-white"
+        className={`${inputClasses} resize-none`}
       ></textarea>
       <Button
         type="submit"

@@ -34,11 +34,11 @@ const ChatPopup = ({ isOpen, onClose }) => {
   return (
     <div
       ref={popupRef}
-      className="fixed bottom-24 right-6 z-[100] w-[90vw] sm:w-[400px] bg-[#1A1A1A] rounded-2xl shadow-2xl border border-[#2A2A2A] overflow-hidden transform transition-all duration-300 animate-in fade-in slide-in-from-bottom-4"
+      className="fixed bottom-24 right-6 z-[100] w-[90vw] sm:w-[400px] bg-bg rounded-2xl shadow-2xl border border-border overflow-hidden transform transition-all duration-300 animate-in fade-in slide-in-from-bottom-4"
     >
-      <div className="bg-[#B71C1C] p-4 flex items-center justify-between">
+      <div className="bg-primary p-4 flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+          <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center">
             <svg
               className="w-6 h-6 text-white"
               fill="none"

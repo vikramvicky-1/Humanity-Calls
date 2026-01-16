@@ -112,14 +112,14 @@ const Volunteer = () => {
           </p>
           <div className="grid grid-cols-2 gap-8">
             <div className="space-y-2">
-              <h3 className="text-3xl font-bold text-blood-red">10+</h3>
+              <h3 className="text-3xl font-bold text-primary">10+</h3>
               <p className="text-gray-500 font-medium">{t("volunteer.active_volunteers")}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-[#F5F5F5] p-8 md:p-12 rounded-3xl border border-gray-200" data-animation="vol-form">
-          <h3 className="text-2xl font-bold mb-8">{t("volunteer.form_title")}</h3>
+        <div className="bg-white p-8 md:p-12 rounded-3xl border border-border shadow-xl" data-animation="vol-form">
+          <h3 className="text-2xl font-bold mb-8 text-primary">{t("volunteer.form_title")}</h3>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <input
@@ -128,7 +128,7 @@ const Volunteer = () => {
                 value={formData.firstName}
                 onChange={handleChange}
                 placeholder={t("volunteer.first_name")}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                className="w-full px-4 py-3 border border-border bg-white rounded-lg focus:ring-2 focus:ring-primary outline-none transition-all shadow-sm"
               />
               <input
                 required
@@ -136,7 +136,7 @@ const Volunteer = () => {
                 value={formData.lastName}
                 onChange={handleChange}
                 placeholder={t("volunteer.last_name")}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                className="w-full px-4 py-3 border border-border bg-white rounded-lg focus:ring-2 focus:ring-primary outline-none transition-all shadow-sm"
               />
             </div>
             <input
@@ -146,7 +146,7 @@ const Volunteer = () => {
               value={formData.email}
               onChange={handleChange}
               placeholder={t("volunteer.email")}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+              className="w-full px-4 py-3 border border-border bg-white rounded-lg focus:ring-2 focus:ring-primary outline-none transition-all shadow-sm"
             />
             <input
               required
@@ -157,14 +157,14 @@ const Volunteer = () => {
               minLength={10}
               maxLength={10}
               placeholder={t("volunteer.phone")}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+              className="w-full px-4 py-3 border border-border bg-white rounded-lg focus:ring-2 focus:ring-primary outline-none transition-all shadow-sm"
             />
             <select
               required
               name="interest"
               value={formData.interest}
               onChange={handleChange}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-500"
+              className="w-full px-4 py-3 border border-border bg-white rounded-lg text-gray-500 focus:ring-2 focus:ring-primary outline-none transition-all shadow-sm"
             >
               <option value="">{t("volunteer.interest_area")}</option>
               <option value="Blood Donation">{t("volunteer.interests.blood")}</option>

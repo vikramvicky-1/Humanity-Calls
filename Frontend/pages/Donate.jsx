@@ -102,11 +102,11 @@ const Donate = () => {
 
       <div className="max-w-none mx-auto px-[5%] grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
         <div data-animation="donate-title">
-          <h1 className="text-5xl font-bold text-blood-red mb-8">{t("donate.title")}</h1>
+          <h1 className="text-5xl font-bold text-primary mb-8">{t("donate.title")}</h1>
           <p className="text-xl text-gray-600 leading-relaxed mb-12">
             {t("donate.description")}
           </p>
-          <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100">
+          <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
             <h4 className="font-bold text-lg mb-2 text-gray-800">{t("donate.why_donate_title")}</h4>
             <ul className="text-gray-600 space-y-2">
               {t("donate.why_donate_list", { returnObjects: true }).map((item, idx) => (
@@ -116,7 +116,7 @@ const Donate = () => {
           </div>
         </div>
 
-        <div className="bg-[#F5F5F5] p-8 md:p-12 rounded-3xl border border-gray-200 shadow-sm" data-animation="donate-form">
+        <div className="bg-white p-8 md:p-12 rounded-3xl border border-border shadow-xl" data-animation="donate-form">
           <h3 className="text-2xl font-bold mb-8 text-gray-800">{t("donate.form_title")}</h3>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -127,7 +127,7 @@ const Donate = () => {
                 value={formData.name}
                 onChange={handleChange}
                 placeholder={t("donate.placeholders.name")}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blood-red focus:border-transparent outline-none transition-all"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all shadow-sm"
               />
             </div>
             <div>
@@ -139,7 +139,7 @@ const Donate = () => {
                 value={formData.email}
                 onChange={handleChange}
                 placeholder={t("donate.placeholders.email")}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blood-red focus:border-transparent outline-none transition-all"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all shadow-sm"
               />
             </div>
             <div>
@@ -153,7 +153,7 @@ const Donate = () => {
                 minLength={10}
                 maxLength={10}
                 placeholder={t("donate.placeholders.phone")}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blood-red focus:border-transparent outline-none transition-all"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all shadow-sm"
               />
             </div>
             <div>
@@ -163,7 +163,7 @@ const Donate = () => {
                 value={formData.amount}
                 onChange={handleChange}
                 placeholder={t("donate.placeholders.amount")}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blood-red focus:border-transparent outline-none transition-all"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all shadow-sm"
               />
             </div>
             <Button type="submit" isLoading={loading} className="w-full py-4 text-lg font-semibold mt-4">
