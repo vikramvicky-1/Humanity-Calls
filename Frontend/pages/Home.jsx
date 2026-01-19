@@ -27,27 +27,39 @@ const Home = () => {
     const ctx = gsap.context(() => {
       const heroTitle = document.querySelector('[data-animation="hero-title"]');
       const heroParagraph = document.querySelector(
-        '[data-animation="hero-paragraph"]'
+        '[data-animation="hero-paragraph"]',
       );
       const heroImage = document.querySelector('[data-animation="hero-image"]');
       const heroGlow = document.querySelector('[data-animation="hero-glow"]');
       const heroButtons = document.querySelectorAll(
-        '[data-animation="hero-button"]'
+        '[data-animation="hero-button"]',
       );
       const bloodDonationSection = document.querySelector(
-        '[data-animation="blood-section"]'
+        '[data-animation="blood-section"]',
       );
       const bloodSectionImage = document.querySelector(
-        '[data-animation="blood-image"]'
+        '[data-animation="blood-image"]',
+      );
+      const poorNeedySection = document.querySelector(
+        '[data-animation="poor-needy-section"]',
+      );
+      const poorNeedyImage = document.querySelector(
+        '[data-animation="poor-needy-image"]',
+      );
+      const animalRescueSection = document.querySelector(
+        '[data-animation="animal-rescue-section"]',
+      );
+      const animalRescueImage = document.querySelector(
+        '[data-animation="animal-rescue-image"]',
       );
       const statSection = document.querySelector(
-        '[data-animation="stat-section"]'
+        '[data-animation="stat-section"]',
       );
       const cards = document.querySelectorAll('[data-animation="card"]');
       const helpImage = document.querySelector('[data-animation="help-image"]');
       const helpText = document.querySelector('[data-animation="help-text"]');
       const newsletterSection = document.querySelector(
-        '[data-animation="newsletter-section"]'
+        '[data-animation="newsletter-section"]',
       );
 
       if (!isMobile) {
@@ -76,7 +88,7 @@ const Home = () => {
                 start: "top 95%",
                 once: true,
               },
-            }
+            },
           );
         }
 
@@ -91,7 +103,7 @@ const Home = () => {
               repeat: -1,
               yoyo: true,
               ease: "sine.inOut",
-            }
+            },
           );
         }
 
@@ -122,7 +134,7 @@ const Home = () => {
                   ease: "power1.inOut",
                 });
               },
-            }
+            },
           );
         }
       } else {
@@ -146,7 +158,7 @@ const Home = () => {
               end: "bottom 60%",
               once: true,
             },
-          }
+          },
         );
       }
 
@@ -169,7 +181,90 @@ const Home = () => {
             },
             onComplete: () =>
               gsap.set(bloodSectionImage, { willChange: "auto" }),
-          }
+          },
+        );
+      }
+
+      if (poorNeedySection) {
+        gsap.fromTo(
+          poorNeedySection,
+          { opacity: 0, y: yOffset },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.7,
+            ease: "power2.out",
+            scrollTrigger: {
+              trigger: poorNeedySection,
+              start: "top 80%",
+              end: "bottom 60%",
+              once: true,
+            },
+          },
+        );
+      }
+
+      if (poorNeedyImage) {
+        gsap.set(poorNeedyImage, { willChange: "transform, opacity" });
+        gsap.fromTo(
+          poorNeedyImage,
+          { opacity: 0, scale: 0.9, x: isMobile ? 20 : 40 },
+          {
+            opacity: 1,
+            scale: 1,
+            x: 0,
+            duration: 0.7,
+            ease: "power2.out",
+            scrollTrigger: {
+              trigger: poorNeedyImage,
+              start: "top 80%",
+              end: "bottom 60%",
+              once: true,
+            },
+            onComplete: () => gsap.set(poorNeedyImage, { willChange: "auto" }),
+          },
+        );
+      }
+
+      if (animalRescueSection) {
+        gsap.fromTo(
+          animalRescueSection,
+          { opacity: 0, y: yOffset },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.7,
+            ease: "power2.out",
+            scrollTrigger: {
+              trigger: animalRescueSection,
+              start: "top 80%",
+              end: "bottom 60%",
+              once: true,
+            },
+          },
+        );
+      }
+
+      if (animalRescueImage) {
+        gsap.set(animalRescueImage, { willChange: "transform, opacity" });
+        gsap.fromTo(
+          animalRescueImage,
+          { opacity: 0, scale: 0.9, x: isMobile ? -20 : -40 },
+          {
+            opacity: 1,
+            scale: 1,
+            x: 0,
+            duration: 0.7,
+            ease: "power2.out",
+            scrollTrigger: {
+              trigger: animalRescueImage,
+              start: "top 80%",
+              end: "bottom 60%",
+              once: true,
+            },
+            onComplete: () =>
+              gsap.set(animalRescueImage, { willChange: "auto" }),
+          },
         );
       }
 
@@ -188,7 +283,7 @@ const Home = () => {
               end: "bottom 60%",
               once: true,
             },
-          }
+          },
         );
       }
 
@@ -214,7 +309,7 @@ const Home = () => {
               once: true,
             },
             onComplete: () => gsap.set(helpImage, { willChange: "auto" }),
-          }
+          },
         );
       }
 
@@ -233,7 +328,7 @@ const Home = () => {
               end: "bottom 60%",
               once: true,
             },
-          }
+          },
         );
       }
 
@@ -252,13 +347,52 @@ const Home = () => {
               end: "bottom 60%",
               once: true,
             },
-          }
+          },
         );
       }
     }, containerRef);
 
     return () => ctx.revert();
   }, [i18n.language]);
+
+  const programs = [
+    {
+      id: "community_conservation",
+      image:
+        "https://res.cloudinary.com/daokrum7i/image/upload/v1767814231/hc_community_conservation_leov19.jpg",
+      alt: "Community conservation project by Humanity Calls",
+    },
+    {
+      id: "early_education",
+      image:
+        "https://res.cloudinary.com/daokrum7i/image/upload/v1767814231/hc_early_education_u8j2cv.jpg",
+      alt: "Early education support for children",
+    },
+    {
+      id: "forest_restoration",
+      image:
+        "https://res.cloudinary.com/daokrum7i/image/upload/v1767814231/hc_forest_restoration_jjjomq.jpg",
+      alt: "Forest restoration initiative",
+    },
+    {
+      id: "stop_wildlife_crime",
+      image:
+        "https://res.cloudinary.com/daokrum7i/image/upload/v1767814232/hc_stop_wildlife_crime_rxiaqf.jpg",
+      alt: "Stopping wildlife crime initiative",
+    },
+    {
+      id: "marine_conservation",
+      image:
+        "https://res.cloudinary.com/daokrum7i/image/upload/v1767814233/hc_marine_conservation_ptw4yg.webp",
+      alt: "Marine conservation project",
+    },
+    {
+      id: "environmental_policy",
+      image:
+        "https://res.cloudinary.com/daokrum7i/image/upload/v1767814231/hc_environmental_policy_gjhqyx.png",
+      alt: "Environmental policy advocacy",
+    },
+  ];
 
   return (
     <div ref={containerRef}>
@@ -269,23 +403,46 @@ const Home = () => {
 
       {/* Hero Section */}
       <section className="relative h-screen flex items-center overflow-hidden">
-        <HeroCarousel />
-        <div className="max-w-none mx-auto px-[5%] w-full relative z-10">
+        <div className="absolute inset-0 px-[5%]">
+          <div className="relative w-full h-full overflow-hidden">
+            <HeroCarousel />
+          </div>
+        </div>
+        <div className="max-w-none mx-auto px-[10%] w-full relative z-10">
           <div className="max-w-3xl space-y-8">
             <h1
               key={i18n.language}
-              className="text-5xl md:text-7xl font-bold text-secondary leading-tight"
+              className="flex flex-col font-bold leading-tight"
               data-animation="hero-title"
             >
-              {t("home.hero_title_help")}{" "}
-              <span className="text-primary inline-flex items-center">
-                {t("home.hero_title_humanity")}
-                <span className="inline-block ml-2 animate-bounce">
-                  <img
-                    src={hclogo}
-                    alt="logo"
-                    className="w-8 h-8 md:w-12 md:h-12"
-                  />
+              <span
+                className="text-3xl md:text-5xl text-white/80 mb-2 drop-shadow-md"
+                style={{
+                  WebkitTextStroke: "2px rgba(40,175,176,0.8)",
+                  paintOrder: "stroke fill",
+                }}
+              >
+                {t("home.hero_title_help")}
+              </span>
+              <span className="relative inline-flex items-center group">
+                <span
+                  className="text-6xl md:text-8xl relative z-10 bg-gradient-to-r from-primary via-white to-primary bg-clip-text text-transparent animate-gradient-text drop-shadow-[0_0_1px_rgba(40,175,176,0.8)]"
+                  style={{
+                    WebkitTextStroke: "1.5px rgba(40,175,176,0.4)",
+                    paintOrder: "stroke fill",
+                  }}
+                >
+                  {t("home.hero_title_humanity")}
+                </span>
+
+                <span className="inline-flex items-center ml-4">
+                  <span className="inline-block animate-bounce">
+                    <img
+                      src={hclogo}
+                      alt="logo"
+                      className="w-10 h-10 md:w-16 md:h-16 filter drop-shadow-[0_0_15px_rgba(40,175,176,0.6)]"
+                    />
+                  </span>
                 </span>
               </span>
             </h1>
@@ -333,7 +490,12 @@ const Home = () => {
                 {t("home.blood_donation_paragraph")}
               </p>
               <Link to="/donate">
-                <Button variant="white">{t("home.donate_today")}</Button>
+                <Button
+                  variant="white"
+                  className="!bg-white !text-[#1a1c2c] hover:!bg-primary hover:!text-white transition-all"
+                >
+                  {t("home.donate_today")}
+                </Button>
               </Link>
             </div>
             <div className="relative">
@@ -364,6 +526,122 @@ const Home = () => {
               components={{ red: <span className="text-blood" /> }}
             />
           </p>
+        </div>
+      </section>
+
+      {/* Poor/Needy Section */}
+      <section
+        className="bg-[#1a1c2c] text-white py-24 overflow-hidden"
+        data-animation="poor-needy-section"
+      >
+        <div className="max-w-none mx-auto px-[5%]">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            <div className="relative lg:order-2 px-4 md:px-0">
+              <div className="absolute inset-0 bg-secondary/10 blur-3xl rounded-full -z-10"></div>
+              <img
+                src="https://res.cloudinary.com/daokrum7i/image/upload/v1767814233/humanity_calls_poor_needy_oef47s.avif"
+                alt={IMAGE_ALTS.poorNeedy}
+                data-animation="poor-needy-image"
+                className="rounded-2xl border border-white/10 w-full max-h-[400px] md:max-h-none object-contain shadow-2xl"
+                width="800"
+                height="533"
+                loading="lazy"
+              />
+            </div>
+            <div className="space-y-6 lg:order-1">
+              <h2 className="text-4xl md:text-5xl font-bold text-white tracking-tight">
+                {t("home.help_poor_needy_title")}
+              </h2>
+              <p className="text-lg text-white/70 leading-relaxed max-w-xl">
+                {t("home.poor_needy_paragraph")}
+              </p>
+              <Link to="/poor-needy" className="inline-block">
+                <Button
+                  variant="white"
+                  className="!bg-white !text-[#1a1c2c] hover:!bg-primary hover:!text-white transition-all"
+                >
+                  {t("home.support_today")}
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Animal Rescue Section */}
+      <section
+        className="bg-[#0f1f0f] text-white py-24 overflow-hidden"
+        data-animation="animal-rescue-section"
+      >
+        <div className="max-w-none mx-auto px-[5%]">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            <div className="relative px-4 md:px-0">
+              <div className="absolute inset-0 bg-primary/10 blur-3xl rounded-full -z-10"></div>
+              <img
+                src="https://res.cloudinary.com/daokrum7i/image/upload/v1767814232/humanity_calls_animal_resque_dxz9jb.avif"
+                alt={IMAGE_ALTS.animalRescue}
+                data-animation="animal-rescue-image"
+                className="rounded-2xl border border-white/10 w-full max-h-[400px] md:max-h-none object-contain shadow-2xl"
+                width="800"
+                height="533"
+                loading="lazy"
+              />
+            </div>
+            <div className="space-y-6">
+              <h2 className="text-4xl md:text-5xl font-bold text-white tracking-tight">
+                {t("home.animal_rescue_title")}
+              </h2>
+              <p className="text-lg text-white/70 leading-relaxed max-w-xl">
+                {t("home.animal_rescue_paragraph")}
+              </p>
+              <Link to="/animal-rescue" className="inline-block">
+                <Button
+                  variant="white"
+                  className="!bg-white !text-[#0f1f0f] hover:!bg-primary hover:!text-white transition-all"
+                >
+                  {t("home.rescue_today")}
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Programs & Projects */}
+
+      <section className="py-24 bg-[#1A1A1A] text-white">
+        <div className="max-w-none mx-auto px-[5%]">
+          <div className="text-center mb-16" data-animation="program-title">
+            <h2 className="text-4xl font-bold mb-6 text-white">
+              {t("about.programs_title")}
+            </h2>
+            <p className="max-w-2xl mx-auto text-gray-400 lowercase">
+              {t("about.programs_para")}
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {programs.map((p, idx) => (
+              <div
+                key={idx}
+                className="bg-[#2A2A2A] rounded-xl overflow-hidden hover:scale-105 transition-transform"
+                data-animation="program-card"
+              >
+                <img
+                  src={p.image}
+                  alt={p.alt}
+                  className="w-full h-48 object-cover opacity-80"
+                />
+                <div className="p-6">
+                  <h3 className="text-xl font-bold mb-3 text-white">
+                    {t(`about.programs.${p.id}.title`)}
+                  </h3>
+                  <p className="text-gray-400 text-sm lowercase">
+                    {t(`about.programs.${p.id}.desc`)}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 

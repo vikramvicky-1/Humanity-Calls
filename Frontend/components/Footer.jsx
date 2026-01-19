@@ -52,6 +52,9 @@ const Footer = () => {
                   { to: "/animal-rescue", label: t("common.animal_rescue") },
                   { to: "/volunteer", label: t("common.volunteer") },
                   { to: "/collaborate", label: t("common.collaborate") },
+                  { to: "/donations-made", label: t("nav.donations_made") },
+                  { to: "/wall-of-fame", label: t("nav.wall_of_fame") },
+                  { to: "/donate", label: t("nav.donate_now") },
                 ].map((link) => (
                   <li key={link.to}>
                     <Link

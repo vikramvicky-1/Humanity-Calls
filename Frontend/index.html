@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -17,12 +17,19 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preconnect" href="https://res.cloudinary.com" crossorigin />
-    <link rel="shortcut icon" href="assets/favicon.ico" type="image/x-icon" />
+    <link rel="icon" href="/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
     <link
       rel="preload"
       as="style"
       href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap"
-      onload="this.onload=null;this.rel='stylesheet'"
+      onload="
+        this.onload = null;
+        this.rel = 'stylesheet';
+      "
     />
     <noscript>
       <link
@@ -33,17 +40,21 @@
 
     <style>
       body {
-        font-family: "Poppins", system-ui, -apple-system, BlinkMacSystemFont,
+        font-family:
+          "Poppins",
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
           sans-serif;
-        background-color: #FFFFFF;
-        color: #4A4A68;
+        background-color: #ffffff;
+        color: #4a4a68;
         scroll-behavior: smooth;
       }
       nav {
         position: sticky;
         top: 0;
         z-index: 50;
-        background-color: #FFFFFF;
+        background-color: #ffffff;
         box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
       }
       section {

@@ -13,7 +13,7 @@
     "stay_connected": "Stay Connected"
   },
   "home": {
-    "hero_title_help": "Help",
+    "hero_title_help": "FEED FOR",
     "hero_title_humanity": "Humanity",
     "hero_paragraph": "Serving those in need through emergency blood support, uplifting the underprivileged, and protecting our animal companions nationwide.",
     "collaborate_with_us": "Collaborate With Us",
@@ -21,6 +21,12 @@
     "donate_blood_save_lives": "Donate Blood, Save Lives",
     "blood_donation_paragraph": "Blood is essential to help patients survive surgeries, cancer treatment, chronic illnesses, and traumatic injuries. This lifesaving care starts with one person making a generous donation. The need for blood is constant.",
     "donate_today": "Donate Today",
+    "help_poor_needy_title": "Help the Poor & Needy",
+    "poor_needy_paragraph": "Join us in our mission to provide essential support, food, and education to those in underprivileged communities.",
+    "support_today": "Support Today",
+    "animal_rescue_title": "Animal Rescue Operations",
+    "animal_rescue_paragraph": "We are dedicated to rescuing abandoned and injured animals, providing them medical care and finding them forever homes.",
+    "rescue_today": "Rescue Today",
     "donors_count": "<red>1000+</red> donors and <red>1</red> purpose !",
     "donations_made_title": "Donations Made",
     "donations_made_desc": "Here is our precious donors who came forward to donate their blood save so many lives with unconditional timings and situations.",
@@ -185,10 +191,10 @@
     }
   },
   "donate": {
-    "title": "Donate Now",
+    "title": "Empower Change through Your Generosity",
     "seo_title": "Donate Now | Support Humanity Calls NGO",
     "seo_desc": "Your contribution helps us save lives, rescue animals, and support those in need. Donate today to Humanity Calls NGO.",
-    "description": "Your generosity can make a real difference. Every donation goes directly towards our mission of saving lives through blood donation drives, animal rescue, and helping the underprivileged.",
+    "description": "Your trust is Our foundation. Every donation is a step towards a better humanity. We ensure Your contribution reaches those who need it most with complete transparency and accountability.",
     "why_donate_title": "Why Donate?",
     "why_donate_list": [
       "Support emergency blood donation drives",
@@ -196,20 +202,25 @@
       "Help underprivileged families with essentials",
       "Facilitate community conservation programs"
     ],
-    "form_title": "Donor Information",
-    "full_name": "Full Name",
+    "form_title": "Donation Details",
+    "full_name": "Name as per Bank Account",
     "email_address": "Email Address",
     "phone_number": "Phone Number",
-    "donation_amount": "Donation Amount (Optional)",
+    "donation_amount": "Amount",
+    "transaction_id": "Transaction ID",
+    "scan_pay_text": "Scan and pay using any UPI App",
+    "upi_id_label": "UPI ID",
+    "upi_id_value": "humanity8080@fbl",
     "submit_whatsapp": "Donate via WhatsApp",
     "whatsapp_note": "Clicking the button will open WhatsApp with your message.",
     "whatsapp_message_header": "I would like to donate.",
     "details": "Details",
     "placeholders": {
-      "name": "John Doe",
+      "name": "Enter name as per bank account",
       "email": "john@example.com",
       "phone": "+91 1234567890",
-      "amount": "e.g. 1000"
+      "amount": "Enter Amount (INR)",
+      "transaction_id": "Enter Transaction ID"
     }
   },
   "volunteer": {
