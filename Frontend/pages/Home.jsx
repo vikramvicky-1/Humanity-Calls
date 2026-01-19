@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useRef } from "react";
+import React, { useLayoutEffect, useRef, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation, Trans } from "react-i18next";
 import gsap from "gsap";
@@ -19,6 +19,109 @@ gsap.registerPlugin(ScrollTrigger);
 const Home = () => {
   const { t, i18n } = useTranslation();
   const containerRef = useRef(null);
+  const [visibleCount, setVisibleCount] = useState(6);
+
+  const programs = [
+    {
+      id: "community_cleanup",
+      image:
+        "https://res.cloudinary.com/daokrum7i/image/upload/v1768843644/hc_community_nrwk4i.jpg",
+      alt: "Community clean up program",
+    },
+    {
+      id: "csr_activities",
+      image:
+        "https://res.cloudinary.com/daokrum7i/image/upload/v1768843644/hc_csr_hdqwno.jpg",
+      alt: "CSR activities with corporates",
+    },
+    {
+      id: "road_safety",
+      image:
+        "https://res.cloudinary.com/daokrum7i/image/upload/v1768843645/hc_road_igjyih.jpg",
+      alt: "Road safety awareness campaign",
+    },
+    {
+      id: "street_paintings",
+      image:
+        "https://res.cloudinary.com/daokrum7i/image/upload/v1768843644/hc_street_o1a0yq.jpg",
+      alt: "Street and wall painting initiative",
+    },
+    {
+      id: "health_hygiene",
+      image:
+        "https://res.cloudinary.com/daokrum7i/image/upload/v1768843644/hc_health_yszrec.jpg",
+      alt: "Health and hygiene awareness session",
+    },
+    {
+      id: "youth_empowerment",
+      image:
+        "https://res.cloudinary.com/daokrum7i/image/upload/v1768843644/hc_youth_bjqle8.jpg",
+      alt: "Youth empowerment workshop",
+    },
+    {
+      id: "community_conservation",
+      image:
+        "https://res.cloudinary.com/daokrum7i/image/upload/v1767814231/hc_community_conservation_leov19.jpg",
+      alt: "Community conservation project by Humanity Calls",
+    },
+    {
+      id: "early_education",
+      image:
+        "https://res.cloudinary.com/daokrum7i/image/upload/v1767814231/hc_early_education_u8j2cv.jpg",
+      alt: "Early education support for children",
+    },
+    {
+      id: "forest_restoration",
+      image:
+        "https://res.cloudinary.com/daokrum7i/image/upload/v1767814231/hc_forest_restoration_jjjomq.jpg",
+      alt: "Forest restoration initiative",
+    },
+    {
+      id: "stop_wildlife_crime",
+      image:
+        "https://res.cloudinary.com/daokrum7i/image/upload/v1767814232/hc_stop_wildlife_crime_rxiaqf.jpg",
+      alt: "Stopping wildlife crime initiative",
+    },
+    {
+      id: "marine_conservation",
+      image:
+        "https://res.cloudinary.com/daokrum7i/image/upload/v1767814233/hc_marine_conservation_ptw4yg.webp",
+      alt: "Marine conservation project",
+    },
+    {
+      id: "environmental_policy",
+      image:
+        "https://res.cloudinary.com/daokrum7i/image/upload/v1767814231/hc_environmental_policy_gjhqyx.png",
+      alt: "Environmental policy advocacy",
+    },
+  ];
+
+  const handleLoadMore = () => {
+    setVisibleCount(programs.length);
+  };
+
+  useEffect(() => {
+    const cards = document.querySelectorAll('[data-animation="program-card"]');
+    if (cards.length > 0) {
+      gsap.fromTo(
+        cards,
+        { opacity: 0, y: 30, scale: 0.95 },
+        {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          duration: 0.5,
+          stagger: 0.1,
+          ease: "power2.out",
+          scrollTrigger: {
+            trigger: cards[0],
+            start: "top 85%",
+            once: true,
+          },
+        },
+      );
+    }
+  }, [visibleCount]);
 
   useLayoutEffect(() => {
     const isMobile = window.innerWidth < 768;
@@ -295,7 +398,7 @@ const Home = () => {
         gsap.set(helpImage, { willChange: "transform, opacity" });
         gsap.fromTo(
           helpImage,
-          { opacity: 0, scale: 0.9, x: isMobile ? -20 : -40 },
+          { opacity: 0, scale: 0.9, x: isMobile ? 20 : 40 },
           {
             opacity: 1,
             scale: 1,
@@ -355,45 +458,6 @@ const Home = () => {
     return () => ctx.revert();
   }, [i18n.language]);
 
-  const programs = [
-    {
-      id: "community_conservation",
-      image:
-        "https://res.cloudinary.com/daokrum7i/image/upload/v1767814231/hc_community_conservation_leov19.jpg",
-      alt: "Community conservation project by Humanity Calls",
-    },
-    {
-      id: "early_education",
-      image:
-        "https://res.cloudinary.com/daokrum7i/image/upload/v1767814231/hc_early_education_u8j2cv.jpg",
-      alt: "Early education support for children",
-    },
-    {
-      id: "forest_restoration",
-      image:
-        "https://res.cloudinary.com/daokrum7i/image/upload/v1767814231/hc_forest_restoration_jjjomq.jpg",
-      alt: "Forest restoration initiative",
-    },
-    {
-      id: "stop_wildlife_crime",
-      image:
-        "https://res.cloudinary.com/daokrum7i/image/upload/v1767814232/hc_stop_wildlife_crime_rxiaqf.jpg",
-      alt: "Stopping wildlife crime initiative",
-    },
-    {
-      id: "marine_conservation",
-      image:
-        "https://res.cloudinary.com/daokrum7i/image/upload/v1767814233/hc_marine_conservation_ptw4yg.webp",
-      alt: "Marine conservation project",
-    },
-    {
-      id: "environmental_policy",
-      image:
-        "https://res.cloudinary.com/daokrum7i/image/upload/v1767814231/hc_environmental_policy_gjhqyx.png",
-      alt: "Environmental policy advocacy",
-    },
-  ];
-
   return (
     <div ref={containerRef}>
       <SEO
@@ -402,13 +466,13 @@ const Home = () => {
       />
 
       {/* Hero Section */}
-      <section className="relative h-screen flex items-center overflow-hidden">
-        <div className="absolute inset-0 px-[5%]">
+      <section className="relative py-16 flex items-center overflow-hidden">
+        <div className="absolute inset-0 px-[5%] py-4">
           <div className="relative w-full h-full overflow-hidden">
             <HeroCarousel />
           </div>
         </div>
-        <div className="max-w-none mx-auto px-[10%] w-full relative z-10">
+        <div className="max-w-none mx-auto px-[10%] w-full relative z-10 py-12">
           <div className="max-w-3xl space-y-8">
             <h1
               key={i18n.language}
@@ -482,6 +546,18 @@ const Home = () => {
       >
         <div className="max-w-none mx-auto px-[5%]">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            <div className="relative">
+              <div className="absolute inset-0 bg-white/10 blur-3xl rounded-full -z-10"></div>
+              <img
+                src="https://res.cloudinary.com/daokrum7i/image/upload/f_auto,q_auto,w_800/v1767814232/hc_blood_donation_mfwveo.png"
+                alt={IMAGE_ALTS.bloodDonation}
+                data-animation="blood-image"
+                className="rounded-2xl border border-white/20"
+                width="800"
+                height="533"
+                loading="lazy"
+              />
+            </div>
             <div className="space-y-6">
               <h2 className="text-4xl md:text-5xl font-bold text-white">
                 {t("home.donate_blood_save_lives")}
@@ -497,18 +573,6 @@ const Home = () => {
                   {t("home.donate_today")}
                 </Button>
               </Link>
-            </div>
-            <div className="relative">
-              <div className="absolute inset-0 bg-white/10 blur-3xl rounded-full -z-10"></div>
-              <img
-                src="https://res.cloudinary.com/daokrum7i/image/upload/f_auto,q_auto,w_800/v1767814232/hc_blood_donation_mfwveo.png"
-                alt={IMAGE_ALTS.bloodDonation}
-                data-animation="blood-image"
-                className="rounded-2xl border border-white/20"
-                width="800"
-                height="533"
-                loading="lazy"
-              />
             </div>
           </div>
         </div>
@@ -620,9 +684,9 @@ const Home = () => {
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {programs.map((p, idx) => (
+            {programs.slice(0, visibleCount).map((p, idx) => (
               <div
-                key={idx}
+                key={`${p.id}-${idx}`}
                 className="bg-[#2A2A2A] rounded-xl overflow-hidden hover:scale-105 transition-transform"
                 data-animation="program-card"
               >
@@ -642,6 +706,17 @@ const Home = () => {
               </div>
             ))}
           </div>
+          {visibleCount < programs.length && (
+            <div className="mt-12 flex justify-center">
+              <Button
+                onClick={handleLoadMore}
+                variant="white"
+                className="!bg-white !text-black hover:!bg-primary hover:!text-white transition-all px-10 py-3"
+              >
+                {t("common.load_more")}
+              </Button>
+            </div>
+          )}
         </div>
       </section>
 
@@ -702,32 +777,43 @@ const Home = () => {
       </section>
 
       {/* How You Can Help Section */}
-      <section className="py-24 bg-white" data-animation="help-section">
-        <div className="max-w-none mx-auto px-[5%] grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-          <div>
-            <img
-              src="https://res.cloudinary.com/daokrum7i/image/upload/f_auto,q_auto,w_600/v1767814233/humanity_how_can_i_help_xezom5.avif"
-              alt={IMAGE_ALTS.howCanIHelp}
-              className="object-cover aspect-[4/5] w-full"
-              data-animation="help-image"
-              width="600"
-              height="750"
-              loading="lazy"
-            />
-          </div>
-          <div className="space-y-16" data-animation="help-text">
-            <h2
-              key={i18n.language}
-              className="text-4xl font-bold text-[#1A1A1A]"
-            >
-              {t("home.how_can_help_title")}
-            </h2>
-            <p className="text-lg text-[#4A4A4A] leading-relaxed">
-              {t("home.how_can_help_desc")}
-            </p>
-            <Link to="/volunteer">
-              <Button>{t("nav.stay_connected")}</Button>
-            </Link>
+      <section
+        className="bg-secondary text-white py-24 overflow-hidden border-y border-border"
+        data-animation="help-section"
+      >
+        <div className="max-w-none mx-auto px-[5%]">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            <div className="space-y-6 lg:order-1" data-animation="help-text">
+              <h2
+                key={i18n.language}
+                className="text-4xl md:text-5xl font-bold text-white"
+              >
+                {t("home.how_can_help_title")}
+              </h2>
+              <p className="text-lg text-white/90 leading-relaxed max-w-xl">
+                {t("home.how_can_help_desc")}
+              </p>
+              <Link to="/volunteer">
+                <Button
+                  variant="white"
+                  className="!bg-white !text-secondary hover:!bg-primary hover:!text-white transition-all"
+                >
+                  {t("nav.stay_connected")}
+                </Button>
+              </Link>
+            </div>
+            <div className="relative lg:order-2">
+              <div className="absolute inset-0 bg-white/10 blur-3xl rounded-full -z-10"></div>
+              <img
+                src="https://res.cloudinary.com/daokrum7i/image/upload/f_auto,q_auto,w_800/v1767814233/humanity_how_can_i_help_xezom5.avif"
+                alt={IMAGE_ALTS.howCanIHelp}
+                data-animation="help-image"
+                className="rounded-2xl border border-white/20 w-full object-cover aspect-[3/2] shadow-2xl"
+                width="800"
+                height="533"
+                loading="lazy"
+              />
+            </div>
           </div>
         </div>
       </section>

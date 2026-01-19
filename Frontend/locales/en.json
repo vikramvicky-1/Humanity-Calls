@@ -13,7 +13,7 @@
     "stay_connected": "Stay Connected"
   },
   "home": {
-    "hero_title_help": "FEED FOR",
+    "hero_title_help": "FEED YOUR",
     "hero_title_humanity": "Humanity",
     "hero_paragraph": "Serving those in need through emergency blood support, uplifting the underprivileged, and protecting our animal companions nationwide.",
     "collaborate_with_us": "Collaborate With Us",
@@ -75,7 +75,8 @@
     "animal_rescue": "Animal Rescue",
     "volunteer": "Volunteer",
     "collaborate": "Collaborate",
-    "view_us": "View Us"
+    "view_us": "View Us",
+    "load_more": "Load More"
   },
   "about": {
     "title": "About Us",
@@ -89,6 +90,30 @@
     "covid_title": "OUR CONTRIBUTIONS DURING COVID-19",
     "covid_para": "\"during the height of the pandemic, our volunteers were on the front lines, facilitating oxygen supply, distributing over 5000 meal packets daily, and providing medical support to families in isolation. humanity truly calls when the times are toughest.\"",
     "programs": {
+      "community_cleanup": {
+        "title": "Community Clean Up Programs",
+        "desc": "Cleaning and maintaining public spaces for a healthier community."
+      },
+      "csr_activities": {
+        "title": "CSR Activities",
+        "desc": "Engaging corporates in social responsibility initiatives."
+      },
+      "road_safety": {
+        "title": "Road Safety Campaigns",
+        "desc": "Spreading awareness for safer roads and traffic discipline."
+      },
+      "street_paintings": {
+        "title": "Street & Wall Paintings",
+        "desc": "Beautifying our cities through artistic social messages."
+      },
+      "health_hygiene": {
+        "title": "Health & Hygiene Awareness",
+        "desc": "Educating communities on sanitation and wellness."
+      },
+      "youth_empowerment": {
+        "title": "Youth Empowerment",
+        "desc": "Nurturing the next generation of leaders and change-makers."
+      },
       "community_conservation": {
         "title": "Community Conservation",
         "desc": "Empowering locals to protect their environment."
