@@ -1,14 +1,15 @@
 import React, { useState, useLayoutEffect, useRef, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { FaGlobe, FaChevronDown } from "react-icons/fa";
+import { FaGlobe, FaChevronDown, FaUserCircle } from "react-icons/fa";
 import gsap from "gsap";
 import Button from "./Button";
 import hclogo from "../assets/humanitycallslogo.avif";
 import { SOCIAL_LINKS } from "../constants";
 import { animateNavBar, animateMobileMenuOpen } from "../utils/animations";
+import { useUser } from "../context/UserContext";
 
-const LanguageSelector = ({ className }) => {
+const LanguageSelector = ({ className, isProfile = false }) => {
   const { i18n } = useTranslation();
   const [isLangOpen, setIsLangOpen] = useState(false);
   const langRef = useRef(null);
@@ -41,15 +42,17 @@ const LanguageSelector = ({ className }) => {
     <div className={`relative ${className}`} ref={langRef}>
       <button
         onClick={() => setIsLangOpen(!isLangOpen)}
-        className="flex items-center space-x-1.5 bg-bg border border-border text-text-body py-2 px-3 rounded-lg text-sm font-medium hover:border-primary hover:text-primary transition-all focus:outline-none shadow-sm"
+        className={`${isProfile ? 'w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center justify-between text-sm text-text-body' : 'flex items-center space-x-1.5 bg-bg border border-border text-text-body py-2 px-3 rounded-lg text-sm font-medium hover:border-primary hover:text-primary transition-all focus:outline-none shadow-sm'}`}
       >
-        <FaGlobe className="text-primary" />
-        <span>{languages.find((l) => l.code === i18n.language)?.label || "Language"}</span>
+        <div className="flex items-center space-x-2">
+          <FaGlobe className="text-primary" />
+          <span>{languages.find((l) => l.code === i18n.language)?.label || "Language"}</span>
+        </div>
         <FaChevronDown className={`text-[10px] transition-transform duration-200 ${isLangOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {isLangOpen && (
-        <div className="absolute top-full right-0 mt-2 w-40 bg-white shadow-2xl rounded-xl border border-border py-2 z-[60] animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className={`${isProfile ? 'absolute right-full top-0 mr-2 w-40 bg-white shadow-2xl rounded-xl border border-border py-2 z-[70]' : 'absolute top-full right-0 mt-2 w-40 bg-white shadow-2xl rounded-xl border border-border py-2 z-[60]'} animate-in fade-in slide-in-from-top-2 duration-200`}>
           {languages.map((lang) => (
             <button
               key={lang.code}
@@ -73,7 +76,10 @@ const Navbar = () => {
   const { t, i18n } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [isMoreOpen, setIsMoreOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const { pathname } = useLocation();
+  const { user, logout } = useUser();
+  const navigate = useNavigate();
   const navRef = useRef(null);
 
   useLayoutEffect(() => {
@@ -93,9 +99,7 @@ const Navbar = () => {
           animateMobileMenuOpen(mobileMenu);
         }
       }, navRef);
-
       document.body.style.overflow = "hidden";
-
       return () => {
         ctx.revert();
         document.body.style.overflow = "";
@@ -126,6 +130,11 @@ const Navbar = () => {
       },
     },
   ];
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/");
+  };
 
   const isActive = (path) => pathname === path;
 
@@ -231,13 +240,48 @@ const Navbar = () => {
                   {t("nav.donate_now")}
                 </Button>
               </Link>
-              <LanguageSelector className="ml-1" />
+              {!user ? (
+                <>
+                  <Link to="/become-a-member">
+                    <Button variant="outline" className="text-[12px] py-2 px-3 min-h-[40px] font-semibold">
+                      Become a Member
+                    </Button>
+                  </Link>
+                  <LanguageSelector className="ml-1" />
+                </>
+              ) : (
+                <div 
+                  className="relative"
+                  onMouseEnter={() => setIsProfileOpen(true)}
+                  onMouseLeave={() => setIsProfileOpen(false)}
+                >
+                  <button className="flex items-center space-x-2 bg-bg border border-border p-2 rounded-full hover:border-primary transition-all">
+                    <FaUserCircle className="text-2xl text-primary" />
+                    <span className="text-sm font-medium text-text-body">{user.name}</span>
+                  </button>
+                  {isProfileOpen && (
+                    <div className="absolute top-full right-0 mt-2 w-48 bg-white shadow-2xl rounded-xl border border-border py-2 z-[60] animate-in fade-in slide-in-from-top-2 duration-200">
+                      <div className="px-4 py-2 border-b border-border mb-2">
+                        <p className="text-xs text-gray-500 uppercase font-bold">Logged in as</p>
+                        <p className="text-sm font-bold text-blood truncate">{user.email}</p>
+                      </div>
+                      <LanguageSelector isProfile={true} />
+                      <button
+                        onClick={handleLogout}
+                        className="w-full text-left px-4 py-2 text-sm text-blood hover:bg-blood/5 font-medium transition-colors"
+                      >
+                        Logout
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
           {/* Mobile Menu Toggle */}
           <div className="lg:hidden flex items-center space-x-3">
-            <LanguageSelector />
+            {!user && <LanguageSelector />}
             <button
               onClick={() => setIsOpen(!isOpen)}
               className="text-primary p-2 hover:bg-border/20 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
@@ -246,26 +290,11 @@ const Navbar = () => {
               }
               aria-expanded={isOpen}
             >
-              <svg
-                className="w-7 h-7"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
+              <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 {isOpen ? (
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 ) : (
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 6h16M4 12h16m-7 6h7"
-                  />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
                 )}
               </svg>
             </button>
@@ -276,10 +305,31 @@ const Navbar = () => {
       {/* Mobile Menu */}
       {isOpen && (
         <div
-          className="lg:hidden bg-bg border-t border-border animate-fade-in pb-12 shadow-2xl"
+          className="lg:hidden bg-bg border-t border-border animate-fade-in pb-12 shadow-2xl overflow-y-auto max-h-[calc(100vh-80px)]"
           data-animation="mobile-menu"
         >
           <div className="px-4 pt-4 space-y-1">
+            {user && (
+              <div className="px-4 py-4 bg-white rounded-lg border border-border mb-4">
+                <div className="flex items-center space-x-3 mb-2">
+                  <FaUserCircle className="text-3xl text-primary" />
+                  <div>
+                    <p className="font-bold text-text-body">{user.name}</p>
+                    <p className="text-xs text-gray-500">{user.email}</p>
+                  </div>
+                </div>
+                <div className="mt-4 pt-4 border-t border-border flex flex-col space-y-2">
+                  <p className="text-xs font-bold uppercase text-gray-400">Settings</p>
+                  <LanguageSelector className="w-full" />
+                  <button 
+                    onClick={handleLogout}
+                    className="w-full py-2 text-left text-blood font-medium text-sm"
+                  >
+                    Logout
+                  </button>
+                </div>
+              </div>
+            )}
             {navLinks.map((link) => (
               <Link
                 key={link.label}
@@ -325,10 +375,7 @@ const Navbar = () => {
             </div>
             <div className="flex flex-col space-y-3 pt-10 px-4">
               <Link to="/request-donors" onClick={() => setIsOpen(false)}>
-                <Button
-                  variant="blood"
-                  className="w-full py-4 text-base font-bold"
-                >
+                <Button variant="blood" className="w-full py-4 text-base font-bold">
                   {t("nav.request_for_donors")}
                 </Button>
               </Link>
@@ -337,26 +384,13 @@ const Navbar = () => {
                   {t("nav.donate_now")}
                 </Button>
               </Link>
-            </div>
-
-            {/* Mobile Social Icons */}
-            <div className="pt-12 px-4 border-t border-border mt-10">
-              <p className="text-center text-xs text-text-body/60 uppercase tracking-widest mb-8 font-bold">
-                {t("nav.stay_connected")}
-              </p>
-              <div className="flex justify-center space-x-8">
-                {SOCIAL_LINKS.map((social) => (
-                  <a
-                    key={social.name}
-                    href={social.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-text-body/60 hover:text-primary transition-colors p-2 hover:bg-white rounded-full focus:outline-none focus:ring-2 focus:ring-primary"
-                  >
-                    <social.icon className="w-6 h-6" />
-                  </a>
-                ))}
-              </div>
+              {!user && (
+                <Link to="/become-a-member" onClick={() => setIsOpen(false)}>
+                  <Button variant="outline" className="w-full py-4 text-base font-bold">
+                    Become a Member
+                  </Button>
+                </Link>
+              )}
             </div>
           </div>
         </div>

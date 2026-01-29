@@ -1,17 +1,24 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import Button from "./Button";
 import { sendEmail } from "../utils/email";
+import withFormAuth from "./withFormAuth";
 
-const ContactForm = ({ className = "", dark = false }) => {
+const ContactForm = ({ className = "", dark = false, user, isFieldDisabled, renderSubmitButton }) => {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    name: "",
-    email: "",
+    name: user?.name || "",
+    email: user?.email || "",
     phone: "",
     message: "",
   });
+
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({ ...prev, name: user.name, email: user.email }));
+    }
+  }, [user]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -19,6 +26,7 @@ const ContactForm = ({ className = "", dark = false }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!user) return;
     setLoading(true);
 
     const success = await sendEmail(
@@ -28,7 +36,7 @@ const ContactForm = ({ className = "", dark = false }) => {
     );
 
     if (success) {
-      setFormData({ name: "", email: "", phone: "", message: "" });
+      setFormData({ name: user?.name || "", email: user?.email || "", phone: "", message: "" });
     }
     setLoading(false);
   };
@@ -37,7 +45,7 @@ const ContactForm = ({ className = "", dark = false }) => {
     dark
       ? "bg-[#2A2A2A] border-white/10 text-white placeholder-gray-500"
       : "bg-white border-border text-text-body"
-  } border rounded-md focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all`;
+  } border rounded-md focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all disabled:opacity-70 disabled:cursor-not-allowed`;
 
   return (
     <form onSubmit={handleSubmit} className={`space-y-4 ${className}`}>
@@ -50,6 +58,7 @@ const ContactForm = ({ className = "", dark = false }) => {
         placeholder={t("form.name")}
         aria-label={t("form.aria_name")}
         className={inputClasses}
+        disabled={isFieldDisabled("name")}
       />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <input
@@ -61,6 +70,7 @@ const ContactForm = ({ className = "", dark = false }) => {
           placeholder={t("form.email")}
           aria-label={t("form.aria_email")}
           className={inputClasses}
+          disabled={isFieldDisabled("email")}
         />
         <input
           required
@@ -85,16 +95,18 @@ const ContactForm = ({ className = "", dark = false }) => {
         rows={4}
         className={`${inputClasses} resize-none`}
       ></textarea>
-      <Button
-        type="submit"
-        isLoading={loading}
-        className="w-full py-4 text-lg"
-        aria-label={t("form.aria_send")}
-      >
-        {t("form.send_message")}
-      </Button>
+      {renderSubmitButton(
+        <Button
+          type="submit"
+          isLoading={loading}
+          className="w-full py-4 text-lg"
+          aria-label={t("form.aria_send")}
+        >
+          {t("form.send_message")}
+        </Button>
+      )}
     </form>
   );
 };
 
-export default ContactForm;
+export default withFormAuth(ContactForm);

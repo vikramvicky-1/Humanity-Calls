@@ -38,6 +38,8 @@ export const sendEmail = async (type, data, subject) => {
       type,
       data,
       subject,
+    }, {
+      withCredentials: true
     });
 
     if (response.status === 200) {

@@ -1,4 +1,4 @@
-import React, { useState, useLayoutEffect, useRef } from "react";
+import React, { useState, useLayoutEffect, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -6,10 +6,11 @@ import SEO from "../components/SEO";
 import Button from "../components/Button";
 import { IMAGE_ALTS } from "../constants";
 import { sendEmail } from "../utils/email";
+import withFormAuth from "../components/withFormAuth";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const PoorNeedy = () => {
+const PoorNeedy = ({ user, isFieldDisabled, renderSubmitButton }) => {
   const { t, i18n } = useTranslation();
   const containerRef = useRef(null);
   const [loading, setLoading] = useState(false);
@@ -100,16 +101,24 @@ const PoorNeedy = () => {
 
     return () => ctx.revert();
   }, [i18n.language]);
+
   const [formData, setFormData] = useState({
-    firstName: "",
+    firstName: user?.name || "",
     phone: "",
-    email: "",
+    email: user?.email || "",
     address: "",
     message: "",
   });
 
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({ ...prev, firstName: user.name, email: user.email }));
+    }
+  }, [user]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!user) return;
     setLoading(true);
     
     const success = await sendEmail(
@@ -120,9 +129,9 @@ const PoorNeedy = () => {
 
     if (success) {
       setFormData({
-        firstName: "",
+        firstName: user?.name || "",
         phone: "",
-        email: "",
+        email: user?.email || "",
         address: "",
         message: "",
       });
@@ -182,7 +191,8 @@ const PoorNeedy = () => {
                   name="firstName"
                   value={formData.firstName}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-border bg-white rounded-lg focus:ring-2 focus:ring-primary outline-none transition-all shadow-sm"
+                  className="w-full px-4 py-3 border border-border bg-white rounded-lg focus:ring-2 focus:ring-primary outline-none transition-all shadow-sm disabled:opacity-70 disabled:cursor-not-allowed"
+                  disabled={isFieldDisabled("firstName")}
                 />
               </div>
               <div className="space-y-2">
@@ -210,7 +220,8 @@ const PoorNeedy = () => {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-border bg-white rounded-lg focus:ring-2 focus:ring-primary outline-none transition-all shadow-sm"
+                className="w-full px-4 py-3 border border-border bg-white rounded-lg focus:ring-2 focus:ring-primary outline-none transition-all shadow-sm disabled:opacity-70 disabled:cursor-not-allowed"
+                disabled={isFieldDisabled("email")}
               />
             </div>
             <div className="space-y-2">
@@ -238,9 +249,11 @@ const PoorNeedy = () => {
                 className="w-full px-4 py-3 border border-border bg-white rounded-lg focus:ring-2 focus:ring-primary outline-none transition-all shadow-sm"
               ></textarea>
             </div>
-            <Button type="submit" isLoading={loading} className="w-full py-4">
-              {t("poor_needy.submit")}
-            </Button>
+            {renderSubmitButton(
+              <Button type="submit" isLoading={loading} className="w-full py-4">
+                {t("poor_needy.submit")}
+              </Button>
+            )}
           </form>
         </div>
       </div>
@@ -248,4 +261,4 @@ const PoorNeedy = () => {
   );
 };
 
-export default PoorNeedy;
+export default withFormAuth(PoorNeedy);

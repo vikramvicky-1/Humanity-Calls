@@ -1,4 +1,4 @@
-import React, { useState, useLayoutEffect, useRef } from "react";
+import React, { useState, useLayoutEffect, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -6,10 +6,11 @@ import SEO from "../components/SEO";
 import Button from "../components/Button";
 import { IMAGE_ALTS } from "../constants";
 import { sendEmail } from "../utils/email";
+import withFormAuth from "../components/withFormAuth";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const RequestDonors = () => {
+const RequestDonors = ({ user, isFieldDisabled, renderSubmitButton }) => {
   const { t, i18n } = useTranslation();
   const containerRef = useRef(null);
   const [loading, setLoading] = useState(false);
@@ -62,17 +63,25 @@ const RequestDonors = () => {
 
     return () => ctx.revert();
   }, [i18n.language]);
+
   const [formData, setFormData] = useState({
-    verifiedPersonName: "",
+    verifiedPersonName: user?.name || "",
     phone: "",
-    email: "",
+    email: user?.email || "",
     patientName: "",
     bloodGroup: "",
     hospitalAddressWithPincode: "",
   });
 
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({ ...prev, verifiedPersonName: user.name, email: user.email }));
+    }
+  }, [user]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!user) return;
     setLoading(true);
 
     const success = await sendEmail(
@@ -83,9 +92,9 @@ const RequestDonors = () => {
 
     if (success) {
       setFormData({
-        verifiedPersonName: "",
+        verifiedPersonName: user?.name || "",
         phone: "",
-        email: "",
+        email: user?.email || "",
         patientName: "",
         bloodGroup: "",
         hospitalAddressWithPincode: "",
@@ -149,7 +158,8 @@ const RequestDonors = () => {
                   name="verifiedPersonName"
                   value={formData.verifiedPersonName}
                   onChange={handleChange}
-                  className="w-full px-4 py-4 bg-white border border-border rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all text-text-body shadow-sm"
+                  className="w-full px-4 py-4 bg-white border border-border rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all text-text-body shadow-sm disabled:opacity-70 disabled:cursor-not-allowed"
+                  disabled={isFieldDisabled("verifiedPersonName")}
                 />
               </div>
               <div className="space-y-2">
@@ -179,7 +189,8 @@ const RequestDonors = () => {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full px-4 py-4 bg-white border border-border rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all text-text-body shadow-sm"
+                className="w-full px-4 py-4 bg-white border border-border rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all text-text-body shadow-sm disabled:opacity-70 disabled:cursor-not-allowed"
+                disabled={isFieldDisabled("email")}
               />
             </div>
 
@@ -235,14 +246,16 @@ const RequestDonors = () => {
               ></textarea>
             </div>
 
-            <Button
-              type="submit"
-              variant="blood"
-              isLoading={loading}
-              className="w-full py-5 text-lg shadow-lg shadow-blood/20"
-            >
-              {t("request_donors.submit_request")}
-            </Button>
+            {renderSubmitButton(
+              <Button
+                type="submit"
+                variant="blood"
+                isLoading={loading}
+                className="w-full py-5 text-lg shadow-lg shadow-blood/20"
+              >
+                {t("request_donors.submit_request")}
+              </Button>
+            )}
           </form>
         </div>
       </div>
@@ -250,4 +263,4 @@ const RequestDonors = () => {
   );
 };
 
-export default RequestDonors;
+export default withFormAuth(RequestDonors);

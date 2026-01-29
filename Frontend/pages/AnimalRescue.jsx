@@ -1,4 +1,4 @@
-import React, { useState, useLayoutEffect, useRef } from "react";
+import React, { useState, useLayoutEffect, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -6,10 +6,11 @@ import SEO from "../components/SEO";
 import Button from "../components/Button";
 import { IMAGE_ALTS } from "../constants";
 import { sendEmail } from "../utils/email";
+import withFormAuth from "../components/withFormAuth";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const AnimalRescue = () => {
+const AnimalRescue = ({ user, isFieldDisabled, renderSubmitButton }) => {
   const { t, i18n } = useTranslation();
   const containerRef = useRef(null);
   const [loading, setLoading] = useState(false);
@@ -100,16 +101,24 @@ const AnimalRescue = () => {
 
     return () => ctx.revert();
   }, [i18n.language]);
+
   const [formData, setFormData] = useState({
-    firstName: "",
+    firstName: user?.name || "",
     phone: "",
-    email: "",
+    email: user?.email || "",
     address: "",
     message: "",
   });
 
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({ ...prev, firstName: user.name, email: user.email }));
+    }
+  }, [user]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!user) return;
     setLoading(true);
     
     const success = await sendEmail(
@@ -120,9 +129,9 @@ const AnimalRescue = () => {
 
     if (success) {
       setFormData({
-        firstName: "",
+        firstName: user?.name || "",
         phone: "",
-        email: "",
+        email: user?.email || "",
         address: "",
         message: "",
       });
@@ -133,6 +142,8 @@ const AnimalRescue = () => {
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
+
+  const inputClasses = "w-full px-4 py-3 border border-border bg-white rounded-lg focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all shadow-sm disabled:opacity-70 disabled:cursor-not-allowed";
 
   return (
     <div className="bg-bg pb-24" ref={containerRef}>
@@ -180,7 +191,8 @@ const AnimalRescue = () => {
                   name="firstName"
                   value={formData.firstName}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-border bg-white rounded-lg focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all shadow-sm"
+                  className={inputClasses}
+                  disabled={isFieldDisabled("firstName")}
                 />
               </div>
               <div className="space-y-2">
@@ -194,7 +206,7 @@ const AnimalRescue = () => {
                   onChange={handleChange}
                   minLength={10}
                   maxLength={10}
-                  className="w-full px-4 py-3 border border-border bg-white rounded-lg focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all shadow-sm"
+                  className={inputClasses}
                 />
               </div>
             </div>
@@ -208,7 +220,8 @@ const AnimalRescue = () => {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-border bg-white rounded-lg focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all shadow-sm"
+                className={inputClasses}
+                disabled={isFieldDisabled("email")}
               />
             </div>
             <div className="space-y-2">
@@ -220,7 +233,7 @@ const AnimalRescue = () => {
                 name="address"
                 value={formData.address}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-border bg-white rounded-lg focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all shadow-sm"
+                className={inputClasses}
               />
             </div>
             <div className="space-y-2">
@@ -233,12 +246,14 @@ const AnimalRescue = () => {
                 value={formData.message}
                 onChange={handleChange}
                 rows={4}
-                className="w-full px-4 py-3 border border-border bg-white rounded-lg focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all shadow-sm"
+                className={inputClasses}
               ></textarea>
             </div>
-            <Button type="submit" variant="primary" isLoading={loading} className="w-full py-4">
-              {t("poor_needy.submit")}
-            </Button>
+            {renderSubmitButton(
+              <Button type="submit" variant="primary" isLoading={loading} className="w-full py-4">
+                {t("poor_needy.submit")}
+              </Button>
+            )}
           </form>
         </div>
       </div>
@@ -246,4 +261,4 @@ const AnimalRescue = () => {
   );
 };
 
-export default AnimalRescue;
+export default withFormAuth(AnimalRescue);

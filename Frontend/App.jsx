@@ -7,6 +7,7 @@ import {
 } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { UserProvider } from "./context/UserContext";
 import Navbar from "./components/Navbar";
 import ContactFloatingButton from "./components/WhatsAppButton";
 import Home from "./pages/Home";
@@ -25,6 +26,7 @@ const Terms = lazy(() => import("./pages/Terms"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Disclaimer = lazy(() => import("./pages/Disclaimer"));
 const DonationsMade = lazy(() => import("./pages/DonationsMade"));
+const BecomeAMember = lazy(() => import("./pages/BecomeAMember"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Loading component
@@ -45,37 +47,40 @@ const ScrollToTop = () => {
 
 const App = () => {
   return (
-    <Router>
-      <ToastContainer theme="dark" position="top-center" />
-      <ScrollToTop />
-      <div className="flex flex-col min-h-screen">
-        <Navbar />
-        <main className="flex-grow">
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/request-donors" element={<RequestDonors />} />
-              <Route path="/poor-needy" element={<PoorNeedy />} />
-              <Route path="/animal-rescue" element={<AnimalRescue />} />
-              <Route path="/collaborate" element={<Collaborate />} />
-              <Route path="/volunteer" element={<Volunteer />} />
-              <Route path="/donate" element={<Donate />} />
-              <Route path="/wall-of-fame" element={<WallOfFame />} />
-              <Route path="/terms" element={<Terms />} />
-              <Route path="/privacy" element={<Privacy />} />
-              <Route path="/disclaimer" element={<Disclaimer />} />
-              <Route path="/donations-made" element={<DonationsMade />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+    <UserProvider>
+      <Router>
+        <ToastContainer theme="dark" position="top-center" />
+        <ScrollToTop />
+        <div className="flex flex-col min-h-screen">
+          <Navbar />
+          <main className="flex-grow">
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/request-donors" element={<RequestDonors />} />
+                <Route path="/poor-needy" element={<PoorNeedy />} />
+                <Route path="/animal-rescue" element={<AnimalRescue />} />
+                <Route path="/collaborate" element={<Collaborate />} />
+                <Route path="/volunteer" element={<Volunteer />} />
+                <Route path="/donate" element={<Donate />} />
+                <Route path="/wall-of-fame" element={<WallOfFame />} />
+                <Route path="/terms" element={<Terms />} />
+                <Route path="/privacy" element={<Privacy />} />
+                <Route path="/disclaimer" element={<Disclaimer />} />
+                <Route path="/donations-made" element={<DonationsMade />} />
+                <Route path="/become-a-member" element={<BecomeAMember />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
+          </main>
+          <Suspense fallback={null}>
+            <Footer />
           </Suspense>
-        </main>
-        <Suspense fallback={null}>
-          <Footer />
-        </Suspense>
-        <ContactFloatingButton />
-      </div>
-    </Router>
+          <ContactFloatingButton />
+        </div>
+      </Router>
+    </UserProvider>
   );
 };
 

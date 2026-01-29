@@ -1,6 +1,7 @@
 import express from "express";
 import { sendEmail } from "../controllers/emailController.js";
 import rateLimit from "express-rate-limit";
+import { protect } from "../middleware/auth.js";
 
 const router = express.Router();
 
@@ -16,6 +17,6 @@ const contactEmailLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-router.post("/send-email", contactEmailLimiter, sendEmail);
+router.post("/send-email", protect, contactEmailLimiter, sendEmail);
 
 export default router;

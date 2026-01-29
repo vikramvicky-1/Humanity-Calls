@@ -1,4 +1,4 @@
-import React, { useState, useLayoutEffect, useRef } from "react";
+import React, { useState, useLayoutEffect, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -6,10 +6,11 @@ import SEO from "../components/SEO";
 import Button from "../components/Button";
 import { IMAGE_ALTS } from "../constants";
 import { sendEmail } from "../utils/email";
+import withFormAuth from "../components/withFormAuth";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const Collaborate = () => {
+const Collaborate = ({ user, isFieldDisabled, renderSubmitButton }) => {
   const { t, i18n } = useTranslation();
   const containerRef = useRef(null);
   const [loading, setLoading] = useState(false);
@@ -62,17 +63,25 @@ const Collaborate = () => {
 
     return () => ctx.revert();
   }, [i18n.language]);
+
   const [formData, setFormData] = useState({
     institutionName: "",
-    contactPerson: "",
-    email: "",
+    contactPerson: user?.name || "",
+    email: user?.email || "",
     phone: "",
     address: "",
     message: "",
   });
 
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({ ...prev, contactPerson: user.name, email: user.email }));
+    }
+  }, [user]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!user) return;
     setLoading(true);
     
     const success = await sendEmail(
@@ -84,8 +93,8 @@ const Collaborate = () => {
     if (success) {
       setFormData({
         institutionName: "",
-        contactPerson: "",
-        email: "",
+        contactPerson: user?.name || "",
+        email: user?.email || "",
         phone: "",
         address: "",
         message: "",
@@ -146,7 +155,8 @@ const Collaborate = () => {
                   value={formData.contactPerson}
                   onChange={handleChange}
                   placeholder={t("collaborate.placeholders.contact_person")}
-                  className="w-full px-4 py-3 border border-border bg-white rounded-lg focus:ring-2 focus:ring-primary outline-none transition-all shadow-sm"
+                  className="w-full px-4 py-3 border border-border bg-white rounded-lg focus:ring-2 focus:ring-primary outline-none transition-all shadow-sm disabled:opacity-70 disabled:cursor-not-allowed"
+                  disabled={isFieldDisabled("contactPerson")}
                 />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -161,7 +171,8 @@ const Collaborate = () => {
                     value={formData.email}
                     onChange={handleChange}
                     placeholder={t("collaborate.placeholders.email")}
-                    className="w-full px-4 py-3 border border-border bg-white rounded-lg focus:ring-2 focus:ring-primary outline-none transition-all shadow-sm"
+                    className="w-full px-4 py-3 border border-border bg-white rounded-lg focus:ring-2 focus:ring-primary outline-none transition-all shadow-sm disabled:opacity-70 disabled:cursor-not-allowed"
+                    disabled={isFieldDisabled("email")}
                   />
                 </div>
                 <div className="space-y-2">
@@ -207,9 +218,11 @@ const Collaborate = () => {
                   className="w-full px-4 py-3 border border-border bg-white rounded-lg focus:ring-2 focus:ring-primary outline-none transition-all shadow-sm"
                 ></textarea>
               </div>
-              <Button type="submit" isLoading={loading} className="w-full py-4">
-                {t("collaborate.submit")}
-              </Button>
+              {renderSubmitButton(
+                <Button type="submit" isLoading={loading} className="w-full py-4">
+                  {t("collaborate.submit")}
+                </Button>
+              )}
             </form>
           </div>
         </div>
@@ -218,4 +231,4 @@ const Collaborate = () => {
   );
 };
 
-export default Collaborate;
+export default withFormAuth(Collaborate);

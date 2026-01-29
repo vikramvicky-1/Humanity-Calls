@@ -1,14 +1,15 @@
-import React, { useState, useLayoutEffect, useRef } from "react";
+import React, { useState, useLayoutEffect, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import SEO from "../components/SEO";
 import Button from "../components/Button";
 import { sendEmail } from "../utils/email";
+import withFormAuth from "../components/withFormAuth";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const Volunteer = () => {
+const Volunteer = ({ user, isFieldDisabled, renderSubmitButton }) => {
   const { t, i18n } = useTranslation();
   const containerRef = useRef(null);
   const [loading, setLoading] = useState(false);
@@ -61,16 +62,29 @@ const Volunteer = () => {
 
     return () => ctx.revert();
   }, [i18n.language]);
+
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
+    firstName: user?.name.split(' ')[0] || "",
+    lastName: user?.name.split(' ').slice(1).join(' ') || "",
+    email: user?.email || "",
     phone: "",
     interest: "",
   });
 
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        firstName: user.name.split(' ')[0],
+        lastName: user.name.split(' ').slice(1).join(' '),
+        email: user.email
+      }));
+    }
+  }, [user]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!user) return;
     setLoading(true);
     
     const success = await sendEmail(
@@ -81,9 +95,9 @@ const Volunteer = () => {
 
     if (success) {
       setFormData({
-        firstName: "",
-        lastName: "",
-        email: "",
+        firstName: user?.name.split(' ')[0] || "",
+        lastName: user?.name.split(' ').slice(1).join(' ') || "",
+        email: user?.email || "",
         phone: "",
         interest: "",
       });
@@ -94,6 +108,8 @@ const Volunteer = () => {
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
+
+  const inputClasses = "w-full px-4 py-3 border border-border bg-white rounded-lg focus:ring-2 focus:ring-primary outline-none transition-all shadow-sm disabled:opacity-70 disabled:cursor-not-allowed";
 
   return (
     <div className="bg-white min-h-screen py-24" ref={containerRef}>
@@ -128,7 +144,8 @@ const Volunteer = () => {
                 value={formData.firstName}
                 onChange={handleChange}
                 placeholder={t("volunteer.first_name")}
-                className="w-full px-4 py-3 border border-border bg-white rounded-lg focus:ring-2 focus:ring-primary outline-none transition-all shadow-sm"
+                className={inputClasses}
+                disabled={isFieldDisabled("firstName")}
               />
               <input
                 required
@@ -136,7 +153,8 @@ const Volunteer = () => {
                 value={formData.lastName}
                 onChange={handleChange}
                 placeholder={t("volunteer.last_name")}
-                className="w-full px-4 py-3 border border-border bg-white rounded-lg focus:ring-2 focus:ring-primary outline-none transition-all shadow-sm"
+                className={inputClasses}
+                disabled={isFieldDisabled("lastName")}
               />
             </div>
             <input
@@ -146,7 +164,8 @@ const Volunteer = () => {
               value={formData.email}
               onChange={handleChange}
               placeholder={t("volunteer.email")}
-              className="w-full px-4 py-3 border border-border bg-white rounded-lg focus:ring-2 focus:ring-primary outline-none transition-all shadow-sm"
+              className={inputClasses}
+              disabled={isFieldDisabled("email")}
             />
             <input
               required
@@ -157,7 +176,7 @@ const Volunteer = () => {
               minLength={10}
               maxLength={10}
               placeholder={t("volunteer.phone")}
-              className="w-full px-4 py-3 border border-border bg-white rounded-lg focus:ring-2 focus:ring-primary outline-none transition-all shadow-sm"
+              className={inputClasses}
             />
             <select
               required
@@ -172,9 +191,11 @@ const Volunteer = () => {
               <option value="Animal Rescue">{t("volunteer.interests.animal")}</option>
               <option value="Event Organizing">{t("volunteer.interests.event")}</option>
             </select>
-            <Button type="submit" isLoading={loading} className="w-full py-4">
-              {t("volunteer.join_now")}
-            </Button>
+            {renderSubmitButton(
+              <Button type="submit" isLoading={loading} className="w-full py-4">
+                {t("volunteer.join_now")}
+              </Button>
+            )}
           </form>
         </div>
       </div>
@@ -182,4 +203,4 @@ const Volunteer = () => {
   );
 };
 
-export default Volunteer;
+export default withFormAuth(Volunteer);

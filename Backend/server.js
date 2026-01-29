@@ -1,7 +1,10 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import cookieParser from "cookie-parser";
+import mongoose from "mongoose";
 import emailRoutes from "./routes/emailRoutes.js";
+import authRoutes from "./routes/auth.js";
 
 dotenv.config();
 
@@ -25,14 +28,27 @@ app.use(
       }
     },
     credentials: true,
-  })
+  }),
 );
+
 app.use(express.json());
+app.use(cookieParser());
+
+// Database Connection
+const mongoURI = process.env.MONGO_URI;
+mongoose
+  .connect(mongoURI)
+  .then(() => console.log("Connected to MongoDB successfully"))
+  .catch((err) => {
+    console.error("MongoDB connection error:", err);
+    // Do not exit process if MONGO_URI is missing, user will add it later
+  });
 
 // Routes
+app.use("/api/auth", authRoutes);
 app.use("/api", emailRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`Contact backend running on port ${PORT}`);
+  console.log(`Backend server running on port ${PORT}`);
 });

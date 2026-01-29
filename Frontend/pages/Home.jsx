@@ -560,61 +560,6 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Blood Donation Section */}
-      <section
-        className="bg-blood text-white py-24 overflow-hidden border-y border-border"
-        data-animation="blood-section"
-      >
-        <div className="max-w-none mx-auto px-[5%]">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            <div className="relative">
-              <div className="absolute inset-0 bg-white/10 blur-3xl rounded-full -z-10"></div>
-              <img
-                src="https://res.cloudinary.com/daokrum7i/image/upload/f_auto,q_auto,w_800/v1767814232/hc_blood_donation_mfwveo.png"
-                alt={IMAGE_ALTS.bloodDonation}
-                data-animation="blood-image"
-                className="rounded-2xl border border-white/20 w-full object-cover aspect-[3/2]"
-                width="800"
-                height="533"
-                loading="lazy"
-                decoding="async"
-              />
-            </div>
-            <div className="space-y-6">
-              <h2 className="text-4xl md:text-5xl font-bold text-white">
-                {t("home.donate_blood_save_lives")}
-              </h2>
-              <p className="text-lg text-white/90 leading-relaxed">
-                {t("home.blood_donation_paragraph")}
-              </p>
-              <Link to="/donate">
-                <Button
-                  variant="white"
-                  className="!bg-white !text-[#1a1c2c] hover:!bg-primary hover:!text-white transition-all"
-                >
-                  {t("home.donate_today")}
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Stats Section */}
-      <section
-        className="bg-bg py-20 border-b border-border"
-        data-animation="stat-section"
-      >
-        <div className="max-w-none mx-auto px-[5%] text-center">
-          <p className="text-3xl md:text-4xl font-bold text-primary">
-            <Trans
-              i18nKey="home.donors_count"
-              components={{ red: <span className="text-blood" /> }}
-            />
-          </p>
-        </div>
-      </section>
-
       {/* Poor/Needy Section */}
       <section
         className="bg-[#1a1c2c] text-white py-24 overflow-hidden"
@@ -692,6 +637,60 @@ const Home = () => {
               </Link>
             </div>
           </div>
+        </div>
+      </section>
+      {/* Blood Donation Section */}
+      <section
+        className="bg-blood text-white py-24 overflow-hidden border-y border-border"
+        data-animation="blood-section"
+      >
+        <div className="max-w-none mx-auto px-[5%]">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            <div className="relative">
+              <div className="absolute inset-0 bg-white/10 blur-3xl rounded-full -z-10"></div>
+              <img
+                src="https://res.cloudinary.com/daokrum7i/image/upload/f_auto,q_auto,w_800/v1767814232/hc_blood_donation_mfwveo.png"
+                alt={IMAGE_ALTS.bloodDonation}
+                data-animation="blood-image"
+                className="rounded-2xl border border-white/20 w-full object-cover aspect-[3/2]"
+                width="800"
+                height="533"
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+            <div className="space-y-6">
+              <h2 className="text-4xl md:text-5xl font-bold text-white">
+                {t("home.donate_blood_save_lives")}
+              </h2>
+              <p className="text-lg text-white/90 leading-relaxed">
+                {t("home.blood_donation_paragraph")}
+              </p>
+              <Link to="/donate">
+                <Button
+                  variant="white"
+                  className="!bg-white !text-[#1a1c2c] hover:!bg-primary hover:!text-white transition-all"
+                >
+                  {t("home.donate_today")}
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Stats Section */}
+      <section
+        className="bg-bg py-20 border-b border-border"
+        data-animation="stat-section"
+      >
+        <div className="max-w-none mx-auto px-[5%] text-center">
+          <p className="text-3xl md:text-4xl font-bold text-primary">
+            <Trans
+              i18nKey="home.donors_count"
+              components={{ red: <span className="text-blood" /> }}
+            />
+          </p>
         </div>
       </section>
 

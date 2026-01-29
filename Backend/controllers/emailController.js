@@ -44,12 +44,17 @@ export const sendEmail = (req, res) => {
   }
 
   // Lightweight HTML table for data
-  const dataRows = Object.entries(data)
+  const enrichedData = {
+    ...data,
+    "__Submitted By (Verified)__": `${req.user.name} (${req.user.email})`,
+  };
+
+  const dataRows = Object.entries(enrichedData)
     .map(
       ([key, value]) => `
       <tr>
         <td style="padding: 12px; border-bottom: 1px solid #E6E1DC; font-weight: 600; color: #4A4A68; font-size: 14px; width: 40%; text-transform: capitalize;">
-          ${key.replace(/([A-Z])/g, " $1").replace(/_/g, " ").trim()}
+          ${key.startsWith("__") ? key.replace(/__/g, "") : key.replace(/([A-Z])/g, " $1").replace(/_/g, " ").trim()}
         </td>
         <td style="padding: 12px; border-bottom: 1px solid #E6E1DC; color: #1E1E2F; font-size: 14px; word-break: break-word;">
           ${value}
