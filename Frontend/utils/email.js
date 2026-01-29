@@ -34,12 +34,19 @@ export const sendEmail = async (type, data, subject) => {
   }
 
   try {
+    const token = sessionStorage.getItem("token");
+    const headers = {};
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
     const response = await axios.post(`${API_URL}/send-email`, {
       type,
       data,
       subject,
     }, {
-      withCredentials: true
+      withCredentials: true,
+      headers
     });
 
     if (response.status === 200) {
