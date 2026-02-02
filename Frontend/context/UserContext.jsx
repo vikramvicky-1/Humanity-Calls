@@ -66,9 +66,24 @@ export const UserProvider = ({ children }) => {
     setUser(null);
   };
 
+  const updateProfile = async (data) => {
+    const token = sessionStorage.getItem("token");
+    const headers = {};
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
+    const response = await axios.put(`${API_URL}/auth/profile`, data, {
+      withCredentials: true,
+      headers,
+    });
+    setUser(response.data.user);
+    return response.data;
+  };
+
   return (
     <UserContext.Provider
-      value={{ user, loading, login, signup, logout, checkAuth }}
+      value={{ user, loading, login, signup, logout, checkAuth, updateProfile }}
     >
       {children}
     </UserContext.Provider>

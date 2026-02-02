@@ -76,7 +76,29 @@
     "volunteer": "Volunteer",
     "collaborate": "Collaborate",
     "view_us": "View Us",
-    "load_more": "Load More"
+    "view_more": "View More",
+    "load_more": "Load More",
+    "word_gallery": "Gallery",
+    "gallery_preparing_title": "Visual stories are being prepared...",
+    "gallery_preparing_desc": "We are currently curating our gallery to bring you the most impactful moments from our field operations.",
+    "view_profile": "View Profile"
+  },
+  "profile": {
+    "title": "My Profile",
+    "account_info": "Account Information",
+    "full_name": "Full Name",
+    "full_name_placeholder": "Enter your name",
+    "email_address_label": "Email Address (Cannot be changed)",
+    "updating": "Updating...",
+    "save_changes": "Save Changes",
+    "preferred_language": "Preferred Language",
+    "sign_out": "Sign Out",
+    "logout_confirm_text": "Are you sure you want to log out of your account?",
+    "logout": "Logout"
+  },
+  "program_detail": {
+    "initiative_cornerstone": "At Humanity Calls, our <strong>{{title}}</strong> initiative is a cornerstone of our commitment to social welfare. This program is designed to address critical needs within our community, ensuring that we provide sustainable and impactful solutions.",
+    "initiative_expansion": "Through our dedicated team of volunteers and the support of our generous donors, we continue to expand the reach and effectiveness of this initiative. Every action taken under this program is a step towards a more compassionate and equitable society."
   },
   "about": {
     "title": "About Us",

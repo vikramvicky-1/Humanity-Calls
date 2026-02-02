@@ -54,9 +54,11 @@ export const signup = async (req, res) => {
 // Login
 export const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, username, password } = req.body;
 
-    const user = await User.findOne({ email });
+    const query = email ? { email } : { username };
+    const user = await User.findOne(query);
+
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -66,7 +68,7 @@ export const login = async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || "fallback_secret", {
+    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET || "fallback_secret", {
       expiresIn: "30d",
     });
 
@@ -79,7 +81,7 @@ export const login = async (req, res) => {
 
     res.status(200).json({
       message: "Logged in successfully",
-      user: { id: user._id, name: user.name, email: user.email },
+      user: { id: user._id, name: user.name, email: user.email, username: user.username, role: user.role },
       token,
     });
   } catch (error) {
@@ -105,4 +107,56 @@ export const logout = (req, res) => {
     sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
   });
   res.status(200).json({ message: "Logged out successfully" });
+};
+
+// Update Profile
+export const updateProfile = async (req, res) => {
+  try {
+    const { name } = req.body;
+    if (!name) {
+      return res.status(400).json({ message: "Name is required" });
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    user.name = name;
+    await user.save();
+
+    res.status(200).json({
+      message: "Profile updated successfully",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        username: user.username,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    console.error("Update profile error:", error);
+    res.status(500).json({ message: "Something went wrong" });
+  }
+};
+
+// Initialize Admin
+export const initAdmin = async () => {
+  try {
+    const adminExists = await User.findOne({ role: "admin" });
+    if (!adminExists) {
+      const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD || "Admin@humanitycalls@2026", 12);
+      const admin = new User({
+        name: "Admin",
+        username: process.env.ADMIN_USERNAME || "humanitycalls",
+        password: hashedPassword,
+        role: "admin",
+      });
+      await admin.save();
+      console.log("Admin user initialized");
+    }
+  } catch (error) {
+    console.error("Admin initialization error:", error);
+  }
 };

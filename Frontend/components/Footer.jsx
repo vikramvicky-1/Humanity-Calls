@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import gsap from "gsap";
 import Button from "./Button";
+import cortexLogo from "../assets/cortexlogo.png";
 import ContactForm from "./ContactForm";
 import { SOCIAL_LINKS } from "../constants";
 import { animateFooterElements } from "../utils/animations";
@@ -140,11 +141,15 @@ const Footer = () => {
           </div>
 
           <p className="text-sm text-white/60 text-center">
-            {t("footer.rights_reserved", { year: new Date().getFullYear() })}
+            © 2026 Humanity Calls Trust®. All Rights Reserved.
           </p>
-          <p className="text-xs font-bold text-white/40 text-center mt-4">
-            {t("footer.designed_developed")}
-          </p>
+          <div className="flex gap-2 items-center text-xs font-bold text-white/40 text-center mt-4">
+            <p className="">Designed and Developed by</p>
+            <div className="flex gap-0.5 items-center  text-[#E2ECED]">
+              <img className="h-6" src={cortexLogo} alt="Cortex" />
+              <p>CORTEX™</p>
+            </div>
+          </div>
         </div>
       </div>
     </footer>

@@ -42,17 +42,24 @@ const LanguageSelector = ({ className, isProfile = false }) => {
     <div className={`relative ${className}`} ref={langRef}>
       <button
         onClick={() => setIsLangOpen(!isLangOpen)}
-        className={`${isProfile ? 'w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center justify-between text-sm text-text-body' : 'flex items-center space-x-1.5 bg-bg border border-border text-text-body py-2 px-3 rounded-lg text-sm font-medium hover:border-primary hover:text-primary transition-all focus:outline-none shadow-sm'}`}
+        className={`${isProfile ? "w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center justify-between text-sm text-text-body" : "flex items-center space-x-1.5 bg-bg border border-border text-text-body py-2 px-3 rounded-lg text-sm font-medium hover:border-primary hover:text-primary transition-all focus:outline-none shadow-sm"}`}
       >
         <div className="flex items-center space-x-2">
           <FaGlobe className="text-primary" />
-          <span>{languages.find((l) => l.code === i18n.language)?.label || "Language"}</span>
+          <span>
+            {languages.find((l) => l.code === i18n.language)?.label ||
+              "Language"}
+          </span>
         </div>
-        <FaChevronDown className={`text-[10px] transition-transform duration-200 ${isLangOpen ? 'rotate-180' : ''}`} />
+        <FaChevronDown
+          className={`text-[10px] transition-transform duration-200 ${isLangOpen ? "rotate-180" : ""}`}
+        />
       </button>
 
       {isLangOpen && (
-        <div className={`${isProfile ? 'absolute right-full top-0 mr-2 w-40 bg-white shadow-2xl rounded-xl border border-border py-2 z-[70]' : 'absolute top-full right-0 mt-2 w-40 bg-white shadow-2xl rounded-xl border border-border py-2 z-[60]'} animate-in fade-in slide-in-from-top-2 duration-200`}>
+        <div
+          className={`${isProfile ? "absolute right-full top-0 mr-2 w-40 bg-white shadow-2xl rounded-xl border border-border py-2 z-[70]" : "absolute top-full right-0 mt-2 w-40 bg-white shadow-2xl rounded-xl border border-border py-2 z-[60]"} animate-in fade-in slide-in-from-top-2 duration-200`}
+        >
           {languages.map((lang) => (
             <button
               key={lang.code}
@@ -93,7 +100,7 @@ const Navbar = () => {
     if (isOpen) {
       const ctx = gsap.context(() => {
         const mobileMenu = document.querySelector(
-          '[data-animation="mobile-menu"]'
+          '[data-animation="mobile-menu"]',
         );
         if (mobileMenu) {
           animateMobileMenuOpen(mobileMenu);
@@ -139,7 +146,10 @@ const Navbar = () => {
   const isActive = (path) => pathname === path;
 
   return (
-    <nav className="sticky top-0 z-50 bg-bg border-b border-border shadow-sm" ref={navRef}>
+    <nav
+      className="sticky top-0 z-50 bg-bg border-b border-border shadow-sm"
+      ref={navRef}
+    >
       <div className="max-w-none mx-auto px-[5%]">
         <div className="flex justify-between items-center h-20">
           {/* Logo */}
@@ -152,7 +162,7 @@ const Navbar = () => {
               src={hclogo}
               width="50"
               height="50"
-              style={{ width: 50, height: 50, objectFit: 'contain' }}
+              style={{ width: 50, height: 50, objectFit: "contain" }}
               alt="Humanity Calls logo"
             />
             <span className="text-xl font-bold text-blood tracking-tight">
@@ -213,7 +223,7 @@ const Navbar = () => {
                         >
                           {link.label}
                         </Link>
-                      )
+                      ),
                     )}
                   </div>
                 )}
@@ -243,37 +253,23 @@ const Navbar = () => {
               {!user ? (
                 <>
                   <Link to="/become-a-member">
-                    <Button variant="outline" className="text-[12px] py-2 px-3 min-h-[40px] font-semibold">
-                      Become a Member
+                    <Button
+                      variant="outline"
+                      className="text-[12px] py-2 px-3 min-h-[40px] font-semibold"
+                    >
+                      Login
                     </Button>
                   </Link>
                   <LanguageSelector className="ml-1" />
                 </>
               ) : (
-                <div 
-                  className="relative"
-                  onMouseEnter={() => setIsProfileOpen(true)}
-                  onMouseLeave={() => setIsProfileOpen(false)}
-                >
-                  <button className="flex items-center space-x-2 bg-bg border border-border p-2 rounded-full hover:border-primary transition-all">
-                    <FaUserCircle className="text-2xl text-primary" />
-                    <span className="text-sm font-medium text-text-body">{user.name}</span>
-                  </button>
-                  {isProfileOpen && (
-                    <div className="absolute top-full right-0 mt-2 w-48 bg-white shadow-2xl rounded-xl border border-border py-2 z-[60] animate-in fade-in slide-in-from-top-2 duration-200">
-                      <div className="px-4 py-2 border-b border-border mb-2">
-                        <p className="text-xs text-gray-500 uppercase font-bold">Logged in as</p>
-                        <p className="text-sm font-bold text-blood truncate">{user.email}</p>
-                      </div>
-                      <LanguageSelector isProfile={true} />
-                      <button
-                        onClick={handleLogout}
-                        className="w-full text-left px-4 py-2 text-sm text-blood hover:bg-blood/5 font-medium transition-colors"
-                      >
-                        Logout
-                      </button>
-                    </div>
-                  )}
+                <div className="relative">
+                  <Link
+                    to="/profile"
+                    className="flex items-center justify-center w-10 h-10 bg-primary text-white rounded-full font-bold hover:bg-primary/90 transition-all shadow-md active:scale-95"
+                  >
+                    {user.name.charAt(0).toUpperCase()}
+                  </Link>
                 </div>
               )}
             </div>
@@ -290,11 +286,26 @@ const Navbar = () => {
               }
               aria-expanded={isOpen}
             >
-              <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+                className="w-7 h-7"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
                 {isOpen ? (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 ) : (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 6h16M4 12h16m-7 6h7"
+                  />
                 )}
               </svg>
             </button>
@@ -310,32 +321,32 @@ const Navbar = () => {
         >
           <div className="px-4 pt-4 space-y-1">
             {user && (
-              <div className="px-4 py-4 bg-white rounded-lg border border-border mb-4">
-                <div className="flex items-center space-x-3 mb-2">
-                  <FaUserCircle className="text-3xl text-primary" />
-                  <div>
-                    <p className="font-bold text-text-body">{user.name}</p>
-                    <p className="text-xs text-gray-500">{user.email}</p>
-                  </div>
+              <Link
+                to="/profile"
+                onClick={() => setIsOpen(false)}
+                className="px-4 py-4 bg-white rounded-xl border border-border mb-4 flex items-center space-x-4 shadow-sm active:scale-[0.98] transition-all"
+              >
+                <div className="w-12 h-12 bg-primary text-white rounded-full flex items-center justify-center font-bold text-xl shadow-inner">
+                  {user.name.charAt(0).toUpperCase()}
                 </div>
-                <div className="mt-4 pt-4 border-t border-border flex flex-col space-y-2">
-                  <p className="text-xs font-bold uppercase text-gray-400">Settings</p>
-                  <LanguageSelector className="w-full" />
-                  <button 
-                    onClick={handleLogout}
-                    className="w-full py-2 text-left text-blood font-medium text-sm"
-                  >
-                    Logout
-                  </button>
+                <div>
+                  <p className="font-bold text-text-body text-lg leading-tight">
+                    {user.name}
+                  </p>
+                  <p className="text-xs text-gray-500 font-medium">
+                    View Profile
+                  </p>
                 </div>
-              </div>
+              </Link>
             )}
             {navLinks.map((link) => (
               <Link
                 key={link.label}
                 to={link.href}
                 className={`block px-4 py-4 text-lg font-medium border-b border-border rounded-lg transition-colors ${
-                  isActive(link.href) ? "text-primary bg-white" : "text-text-body hover:bg-white hover:text-secondary"
+                  isActive(link.href)
+                    ? "text-primary bg-white"
+                    : "text-text-body hover:bg-white hover:text-secondary"
                 }`}
                 onClick={() => setIsOpen(false)}
                 data-animation="mobile-link"
@@ -369,13 +380,16 @@ const Navbar = () => {
                     >
                       {link.label}
                     </Link>
-                  )
+                  ),
                 )}
               </div>
             </div>
             <div className="flex flex-col space-y-3 pt-10 px-4">
               <Link to="/request-donors" onClick={() => setIsOpen(false)}>
-                <Button variant="blood" className="w-full py-4 text-base font-bold">
+                <Button
+                  variant="blood"
+                  className="w-full py-4 text-base font-bold"
+                >
                   {t("nav.request_for_donors")}
                 </Button>
               </Link>
@@ -386,7 +400,10 @@ const Navbar = () => {
               </Link>
               {!user && (
                 <Link to="/become-a-member" onClick={() => setIsOpen(false)}>
-                  <Button variant="outline" className="w-full py-4 text-base font-bold">
+                  <Button
+                    variant="outline"
+                    className="w-full py-4 text-base font-bold"
+                  >
                     Become a Member
                   </Button>
                 </Link>

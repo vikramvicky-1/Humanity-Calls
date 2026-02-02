@@ -5,6 +5,8 @@ import cookieParser from "cookie-parser";
 import mongoose from "mongoose";
 import emailRoutes from "./routes/emailRoutes.js";
 import authRoutes from "./routes/auth.js";
+import galleryRoutes from "./routes/galleryRoutes.js";
+import { initAdmin } from "./controllers/authController.js";
 
 dotenv.config();
 
@@ -38,14 +40,17 @@ app.use(cookieParser());
 const mongoURI = process.env.MONGO_URI;
 mongoose
   .connect(mongoURI)
-  .then(() => console.log("Connected to MongoDB successfully"))
+  .then(() => {
+    console.log("Connected to MongoDB successfully");
+    initAdmin();
+  })
   .catch((err) => {
     console.error("MongoDB connection error:", err);
-    // Do not exit process if MONGO_URI is missing, user will add it later
   });
 
 // Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/gallery", galleryRoutes);
 app.use("/api", emailRoutes);
 
 const PORT = process.env.PORT || 5000;
