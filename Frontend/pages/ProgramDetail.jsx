@@ -118,7 +118,7 @@ const ProgramDetail = () => {
           </div>
 
           {isLoading ? (
-            <div className="grid grid-cols-2 gap-4 md:gap-8">
+            <div className="grid grid-cols-2 max-sm:grid-cols-1 gap-4 md:gap-8">
               {[1, 2, 3, 4].map((n) => (
                 <div
                   key={n}
@@ -127,7 +127,7 @@ const ProgramDetail = () => {
               ))}
             </div>
           ) : sortedImages.length > 0 ? (
-            <div className="grid grid-cols-2 gap-4 md:gap-8">
+            <div className="grid grid-cols-2 max-sm:grid-cols-1 gap-4 md:gap-8">
               {sortedImages.map((img) => (
                 <div
                   key={img._id}
