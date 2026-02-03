@@ -68,7 +68,7 @@ const ProgramDetail = () => {
   }, [id, i18n.language]);
 
   return (
-    <div className="bg-bg min-h-screen pt-32 pb-12" ref={containerRef}>
+    <div className="bg-bg min-h-screen pt-12 pb-12" ref={containerRef}>
       <SEO title={`${title} | Humanity Calls`} description={desc} />
 
       <div className="max-w-none mx-auto px-[5%]">
