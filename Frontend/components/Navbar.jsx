@@ -9,76 +9,6 @@ import { SOCIAL_LINKS } from "../constants";
 import { animateNavBar, animateMobileMenuOpen } from "../utils/animations";
 import { useUser } from "../context/UserContext";
 
-const LanguageSelector = ({ className, isProfile = false }) => {
-  const { i18n } = useTranslation();
-  const [isLangOpen, setIsLangOpen] = useState(false);
-  const langRef = useRef(null);
-
-  const languages = [
-    { code: "en", label: "English" },
-    { code: "kn", label: "ಕನ್ನಡ" },
-    { code: "te", label: "తెలుగు" },
-    { code: "ta", label: "தமிழ்" },
-    { code: "ml", label: "മലയാളം" },
-    { code: "hi", label: "हिन्दी" },
-  ];
-
-  const changeLanguage = (lng) => {
-    i18n.changeLanguage(lng);
-    setIsLangOpen(false);
-  };
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (langRef.current && !langRef.current.contains(event.target)) {
-        setIsLangOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  return (
-    <div className={`relative ${className}`} ref={langRef}>
-      <button
-        onClick={() => setIsLangOpen(!isLangOpen)}
-        className={`${isProfile ? "w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center justify-between text-sm text-text-body" : "flex items-center space-x-1.5 bg-bg border border-border text-text-body py-2 px-3 rounded-lg text-sm font-medium hover:border-primary hover:text-primary transition-all focus:outline-none shadow-sm"}`}
-      >
-        <div className="flex items-center space-x-2">
-          <FaGlobe className="text-primary" />
-          <span>
-            {languages.find((l) => l.code === i18n.language)?.label ||
-              "Language"}
-          </span>
-        </div>
-        <FaChevronDown
-          className={`text-[10px] transition-transform duration-200 ${isLangOpen ? "rotate-180" : ""}`}
-        />
-      </button>
-
-      {isLangOpen && (
-        <div
-          className={`${isProfile ? "absolute right-full top-0 mr-2 w-40 bg-white shadow-2xl rounded-xl border border-border py-2 z-[70]" : "absolute top-full right-0 mt-2 w-40 bg-white shadow-2xl rounded-xl border border-border py-2 z-[60]"} animate-in fade-in slide-in-from-top-2 duration-200`}
-        >
-          {languages.map((lang) => (
-            <button
-              key={lang.code}
-              onClick={() => changeLanguage(lang.code)}
-              className={`w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-gray-50 ${
-                i18n.language === lang.code
-                  ? "text-primary font-bold bg-blue-50/50"
-                  : "text-text-body"
-              }`}
-            >
-              {lang.label}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
-
 const Navbar = () => {
   const { t, i18n } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
@@ -260,13 +190,13 @@ const Navbar = () => {
                       Login
                     </Button>
                   </Link>
-                  <LanguageSelector className="ml-1" />
                 </>
               ) : (
                 <div className="relative">
                   <Link
                     to="/profile"
                     className="flex items-center justify-center w-10 h-10 bg-primary text-white rounded-full font-bold hover:bg-primary/90 transition-all shadow-md active:scale-95"
+                    title={user.name}
                   >
                     {user.name.charAt(0).toUpperCase()}
                   </Link>
@@ -277,7 +207,6 @@ const Navbar = () => {
 
           {/* Mobile Menu Toggle */}
           <div className="lg:hidden flex items-center space-x-3">
-            {!user && <LanguageSelector />}
             <button
               onClick={() => setIsOpen(!isOpen)}
               className="text-primary p-2 hover:bg-border/20 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-primary"

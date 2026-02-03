@@ -89,6 +89,14 @@ const AppContent = () => {
             <Route path="/profile" element={<Profile />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route
+              path="/add-gallery"
+              element={<AdminDashboard defaultTab="add-gallery" />}
+            />
+            <Route
+              path="/admin/gallery"
+              element={<AdminDashboard defaultTab="gallery" />}
+            />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
@@ -97,13 +105,6 @@ const AppContent = () => {
         <Suspense fallback={null}>
           <Footer />
         </Suspense>
-      )}
-      {isAdminPage && (
-        <footer className="bg-white border-t border-border py-4 px-6 text-center shrink-0">
-          <p className="text-xs font-bold text-text-body/60 uppercase tracking-widest">
-            Designed and Developed by <span className="text-primary">CORTEX™</span>
-          </p>
-        </footer>
       )}
       {!isAdminPage && <ContactFloatingButton />}
     </div>

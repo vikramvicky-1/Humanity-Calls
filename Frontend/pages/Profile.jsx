@@ -106,13 +106,13 @@ const Profile = () => {
           {/* Update Name Section */}
           <div className="bg-white rounded-3xl shadow-xl border border-border p-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <h2 className="text-xl font-bold text-primary mb-6 flex items-center gap-3">
-              <FaUser className="text-sm" /> Account Information
+              <FaUser className="text-sm" /> {t("profile.account_info")}
             </h2>
             
             <form onSubmit={handleUpdate} className="space-y-6">
               <div className="space-y-2">
                 <label className="text-xs font-bold text-text-body uppercase tracking-widest flex items-center gap-2">
-                  Full Name <span className="text-blood">*</span>
+                  {t("profile.full_name")} <span className="text-blood">*</span>
                 </label>
                 <div className="relative">
                   <input
@@ -120,7 +120,7 @@ const Profile = () => {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     className="w-full px-6 py-4 border border-border bg-bg/30 rounded-2xl focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all font-medium"
-                    placeholder="Enter your name"
+                    placeholder={t("profile.full_name_placeholder")}
                     required
                   />
                 </div>
@@ -128,7 +128,7 @@ const Profile = () => {
 
               <div className="space-y-2">
                 <label className="text-xs font-bold text-text-body/40 uppercase tracking-widest">
-                  Email Address (Cannot be changed)
+                  {t("profile.email_address_label")}
                 </label>
                 <div className="relative">
                   <div className="w-full px-6 py-4 border border-border bg-gray-50 rounded-2xl text-text-body/50 font-medium flex items-center gap-3">
@@ -146,11 +146,11 @@ const Profile = () => {
                 {isUpdating ? (
                   <>
                     <span className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin"></span>
-                    Updating...
+                    {t("profile.updating")}
                   </>
                 ) : (
                   <>
-                    <FaSave /> Save Changes
+                    <FaSave /> {t("profile.save_changes")}
                   </>
                 )}
               </button>
@@ -160,7 +160,7 @@ const Profile = () => {
           {/* Language Selection */}
           <div className="bg-white rounded-3xl shadow-xl border border-border p-8 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
             <h2 className="text-xl font-bold text-primary mb-6 flex items-center gap-3">
-              <FaGlobe className="text-sm" /> Preferred Language
+              <FaGlobe className="text-sm" /> {t("profile.preferred_language")}
             </h2>
             <LanguageSelectorProfile />
           </div>
@@ -170,15 +170,15 @@ const Profile = () => {
             <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
               <div>
                 <h2 className="text-xl font-bold text-blood mb-1 flex items-center gap-3">
-                  <FaSignOutAlt className="text-sm" /> Sign Out
+                  <FaSignOutAlt className="text-sm" /> {t("profile.sign_out")}
                 </h2>
-                <p className="text-text-body/60 text-sm font-medium">Are you sure you want to log out of your account?</p>
+                <p className="text-text-body/60 text-sm font-medium">{t("profile.logout_confirm_text")}</p>
               </div>
               <button
                 onClick={handleLogout}
                 className="w-full sm:w-auto px-10 py-4 rounded-2xl bg-blood text-white font-bold hover:bg-blood/90 transition-all shadow-xl shadow-blood/20 active:scale-[0.98] uppercase tracking-widest flex items-center justify-center gap-3"
               >
-                Logout
+                {t("profile.logout")}
               </button>
             </div>
           </div>

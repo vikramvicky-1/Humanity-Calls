@@ -18,7 +18,7 @@ export const getGallery = async (req, res) => {
 // @route   POST /api/gallery/upload
 export const uploadImage = async (req, res) => {
   try {
-    const { projectId } = req.body;
+    const { projectId, eventDate } = req.body;
     
     if (!req.file) {
       return res.status(400).json({ message: "No image uploaded" });
@@ -28,6 +28,7 @@ export const uploadImage = async (req, res) => {
       imageUrl: req.file.path,
       publicId: req.file.filename,
       projectId: projectId || "general",
+      eventDate: eventDate || null,
     });
 
     await newImage.save();

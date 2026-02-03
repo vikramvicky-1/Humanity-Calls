@@ -13,6 +13,7 @@ export default {
         sans: ["Montserrat", "sans-serif"],
         serif: ["Montserrat", "serif"],
         mono: ["Montserrat", "monospace"],
+        conthrax: ["Conthrax", "sans-serif"],
       },
       colors: {
         bg: "#FFFFFF",

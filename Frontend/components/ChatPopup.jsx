@@ -10,7 +10,7 @@ const ChatPopup = ({ isOpen, onClose }) => {
     const handleClickOutside = (event) => {
       // Don't close if clicking the popup or the floating toggle button
       const floatingButton = document.querySelector(
-        'button[aria-label="' + t("footer.contact_us") + '"]'
+        'button[aria-label="' + t("footer.contact_us") + '"]',
       );
       if (
         popupRef.current &&
@@ -57,9 +57,6 @@ const ChatPopup = ({ isOpen, onClose }) => {
             <h3 className="text-white font-bold leading-tight">
               {t("footer.contact_us")}
             </h3>
-            <p className="text-white/80 text-xs">
-              {t("humanitycallsnotify@gmail.com") || "We're here to help"}
-            </p>
           </div>
         </div>
         <button

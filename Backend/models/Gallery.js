@@ -13,6 +13,10 @@ const gallerySchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  eventDate: {
+    type: Date,
+    required: false,
+  },
   createdAt: {
     type: Date,
     default: Date.now,
