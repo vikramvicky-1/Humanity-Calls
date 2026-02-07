@@ -70,6 +70,7 @@ const RequestDonors = ({ user, isFieldDisabled, renderSubmitButton }) => {
     email: user?.email || "",
     patientName: "",
     bloodGroup: "",
+    bloodRequestType: "",
     hospitalAddressWithPincode: "",
   });
 
@@ -97,6 +98,7 @@ const RequestDonors = ({ user, isFieldDisabled, renderSubmitButton }) => {
         email: user?.email || "",
         patientName: "",
         bloodGroup: "",
+        bloodRequestType: "",
         hospitalAddressWithPincode: "",
       });
     }
@@ -194,7 +196,7 @@ const RequestDonors = ({ user, isFieldDisabled, renderSubmitButton }) => {
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <div className="space-y-2">
                 <label className="text-xs font-bold text-blood-dark uppercase tracking-widest">
                   {t("request_donors.patient_name")}
@@ -227,6 +229,38 @@ const RequestDonors = ({ user, isFieldDisabled, renderSubmitButton }) => {
                   <option value="O-">O-</option>
                   <option value="AB+">AB+</option>
                   <option value="AB-">AB-</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-blood-dark uppercase tracking-widest">
+                  {t("request_donors.blood_request_type")}
+                </label>
+                <select
+                  required
+                  name="bloodRequestType"
+                  value={formData.bloodRequestType}
+                  onChange={handleChange}
+                  className="w-full px-4 py-4 bg-white border border-border rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all text-text-body shadow-sm"
+                >
+                  <option value="">{t("request_donors.select_type")}</option>
+                  <option value={t("request_donors.blood_request_options.whole_blood")}>
+                    {t("request_donors.blood_request_options.whole_blood")}
+                  </option>
+                  <option value={t("request_donors.blood_request_options.rbc")}>
+                    {t("request_donors.blood_request_options.rbc")}
+                  </option>
+                  <option value={t("request_donors.blood_request_options.platelets")}>
+                    {t("request_donors.blood_request_options.platelets")}
+                  </option>
+                  <option value={t("request_donors.blood_request_options.plasma")}>
+                    {t("request_donors.blood_request_options.plasma")}
+                  </option>
+                  <option value={t("request_donors.blood_request_options.cyroprecipitate")}>
+                    {t("request_donors.blood_request_options.cyroprecipitate")}
+                  </option>
+                  <option value={t("request_donors.blood_request_options.wbc")}>
+                    {t("request_donors.blood_request_options.wbc")}
+                  </option>
                 </select>
               </div>
             </div>

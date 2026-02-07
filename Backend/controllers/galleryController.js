@@ -59,3 +59,24 @@ export const deleteImage = async (req, res) => {
     res.status(500).json({ message: "Delete failed" });
   }
 };
+
+// @desc    Update image details
+// @route   PUT /api/gallery/:id
+export const updateImage = async (req, res) => {
+  try {
+    const { projectId, eventDate } = req.body;
+    const image = await Gallery.findById(req.params.id);
+
+    if (!image) {
+      return res.status(404).json({ message: "Image not found" });
+    }
+
+    image.projectId = projectId || image.projectId;
+    image.eventDate = eventDate || image.eventDate;
+
+    await image.save();
+    res.json(image);
+  } catch (error) {
+    res.status(500).json({ message: "Update failed" });
+  }
+};

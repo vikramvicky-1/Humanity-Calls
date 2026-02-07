@@ -7,6 +7,7 @@ import {
   getGallery,
   uploadImage,
   deleteImage,
+  updateImage,
 } from "../controllers/galleryController.js";
 import dotenv from "dotenv";
 
@@ -42,5 +43,8 @@ router.post("/upload", protect, upload.single("image"), uploadImage);
 
 // @route   DELETE /api/gallery/:id
 router.delete("/:id", protect, deleteImage);
+
+// @route   PUT /api/gallery/:id
+router.put("/:id", protect, updateImage);
 
 export default router;

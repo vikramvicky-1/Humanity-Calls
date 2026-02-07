@@ -175,6 +175,16 @@
     "hospital_address": "പിൻകോഡ് സഹിതമുള്ള ആശുപത്രി വിലാസം",
     "hospital_address_placeholder": "പിൻകോഡ് ഉൾപ്പെടെയുള്ള പൂർണ്ണ വിലാസം",
     "select_group": "ഗ്രൂപ്പ് തിരഞ്ഞെടുക്കുക",
+    "blood_request_type": "രക്ത അഭ്യർത്ഥനയുടെ തരം",
+    "select_type": "തരം തിരഞ്ഞെടുക്കുക",
+    "blood_request_options": {
+      "whole_blood": "മുഴുവൻ രക്തം (Whole Blood)",
+      "rbc": "ചുവന്ന രക്താണുക്കൾ (RBC)",
+      "platelets": "പ്ലേറ്റ്‌ലെറ്റുകൾ (Platelets)",
+      "plasma": "പ്ലാസ്മ (FFP)",
+      "cyroprecipitate": "ക്രയോപ്രെസിപിറ്റേറ്റ് (Cyroprecipitate)",
+      "wbc": "വെളുത്ത രക്താണുക്കൾ (WBC/granulocytes)"
+    },
     "submit_request": "അടിയന്തിര അഭ്യർത്ഥന സമർപ്പിക്കുക"
   },
   "poor_needy": {

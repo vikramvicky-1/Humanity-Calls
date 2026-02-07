@@ -175,6 +175,16 @@
     "hospital_address": "पिनकोड के साथ अस्पताल का पता",
     "hospital_address_placeholder": "पिनकोड सहित पूरा पता",
     "select_group": "समूह चुनें",
+    "blood_request_type": "रक्त अनुरोध का प्रकार",
+    "select_type": "प्रकार चुनें",
+    "blood_request_options": {
+      "whole_blood": "पूर्ण रक्त (Whole Blood)",
+      "rbc": "लाल रक्त कोशिकाएं (RBC)",
+      "platelets": "प्लेटलेट्स (Platelets)",
+      "plasma": "प्लाज्मा (FFP)",
+      "cyroprecipitate": "क्रायोप्रेसिपिटेट (Cyroprecipitate)",
+      "wbc": "श्वेत रक्त कोशिकाएं (WBC/granulocytes)"
+    },
     "submit_request": "आपातकालीन अनुरोध सबमिट करें"
   },
   "poor_needy": {

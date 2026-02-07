@@ -175,6 +175,16 @@
     "hospital_address": "ಪಿನ್‌ಕೋಡ್‌ನೊಂದಿಗೆ ಆಸ್ಪತ್ರೆ ವಿಳಾಸ",
     "hospital_address_placeholder": "ಪಿನ್‌ಕೋಡ್ ಸೇರಿದಂತೆ ಪೂರ್ಣ ವಿಳಾಸ",
     "select_group": "ಗುಂಪನ್ನು ಆಯ್ಕೆ ಮಾಡಿ",
+    "blood_request_type": "ರಕ್ತದ ವಿನಂತಿಯ ವಿಧ",
+    "select_type": "ವಿಧವನ್ನು ಆಯ್ಕೆ ಮಾಡಿ",
+    "blood_request_options": {
+      "whole_blood": "ಸಂಪೂರ್ಣ ರಕ್ತ (Whole Blood)",
+      "rbc": "ಕೆಂಪು ರಕ್ತ ಕಣಗಳು (RBC)",
+      "platelets": "ಪ್ಲೇಟ್ಲೆಟ್ಗಳು (Platelets)",
+      "plasma": "ಪ್ಲಾಸ್ಮಾ (FFP)",
+      "cyroprecipitate": "ಕ್ರಯೋಪ್ರೆಸಿಪಿಟೇಟ್ (Cyroprecipitate)",
+      "wbc": "ಬಿಳಿ ರಕ್ತ ಕಣಗಳು (WBC/granulocytes)"
+    },
     "submit_request": "ತುರ್ತು ವಿನಂತಿಯನ್ನು ಸಲ್ಲಿಸಿ"
   },
   "poor_needy": {

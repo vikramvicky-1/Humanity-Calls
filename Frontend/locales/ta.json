@@ -175,6 +175,16 @@
     "hospital_address": "பின்கோடுடன் கூடிய மருத்துவமனை முகவரி",
     "hospital_address_placeholder": "பின்கோடு உட்பட முழு முகவரி",
     "select_group": "வகையைத் தேர்ந்தெடுக்கவும்",
+    "blood_request_type": "இரத்தக் கோரிக்கையின் வகை",
+    "select_type": "வகையைத் தேர்ந்தெடுக்கவும்",
+    "blood_request_options": {
+      "whole_blood": "முழு இரத்தம் (Whole Blood)",
+      "rbc": "சிவப்பு இரத்த அணுக்கள் (RBC)",
+      "platelets": "பிளேட்லெட்டுகள் (Platelets)",
+      "plasma": "பிளாஸ்மா (FFP)",
+      "cyroprecipitate": "கிரையோபிரசிபிட்டேட் (Cyroprecipitate)",
+      "wbc": "வெள்ளை இரத்த அணுக்கள் (WBC/granulocytes)"
+    },
     "submit_request": "அவசர கோரிக்கையை சமர்ப்பிக்கவும்"
   },
   "poor_needy": {

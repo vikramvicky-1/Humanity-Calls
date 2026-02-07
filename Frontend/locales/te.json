@@ -175,6 +175,16 @@
     "hospital_address": "పిన్ కోడ్‌తో ఆసుపత్రి చిరునామా",
     "hospital_address_placeholder": "పిన్ కోడ్‌తో సహా పూర్తి చిరునామా",
     "select_group": "వర్గాన్ని ఎంచుకోండి",
+    "blood_request_type": "రక్త అభ్యర్థన రకం",
+    "select_type": "రకాన్ని ఎంచుకోండి",
+    "blood_request_options": {
+      "whole_blood": "పూర్తి రక్తం (Whole Blood)",
+      "rbc": "ఎర్ర రక్త కణాలు (RBC)",
+      "platelets": "ప్లేట్‌లెట్స్ (Platelets)",
+      "plasma": "ప్లాస్మా (FFP)",
+      "cyroprecipitate": "క్రయోప్రెసిపిటేట్ (Cyroprecipitate)",
+      "wbc": "తెల్ల రక్త కణాలు (WBC/granulocytes)"
+    },
     "submit_request": "అత్యవసర అభ్యర్థనను సమర్పించండి"
   },
   "poor_needy": {

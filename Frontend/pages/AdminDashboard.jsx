@@ -7,6 +7,7 @@ import {
   FaTimes,
   FaSignOutAlt,
   FaTrashAlt,
+  FaEdit,
 } from "react-icons/fa";
 import hclogo from "../assets/humanitycallslogo.avif";
 import { PROGRAMS } from "../constants";
@@ -32,8 +33,15 @@ const AdminDashboard = ({ defaultTab }) => {
   const [galleryFilter, setGalleryFilter] = useState("");
   const [isLoadingGallery, setIsLoadingGallery] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [imageToDelete, setImageToDelete] = useState(null);
+  const [imageToEdit, setImageToEdit] = useState(null);
+  const [editFormData, setEditFormData] = useState({
+    projectId: "",
+    eventDate: "",
+  });
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
     const token = sessionStorage.getItem("adminToken");
@@ -145,6 +153,39 @@ const AdminDashboard = ({ defaultTab }) => {
   const confirmDelete = (id) => {
     setImageToDelete(id);
     setShowDeleteModal(true);
+  };
+
+  const openEditModal = (img) => {
+    setImageToEdit(img._id);
+    setEditFormData({
+      projectId: img.projectId,
+      eventDate: img.eventDate ? new Date(img.eventDate).toISOString().split("T")[0] : "",
+    });
+    setShowEditModal(true);
+  };
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    setIsUpdating(true);
+    try {
+      const token = sessionStorage.getItem("adminToken");
+      await axios.put(
+        `${import.meta.env.VITE_API_URL}/gallery/${imageToEdit}`,
+        editFormData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      toast.success("Image details updated successfully");
+      fetchGallery();
+      setShowEditModal(false);
+    } catch (err) {
+      toast.error("Update failed");
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   const menuItems = [
@@ -405,16 +446,15 @@ const AdminDashboard = ({ defaultTab }) => {
                       {galleryImages.map((img) => (
                         <div
                           key={img._id}
-                          className="group relative aspect-video rounded-2xl overflow-hidden border border-border bg-bg shadow-sm hover:shadow-md transition-all cursor-pointer"
-                          onClick={() => setSelectedImage(img.imageUrl)}
+                          className="group relative aspect-video rounded-2xl overflow-hidden border border-border bg-bg shadow-sm hover:shadow-md transition-all"
                         >
                           <img
                             src={img.imageUrl}
                             alt="Gallery"
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                            className="w-full h-full object-cover"
                             loading="lazy"
                           />
-                          <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                          <div className="absolute inset-0 bg-black/10"></div>
                           {img.eventDate && (
                             <div className="absolute top-2 left-2 z-10">
                               <span className="bg-black/40 backdrop-blur-md text-[8px] font-bold text-white px-2 py-1 rounded-md uppercase tracking-wider border border-white/10">
@@ -422,13 +462,23 @@ const AdminDashboard = ({ defaultTab }) => {
                               </span>
                             </div>
                           )}
-                          <div className="absolute top-2 right-2">
+                          <div className="absolute top-2 right-2 flex gap-2">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openEditModal(img);
+                              }}
+                              className="bg-primary text-white p-2 rounded-lg shadow-lg hover:scale-110 active:scale-95 transition-all z-10"
+                              title="Edit Details"
+                            >
+                              <FaEdit size={14} />
+                            </button>
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 confirmDelete(img._id);
                               }}
-                              className="bg-blood text-white p-2 rounded-lg shadow-lg hover:scale-110 active:scale-95 transition-all z-10 opacity-0 group-hover:opacity-100"
+                              className="bg-blood text-white p-2 rounded-lg shadow-lg hover:scale-110 active:scale-95 transition-all z-10"
                               title="Delete Image"
                             >
                               <FaTrashAlt size={14} />
@@ -462,6 +512,90 @@ const AdminDashboard = ({ defaultTab }) => {
           </div>
         </main>
       </div>
+
+      {/* Edit Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300"
+            onClick={() => !isUpdating && setShowEditModal(false)}
+          />
+          <div className="bg-white rounded-3xl p-8 max-w-md w-full relative z-10 shadow-2xl border border-border animate-in zoom-in-95 duration-300">
+            <h3 className="text-2xl font-bold text-primary mb-6 flex items-center gap-2">
+              <FaEdit /> Edit Image Details
+            </h3>
+            <form onSubmit={handleUpdate} className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-text-body uppercase tracking-widest">
+                  Project
+                </label>
+                <select
+                  required
+                  value={editFormData.projectId}
+                  onChange={(e) =>
+                    setEditFormData({ ...editFormData, projectId: e.target.value })
+                  }
+                  className="w-full px-4 py-3 border border-border bg-bg/30 rounded-xl focus:border-primary outline-none transition-all"
+                >
+                  <option value="">Choose a project...</option>
+                  {PROGRAMS.map((program) => (
+                    <option key={program.id} value={program.id}>
+                      {program.id
+                        .split("_")
+                        .map(
+                          (word) =>
+                            word.charAt(0).toUpperCase() + word.slice(1)
+                        )
+                        .join(" ")}
+                    </option>
+                  ))}
+                  <option value="general">General Events</option>
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-text-body uppercase tracking-widest">
+                  Date of Event
+                </label>
+                <input
+                  required
+                  type="date"
+                  value={editFormData.eventDate}
+                  onChange={(e) =>
+                    setEditFormData({ ...editFormData, eventDate: e.target.value })
+                  }
+                  className="w-full px-4 py-3 border border-border bg-bg/30 rounded-xl focus:border-primary outline-none transition-all"
+                />
+              </div>
+
+              <div className="flex gap-4 pt-4">
+                <button
+                  type="button"
+                  disabled={isUpdating}
+                  onClick={() => setShowEditModal(false)}
+                  className="flex-1 px-6 py-3 rounded-xl font-bold text-text-body/60 hover:bg-bg transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isUpdating}
+                  className="flex-1 px-6 py-3 rounded-xl bg-primary text-white font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2 disabled:opacity-70"
+                >
+                  {isUpdating ? (
+                    <>
+                      <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                      Updating...
+                    </>
+                  ) : (
+                    "Save Changes"
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Custom Delete Confirmation Modal */}
       {showDeleteModal && (

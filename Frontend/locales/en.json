@@ -175,6 +175,16 @@
     "hospital_address": "Hospital Address with Pincode",
     "hospital_address_placeholder": "Full address including pincode",
     "select_group": "Select Group",
+    "blood_request_type": "Type of Blood Request",
+    "select_type": "Select Type",
+    "blood_request_options": {
+      "whole_blood": "Whole Blood",
+      "rbc": "Red blood Cells (RBC)",
+      "platelets": "Platelets",
+      "plasma": "Plasma (FFP)",
+      "cyroprecipitate": "Cyroprecipitate",
+      "wbc": "White Blood Cells (WBC/granulocytes)"
+    },
     "submit_request": "Submit Emergency Request"
   },
   "poor_needy": {
