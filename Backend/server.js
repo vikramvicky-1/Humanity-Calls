@@ -6,6 +6,7 @@ import mongoose from "mongoose";
 import emailRoutes from "./routes/emailRoutes.js";
 import authRoutes from "./routes/auth.js";
 import galleryRoutes from "./routes/galleryRoutes.js";
+import volunteerRoutes from "./routes/volunteerRoutes.js";
 import { initAdmin } from "./controllers/authController.js";
 
 dotenv.config();
@@ -51,6 +52,7 @@ mongoose
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/gallery", galleryRoutes);
+app.use("/api/volunteers", volunteerRoutes);
 app.use("/api", emailRoutes);
 
 const PORT = process.env.PORT || 5000;

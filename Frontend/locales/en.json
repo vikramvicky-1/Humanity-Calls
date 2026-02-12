@@ -3,6 +3,7 @@
     "about_us": "About Us",
     "poor_needy": "Poor/Needy",
     "animal_rescue": "Animal Rescue",
+    "volunteer": "Volunteer",
     "wall_of_fame": "Collaborators",
     "donations_made": "Donations Made",
     "contact_us": "Contact Us",
@@ -298,6 +299,13 @@
       "animal": "Animal Rescue",
       "event": "Event Organizing"
     },
+    "gov_id_type": "Gov ID Type",
+    "gov_id_number": "Gov ID Number",
+    "blood_group": "Blood Group",
+    "dob": "Date of Birth",
+    "joining_date": "Joining Date",
+    "terms_conditions": "Terms and Conditions",
+    "accept_terms": "I accept the Terms and Conditions",
     "join_now": "Join Now"
   },
   "donations_made": {

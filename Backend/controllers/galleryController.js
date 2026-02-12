@@ -6,6 +6,17 @@ import { v2 as cloudinary } from "cloudinary";
 export const getGallery = async (req, res) => {
   try {
     const { projectId } = req.query;
+    
+    // Cleanup: Remove any records that were accidentally added from the volunteer folder
+    // Volunteer images have publicId starting with 'humanity_calls_volunteers/'
+    await Gallery.deleteMany({
+      $or: [
+        { publicId: { $regex: /^humanity_calls_volunteers\// } },
+        { imageUrl: { $regex: /humanity_calls_volunteers/ } },
+        { projectId: "volunteer" }
+      ]
+    });
+
     const query = projectId ? { projectId } : {};
     const images = await Gallery.find(query).sort({ createdAt: -1 });
     res.json(images);
@@ -35,6 +46,21 @@ export const uploadImage = async (req, res) => {
     res.status(201).json(newImage);
   } catch (error) {
     res.status(500).json({ message: "Upload failed" });
+  }
+};
+
+// @desc    Upload file only (returns URL, doesn't save to Gallery)
+export const uploadFileOnly = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+    res.status(200).json({ 
+      imageUrl: req.file.path,
+      publicId: req.file.filename
+    });
+  } catch (error) {
+    res.status(500).json({ message: "File upload failed" });
   }
 };
 

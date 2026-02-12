@@ -14,8 +14,7 @@ const withFormAuth = (WrappedComponent) => {
           const updates = {};
           if (Object.prototype.hasOwnProperty.call(prev, "name")) updates.name = user.name;
           if (Object.prototype.hasOwnProperty.call(prev, "email")) updates.email = user.email;
-          if (Object.prototype.hasOwnProperty.call(prev, "firstName")) updates.firstName = user.name.split(" ")[0];
-          if (Object.prototype.hasOwnProperty.call(prev, "lastName")) updates.lastName = user.name.split(" ").slice(1).join(" ");
+          if (Object.prototype.hasOwnProperty.call(prev, "fullName")) updates.fullName = user.name;
           if (Object.prototype.hasOwnProperty.call(prev, "contactPerson")) updates.contactPerson = user.name;
           if (Object.prototype.hasOwnProperty.call(prev, "verifiedPersonName")) updates.verifiedPersonName = user.name;
           return { ...prev, ...updates };
@@ -24,7 +23,7 @@ const withFormAuth = (WrappedComponent) => {
     }, [user, props.setFormData]);
 
     const isFieldDisabled = (fieldName) => {
-      const protectedFields = ["name", "email", "firstName", "lastName", "contactPerson", "verifiedPersonName"];
+      const protectedFields = ["email"];
       return !!(user && protectedFields.includes(fieldName));
     };
 

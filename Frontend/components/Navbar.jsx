@@ -2,12 +2,14 @@ import React, { useState, useLayoutEffect, useRef, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { FaGlobe, FaChevronDown, FaUserCircle } from "react-icons/fa";
+import { MdVerified } from "react-icons/md";
 import gsap from "gsap";
 import Button from "./Button";
 import hclogo from "../assets/humanitycallslogo.avif";
 import { SOCIAL_LINKS } from "../constants";
 import { animateNavBar, animateMobileMenuOpen } from "../utils/animations";
 import { useUser } from "../context/UserContext";
+import axios from "axios";
 
 const Navbar = () => {
   const { t, i18n } = useTranslation();
@@ -18,6 +20,29 @@ const Navbar = () => {
   const { user, logout } = useUser();
   const navigate = useNavigate();
   const navRef = useRef(null);
+
+  const [volunteerStatus, setVolunteerStatus] = useState(null);
+  const [volunteerData, setVolunteerData] = useState(null);
+
+  useEffect(() => {
+    const fetchStatus = async () => {
+      const token = sessionStorage.getItem("token");
+      if (!token || !user) return;
+      try {
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_URL}/volunteers/my-status`,
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
+        if (response.data.status !== "none") {
+          setVolunteerStatus(response.data.status);
+          setVolunteerData(response.data.volunteer);
+        }
+      } catch (error) {
+        console.error("Error fetching volunteer status:", error);
+      }
+    };
+    fetchStatus();
+  }, [user]);
 
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
@@ -55,6 +80,8 @@ const Navbar = () => {
 
   const dropdownLinks = [
     { label: t("nav.donations_made"), href: "/donations-made" },
+    { label: t("nav.volunteer"), href: "/volunteer" },
+
     {
       label: t("nav.contact_us"),
       href: "#contact",
@@ -192,13 +219,26 @@ const Navbar = () => {
                   </Link>
                 </>
               ) : (
-                <div className="relative">
+                <div className="relative group">
                   <Link
                     to="/profile"
-                    className="flex items-center justify-center w-10 h-10 bg-primary text-white rounded-full font-bold hover:bg-primary/90 transition-all shadow-md active:scale-95"
+                    className={`flex items-center justify-center w-10 h-10 rounded-full font-bold hover:bg-primary/90 transition-all shadow-md active:scale-95 relative ${volunteerStatus === "active" ? "bg-primary ring-2 ring-primary/20 ring-offset-2" : "bg-primary text-white"}`}
                     title={user.name}
                   >
-                    {user.name.charAt(0).toUpperCase()}
+                    {volunteerData?.profilePicture ? (
+                      <img
+                        src={volunteerData.profilePicture}
+                        alt={user.name}
+                        className="w-full h-full object-cover rounded-full"
+                      />
+                    ) : (
+                      <span className="text-white">
+                        {user.name.charAt(0).toUpperCase()}
+                      </span>
+                    )}
+                    {volunteerStatus === "active" && (
+                      <MdVerified className="absolute -right-1.5 -bottom-1 text-blue-600 bg-white rounded-full text-base" />
+                    )}
                   </Link>
                 </div>
               )}
@@ -253,17 +293,35 @@ const Navbar = () => {
               <Link
                 to="/profile"
                 onClick={() => setIsOpen(false)}
-                className="px-4 py-4 bg-white rounded-xl border border-border mb-4 flex items-center space-x-4 shadow-sm active:scale-[0.98] transition-all"
+                className={`px-4 py-4 rounded-xl border mb-4 flex items-center space-x-4 shadow-sm active:scale-[0.98] transition-all ${volunteerStatus === "active" ? "bg-gradient-to-r from-primary/5 to-white border-primary/20" : "bg-white border-border"}`}
               >
-                <div className="w-12 h-12 bg-primary text-white rounded-full flex items-center justify-center font-bold text-xl shadow-inner">
-                  {user.name.charAt(0).toUpperCase()}
+                <div
+                  className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl shadow-inner relative ${volunteerStatus === "active" ? "bg-primary text-white" : "bg-primary text-white"}`}
+                >
+                  {volunteerData?.profilePicture ? (
+                    <img
+                      src={volunteerData.profilePicture}
+                      alt={user.name}
+                      className="w-full h-full object-cover rounded-full"
+                    />
+                  ) : (
+                    user.name.charAt(0).toUpperCase()
+                  )}
+                  {volunteerStatus === "active" && (
+                    <MdVerified className="absolute -right-1 -bottom-1 text-primary bg-white rounded-full text-lg" />
+                  )}
                 </div>
                 <div>
-                  <p className="font-bold text-text-body text-lg leading-tight">
+                  <p className="font-bold text-text-body text-lg leading-tight flex items-center gap-1">
                     {user.name}
+                    {volunteerStatus === "active" && (
+                      <MdVerified className="text-primary text-base" />
+                    )}
                   </p>
                   <p className="text-xs text-gray-500 font-medium">
-                    View Profile
+                    {volunteerStatus === "active"
+                      ? "Verified Volunteer"
+                      : "View Profile"}
                   </p>
                 </div>
               </Link>

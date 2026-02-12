@@ -1,14 +1,29 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { FaUser, FaEnvelope, FaGlobe, FaSignOutAlt, FaSave } from "react-icons/fa";
+import {
+  FaUser,
+  FaEnvelope,
+  FaGlobe,
+  FaSignOutAlt,
+  FaSave,
+  FaHandHoldingHeart,
+  FaExternalLinkAlt,
+  FaClock,
+  FaCheckCircle,
+  FaTimesCircle,
+  FaBan,
+  FaIdCard,
+} from "react-icons/fa";
+import { MdVerified } from "react-icons/md";
 import { useUser } from "../context/UserContext";
+import axios from "axios";
 import { toast } from "react-toastify";
 import SEO from "../components/SEO";
 
 const LanguageSelectorProfile = () => {
   const { i18n } = useTranslation();
-  
+
   const languages = [
     { code: "en", label: "English" },
     { code: "kn", label: "ಕನ್ನಡ" },
@@ -20,7 +35,9 @@ const LanguageSelectorProfile = () => {
 
   const changeLanguage = (lng) => {
     i18n.changeLanguage(lng);
-    toast.success(`Language changed to ${languages.find(l => l.code === lng)?.label}`);
+    toast.success(
+      `Language changed to ${languages.find((l) => l.code === lng)?.label}`,
+    );
   };
 
   return (
@@ -48,21 +65,44 @@ const Profile = () => {
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
+  const [volunteerStatus, setVolunteerStatus] = useState(null);
+  const [volunteerData, setVolunteerData] = useState(null);
+  const [isLoadingStatus, setIsLoadingStatus] = useState(true);
 
   useEffect(() => {
     if (!user) {
       navigate("/become-a-member");
     } else {
       setName(user.name);
+      fetchVolunteerStatus();
     }
   }, [user, navigate]);
+
+  const fetchVolunteerStatus = async () => {
+    const token = sessionStorage.getItem("token");
+    if (!token) return;
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/volunteers/my-status`,
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      if (response.data.status !== "none") {
+        setVolunteerStatus(response.data.status);
+        setVolunteerData(response.data.volunteer);
+      }
+    } catch (err) {
+      console.error("Failed to fetch volunteer status", err);
+    } finally {
+      setIsLoadingStatus(false);
+    }
+  };
 
   if (!user) return null;
 
   const handleUpdate = async (e) => {
     e.preventDefault();
     if (name === user.name) return;
-    
+
     setIsUpdating(true);
     try {
       await updateProfile({ name });
@@ -87,28 +127,163 @@ const Profile = () => {
   return (
     <div className="min-h-screen bg-[#F8FAFC] pt-32 pb-20 px-4">
       <SEO title="My Profile | Humanity Calls" />
-      
+
       <div className="max-w-2xl mx-auto">
         {/* Profile Header */}
-        <div className="bg-white rounded-3xl shadow-xl border border-border p-8 mb-8 text-center relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary to-blood"></div>
-          
-          <div className="w-24 h-24 bg-primary text-white rounded-full flex items-center justify-center text-4xl font-bold mx-auto mb-6 shadow-xl shadow-primary/20 border-4 border-white">
-            {user.name.charAt(0).toUpperCase()}
+        <div className={`rounded-3xl shadow-xl border p-8 mb-8 text-center relative overflow-hidden transition-all duration-500 ${
+          volunteerStatus === "active" 
+            ? "bg-gradient-to-br from-amber-50 via-yellow-50 to-amber-100 border-amber-200" 
+            : "bg-white border-border"
+        }`}>
+          {volunteerStatus === "active" ? (
+            <div className="absolute top-0 left-0 w-full h-full opacity-[0.03] pointer-events-none" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2v-4h4v-2h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2v-4h4v-2H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")` }}></div>
+          ) : (
+            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary to-blood"></div>
+          )}
+
+          <div className="relative inline-block mb-6">
+            <div className={`w-28 h-28 rounded-full flex items-center justify-center text-4xl font-bold mx-auto shadow-xl border-4 border-white overflow-hidden bg-bg transition-transform duration-500 ${volunteerStatus === "active" ? "scale-110 shadow-primary/20 ring-4 ring-primary/10" : ""}`}>
+              {volunteerData?.profilePicture ? (
+                <img src={volunteerData.profilePicture} alt={user.name} className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-primary">{user.name.charAt(0).toUpperCase()}</span>
+              )}
+            </div>
+            {volunteerStatus === "active" && (
+              <div className="absolute -right-2 -bottom-2 bg-blue-600 rounded-full p-1.5 shadow-lg animate-bounce-slow">
+                <MdVerified className="text-white text-2xl" />
+              </div>
+            )}
           </div>
-          
-          <h1 className="text-3xl font-bold text-primary mb-1 uppercase tracking-tight">{user.name}</h1>
-          <p className="text-text-body/60 font-medium">{user.email}</p>
+
+          <div className="flex flex-col items-center gap-2">
+            <h1 className="text-3xl font-black text-primary uppercase tracking-tighter">
+              {user.name}
+            </h1>
+            
+            {volunteerStatus === "active" && volunteerData?.volunteerId && (
+              <div className="flex flex-col items-center gap-1">
+                <div className="flex items-center gap-2 px-4 py-1.5 bg-amber-600 text-white text-xs font-black rounded-full uppercase tracking-[0.2em] shadow-lg shadow-amber-600/20">
+                  <FaIdCard className="text-white/80" /> {volunteerData.volunteerId}
+                </div>
+                <span className="text-[10px] font-bold text-amber-600 uppercase tracking-widest opacity-60">Verified Volunteer</span>
+              </div>
+            )}
+            
+            {!volunteerData?.volunteerId && (
+              <p className="text-text-body/60 font-medium">{user.email}</p>
+            )}
+            
+            {volunteerStatus === "active" && (
+              <p className="text-text-body/40 text-[10px] font-bold uppercase tracking-widest mt-2">Member since {new Date(volunteerData?.joiningDate).getFullYear()}</p>
+            )}
+          </div>
         </div>
 
         {/* Settings Content */}
         <div className="space-y-8">
+          {/* Volunteer Status Section */}
+          <div className="bg-white rounded-3xl shadow-xl border border-border p-8 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-75">
+            <h2 className="text-xl font-bold text-primary mb-6 flex items-center gap-3">
+              <FaHandHoldingHeart className="text-sm" /> Volunteer Status
+            </h2>
+
+            {isLoadingStatus ? (
+              <div className="flex items-center gap-3 py-2">
+                <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+                <span className="text-text-body/60 font-medium italic">
+                  Fetching status...
+                </span>
+              </div>
+            ) : !volunteerStatus ? (
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-6 p-6 bg-primary/5 rounded-2xl border border-primary/10">
+                <div>
+                  <h3 className="font-bold text-primary mb-1">
+                    Become a Volunteer
+                  </h3>
+                  <p className="text-text-body/60 text-sm">
+                    Join our mission to serve humanity.
+                  </p>
+                </div>
+                <Link
+                  to="/volunteer"
+                  className="w-full sm:w-auto px-8 py-3 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all text-center flex items-center justify-center gap-2"
+                >
+                  Join Now <FaExternalLinkAlt size={12} />
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                <div
+                  className={`p-6 rounded-2xl border flex items-center gap-4 ${
+                    volunteerStatus === "active"
+                      ? "bg-green-50 border-green-100 text-green-700"
+                      : volunteerStatus === "pending"
+                        ? "bg-amber-50 border-amber-100 text-amber-700"
+                        : volunteerStatus === "rejected"
+                          ? "bg-red-50 border-red-100 text-red-700"
+                          : "bg-gray-50 border-gray-100 text-gray-700"
+                  }`}
+                >
+                  <div className="text-2xl shrink-0">
+                    {volunteerStatus === "active" && <FaCheckCircle />}
+                    {volunteerStatus === "pending" && <FaClock />}
+                    {volunteerStatus === "rejected" && <FaTimesCircle />}
+                    {volunteerStatus === "banned" && <FaBan />}
+                  </div>
+                  <div>
+                    <h3 className="font-bold uppercase tracking-wider text-xs mb-1">
+                      Current Status
+                    </h3>
+                    <p className="font-black text-xl capitalize">
+                      {volunteerStatus}
+                    </p>
+                    <p className="text-sm opacity-80 mt-1">
+                      {volunteerStatus === "pending" &&
+                        "Your application is under review."}
+                      {volunteerStatus === "active" &&
+                        "You are an official volunteer! Thank you."}
+                      {volunteerStatus === "rejected" &&
+                        "Your application was not approved."}
+                      {volunteerStatus === "banned" &&
+                        "Your volunteer status is suspended."}
+                    </p>
+                    {(volunteerStatus === "rejected" || volunteerStatus === "banned") && (volunteerData?.rejectionReason || volunteerData?.banReason) && (
+                      <div className="mt-3 p-3 bg-white/50 rounded-xl border border-current/10 text-xs italic">
+                        <span className="font-bold uppercase tracking-widest text-[10px] block mb-1">Reason from Admin:</span>
+                        "{volunteerStatus === "rejected" ? volunteerData.rejectionReason : volunteerData.banReason}"
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {volunteerStatus === "rejected" && (
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-6 p-6 bg-primary/5 rounded-2xl border border-primary/10">
+                    <div>
+                      <h3 className="font-bold text-primary mb-1">
+                        Re-apply as Volunteer
+                      </h3>
+                      <p className="text-text-body/60 text-sm">
+                        You can try applying again with updated information.
+                      </p>
+                    </div>
+                    <Link
+                      to="/volunteer"
+                      className="w-full sm:w-auto px-8 py-3 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all text-center flex items-center justify-center gap-2"
+                    >
+                      Join Now <FaExternalLinkAlt size={12} />
+                    </Link>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
           {/* Update Name Section */}
           <div className="bg-white rounded-3xl shadow-xl border border-border p-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <h2 className="text-xl font-bold text-primary mb-6 flex items-center gap-3">
               <FaUser className="text-sm" /> {t("profile.account_info")}
             </h2>
-            
+
             <form onSubmit={handleUpdate} className="space-y-6">
               <div className="space-y-2">
                 <label className="text-xs font-bold text-text-body uppercase tracking-widest flex items-center gap-2">
@@ -172,7 +347,9 @@ const Profile = () => {
                 <h2 className="text-xl font-bold text-blood mb-1 flex items-center gap-3">
                   <FaSignOutAlt className="text-sm" /> {t("profile.sign_out")}
                 </h2>
-                <p className="text-text-body/60 text-sm font-medium">{t("profile.logout_confirm_text")}</p>
+                <p className="text-text-body/60 text-sm font-medium">
+                  {t("profile.logout_confirm_text")}
+                </p>
               </div>
               <button
                 onClick={handleLogout}
