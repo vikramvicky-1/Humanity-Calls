@@ -14,6 +14,7 @@ import {
   FaTimesCircle,
   FaBan,
   FaIdCard,
+  FaCalendarAlt,
 } from "react-icons/fa";
 import { MdVerified } from "react-icons/md";
 import { useUser } from "../context/UserContext";
@@ -130,23 +131,38 @@ const Profile = () => {
 
       <div className="max-w-2xl mx-auto">
         {/* Profile Header */}
-        <div className={`rounded-3xl shadow-xl border p-8 mb-8 text-center relative overflow-hidden transition-all duration-500 ${
-          volunteerStatus === "active" 
-            ? "bg-gradient-to-br from-amber-50 via-yellow-50 to-amber-100 border-amber-200" 
-            : "bg-white border-border"
-        }`}>
+        <div
+          className={`rounded-3xl shadow-xl border p-8 mb-8 text-center relative overflow-hidden transition-all duration-500 ${
+            volunteerStatus === "active"
+              ? "bg-gradient-to-br from-amber-50 via-yellow-50 to-amber-100 border-amber-200"
+              : "bg-white border-border"
+          }`}
+        >
           {volunteerStatus === "active" ? (
-            <div className="absolute top-0 left-0 w-full h-full opacity-[0.03] pointer-events-none" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2v-4h4v-2h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2v-4h4v-2H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")` }}></div>
+            <div
+              className="absolute top-0 left-0 w-full h-full opacity-[0.03] pointer-events-none"
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2v-4h4v-2h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2v-4h4v-2H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+              }}
+            ></div>
           ) : (
             <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary to-blood"></div>
           )}
 
           <div className="relative inline-block mb-6">
-            <div className={`w-28 h-28 rounded-full flex items-center justify-center text-4xl font-bold mx-auto shadow-xl border-4 border-white overflow-hidden bg-bg transition-transform duration-500 ${volunteerStatus === "active" ? "scale-110 shadow-primary/20 ring-4 ring-primary/10" : ""}`}>
+            <div
+              className={`w-28 h-28 rounded-full flex items-center justify-center text-4xl font-bold mx-auto shadow-xl border-4 border-white overflow-hidden bg-bg transition-transform duration-500 ${volunteerStatus === "active" ? "scale-110 shadow-primary/20 ring-4 ring-primary/10" : ""}`}
+            >
               {volunteerData?.profilePicture ? (
-                <img src={volunteerData.profilePicture} alt={user.name} className="w-full h-full object-cover" />
+                <img
+                  src={volunteerData.profilePicture}
+                  alt={user.name}
+                  className="w-full h-full object-cover"
+                />
               ) : (
-                <span className="text-primary">{user.name.charAt(0).toUpperCase()}</span>
+                <span className="text-primary">
+                  {user.name.charAt(0).toUpperCase()}
+                </span>
               )}
             </div>
             {volunteerStatus === "active" && (
@@ -160,22 +176,31 @@ const Profile = () => {
             <h1 className="text-3xl font-black text-primary uppercase tracking-tighter">
               {user.name}
             </h1>
-            
+
             {volunteerStatus === "active" && volunteerData?.volunteerId && (
               <div className="flex flex-col items-center gap-1">
                 <div className="flex items-center gap-2 px-4 py-1.5 bg-amber-600 text-white text-xs font-black rounded-full uppercase tracking-[0.2em] shadow-lg shadow-amber-600/20">
-                  <FaIdCard className="text-white/80" /> {volunteerData.volunteerId}
+                  <FaIdCard className="text-white/80" />{" "}
+                  {volunteerData.volunteerId}
                 </div>
-                <span className="text-[10px] font-bold text-amber-600 uppercase tracking-widest opacity-60">Verified Volunteer</span>
+                <span className="text-[10px] font-bold text-amber-600 uppercase tracking-widest opacity-60">
+                  Verified Volunteer
+                </span>
               </div>
             )}
-            
+
             {!volunteerData?.volunteerId && (
               <p className="text-text-body/60 font-medium">{user.email}</p>
             )}
-            
+
             {volunteerStatus === "active" && (
-              <p className="text-text-body/40 text-[10px] font-bold uppercase tracking-widest mt-2">Member since {new Date(volunteerData?.joiningDate).getFullYear()}</p>
+              <p className="text-text-body/40 text-[10px] font-bold uppercase tracking-widest mt-2 flex items-center gap-2 justify-center">
+                <FaCalendarAlt className="text-primary/60" />
+                Member since{" "}
+                {new Date(volunteerData?.joiningDate)
+                  .toLocaleString("en-US", { month: "short", year: "numeric" })
+                  .toUpperCase()}
+              </p>
             )}
           </div>
         </div>
@@ -248,12 +273,21 @@ const Profile = () => {
                       {volunteerStatus === "banned" &&
                         "Your volunteer status is suspended."}
                     </p>
-                    {(volunteerStatus === "rejected" || volunteerStatus === "banned") && (volunteerData?.rejectionReason || volunteerData?.banReason) && (
-                      <div className="mt-3 p-3 bg-white/50 rounded-xl border border-current/10 text-xs italic">
-                        <span className="font-bold uppercase tracking-widest text-[10px] block mb-1">Reason from Admin:</span>
-                        "{volunteerStatus === "rejected" ? volunteerData.rejectionReason : volunteerData.banReason}"
-                      </div>
-                    )}
+                    {(volunteerStatus === "rejected" ||
+                      volunteerStatus === "banned") &&
+                      (volunteerData?.rejectionReason ||
+                        volunteerData?.banReason) && (
+                        <div className="mt-3 p-3 bg-white/50 rounded-xl border border-current/10 text-xs italic">
+                          <span className="font-bold uppercase tracking-widest text-[10px] block mb-1">
+                            Reason from Admin:
+                          </span>
+                          "
+                          {volunteerStatus === "rejected"
+                            ? volunteerData.rejectionReason
+                            : volunteerData.banReason}
+                          "
+                        </div>
+                      )}
                   </div>
                 </div>
 
