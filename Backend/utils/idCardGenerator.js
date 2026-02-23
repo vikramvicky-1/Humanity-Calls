@@ -58,12 +58,21 @@ export const generateIdCard = async (volunteer) => {
     // ===== Launch Puppeteer (Render Safe) =====
     browser = await puppeteer.launch({
       headless: true,
+      executablePath: puppeteer.executablePath(),
       args: [
         "--no-sandbox",
         "--disable-setuid-sandbox",
         "--disable-dev-shm-usage",
         "--disable-gpu",
+        "--single-process",
+        "--no-zygote",
+        "--disable-extensions",
       ],
+      defaultViewport: {
+        width: 700,
+        height: 542,
+        deviceScaleFactor: 2,
+      },
     });
 
     const page = await browser.newPage();
