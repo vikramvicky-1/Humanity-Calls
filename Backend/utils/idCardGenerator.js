@@ -47,39 +47,48 @@ export const generateIdCard = async (volunteer) => {
     .replace(".name {", `.name { font-size: ${finalFontSize}px;`);
 
   // ===== Launch Puppeteer =====
-  const browser = await puppeteer.launch({
-    headless: "new",
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
-  });
+  let browser;
+  try {
+    browser = await puppeteer.launch({
+      headless: "new",
+      args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
+      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || null,
+    });
 
-  const page = await browser.newPage();
+    const page = await browser.newPage();
 
-  // Set content with "load" instead of "networkidle0" to avoid timeouts with large base64 strings
-  await page.setContent(html, {
-    waitUntil: "load",
-    timeout: 60000, // Increase timeout to 60s
-  });
+    // Set content with "load" instead of "networkidle0" to avoid timeouts with large base64 strings
+    await page.setContent(html, {
+      waitUntil: "load",
+      timeout: 60000, // Increase timeout to 60s
+    });
 
-  // Set viewport to match card dimensions for high quality
-  await page.setViewport({
-    width: 700,
-    height: 542,
-    deviceScaleFactor: 2,
-  });
+    // Set viewport to match card dimensions for high quality
+    await page.setViewport({
+      width: 700,
+      height: 542,
+      deviceScaleFactor: 2,
+    });
 
-  const pdfBuffer = await page.pdf({
-    width: "700px",
-    height: "542px",
-    printBackground: true,
-    margin: {
-      top: "0px",
-      right: "0px",
-      bottom: "0px",
-      left: "0px",
-    },
-  });
+    const pdfBuffer = await page.pdf({
+      width: "700px",
+      height: "542px",
+      printBackground: true,
+      margin: {
+        top: "0px",
+        right: "0px",
+        bottom: "0px",
+        left: "0px",
+      },
+    });
 
-  await browser.close();
-
-  return pdfBuffer;
+    return pdfBuffer;
+  } catch (error) {
+    console.error("Puppeteer PDF generation error:", error);
+    throw error;
+  } finally {
+    if (browser) {
+      await browser.close();
+    }
+  }
 };
