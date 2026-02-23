@@ -8,6 +8,13 @@ export const downloadIdCard = async (req, res) => {
   try {
     const { id } = req.params;
 
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized access",
+      });
+    }
+
     const volunteer = await Volunteer.findById(id);
 
     if (!volunteer) {
@@ -17,8 +24,11 @@ export const downloadIdCard = async (req, res) => {
       });
     }
 
-    // Security Check: Only the volunteer themselves or an admin can download
-    if (req.user.role !== "admin" && volunteer.user.toString() !== req.user.id.toString()) {
+    // Admin OR Owner
+    if (
+      req.user.role !== "admin" &&
+      volunteer.user?.toString() !== req.user.id?.toString()
+    ) {
       return res.status(403).json({
         success: false,
         message: "You are not authorized to download this ID card",
@@ -37,18 +47,19 @@ export const downloadIdCard = async (req, res) => {
     res.set({
       "Content-Type": "application/pdf",
       "Content-Disposition": `attachment; filename=${volunteer.volunteerId}.pdf`,
+      "Content-Length": pdfBuffer.length,
     });
 
     return res.send(pdfBuffer);
   } catch (error) {
-    console.error("ID Card Generation Error:", error);
+    console.error("❌ Download ID Card Error:", error);
+
     return res.status(500).json({
       success: false,
       message: "Failed to generate ID card",
     });
   }
 };
-
 /**
  * Verify Volunteer via QR
  */
