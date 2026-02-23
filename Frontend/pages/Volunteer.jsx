@@ -232,10 +232,17 @@ const Volunteer = ({ user, isFieldDisabled, renderSubmitButton }) => {
       setProfilePreview(null);
       setHasScrolledToBottom(false);
     } catch (error) {
-      const msg =
-        error.response?.status === 401
-          ? "Session expired. Please login again."
-          : error.response?.data?.message || "Application failed";
+      console.error("Upload error:", error);
+      let msg = "Application failed";
+      
+      if (error.response?.status === 401) {
+        msg = "Session expired. Please login again.";
+      } else if (error.response?.data?.message) {
+        msg = error.response.data.message;
+      } else if (error.message) {
+        msg = error.message;
+      }
+      
       toast.error(msg);
     } finally {
       setLoading(false);
@@ -463,6 +470,8 @@ const Volunteer = ({ user, isFieldDisabled, renderSubmitButton }) => {
                       name="dob"
                       value={formData.dob}
                       onChange={handleChange}
+                      max={new Date().toISOString().split("T")[0]}
+                      min="1900-01-01"
                       className={inputClasses}
                     />
                   </div>
@@ -476,6 +485,8 @@ const Volunteer = ({ user, isFieldDisabled, renderSubmitButton }) => {
                       name="joiningDate"
                       value={formData.joiningDate}
                       onChange={handleChange}
+                      max={new Date().toISOString().split("T")[0]}
+                      min="1900-01-01"
                       className={inputClasses}
                     />
                   </div>

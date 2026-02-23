@@ -31,6 +31,7 @@ const ProgramDetail = lazy(() => import("./pages/ProgramDetail"));
 const Profile = lazy(() => import("./pages/Profile"));
 const AdminLogin = lazy(() => import("./pages/AdminLogin"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const Verify = lazy(() => import("./pages/Verify"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Loading component
@@ -97,6 +98,7 @@ const AppContent = () => {
               path="/admin/gallery"
               element={<AdminDashboard defaultTab="gallery" />}
             />
+            <Route path="/verify/:volunteerId" element={<Verify />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>

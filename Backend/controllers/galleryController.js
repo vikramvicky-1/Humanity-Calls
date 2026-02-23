@@ -55,12 +55,20 @@ export const uploadFileOnly = async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ message: "No file uploaded" });
     }
+    
+    const cloudinaryUrl = req.file.path;
+    const publicId = req.file.filename;
+    
+    console.log("File uploaded successfully:", { cloudinaryUrl, publicId });
+    
     res.status(200).json({ 
-      imageUrl: req.file.path,
-      publicId: req.file.filename
+      imageUrl: cloudinaryUrl,
+      publicId: publicId,
+      success: true
     });
   } catch (error) {
-    res.status(500).json({ message: "File upload failed" });
+    console.error("Upload file error:", error);
+    res.status(500).json({ message: "File upload failed", error: error.message });
   }
 };
 

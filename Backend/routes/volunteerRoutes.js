@@ -33,11 +33,36 @@ const storage = new CloudinaryStorage({
   },
 });
 
-const upload = multer({ storage: storage });
+const upload = multer({ 
+  storage: storage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const allowedMimes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+    const allowedExtensions = [".jpg", ".jpeg", ".png", ".webp"];
+    const fileExt = file.originalname.toLowerCase().substring(file.originalname.lastIndexOf("."));
+    
+    const isMimeValid = allowedMimes.includes(file.mimetype.toLowerCase());
+    const isExtValid = allowedExtensions.includes(fileExt);
+    
+    if (isMimeValid || isExtValid) {
+      cb(null, true);
+    } else {
+      cb(new Error("Unsupported file type. Please upload JPEG, PNG, or WebP images only."));
+    }
+  }
+});
 
 router.post("/apply", protect, applyVolunteer);
 router.get("/my-status", protect, getMyVolunteerStatus);
-router.post("/upload", protect, upload.single("image"), uploadFileOnly);
+router.post("/upload", protect, (req, res, next) => {
+  upload.single("image")(req, res, (err) => {
+    if (err) {
+      console.error("Multer error:", err.message);
+      return res.status(400).json({ message: err.message });
+    }
+    next();
+  });
+}, uploadFileOnly);
 router.get("/", protect, adminOnly, getVolunteers);
 router.put("/status/:id", protect, adminOnly, updateVolunteerStatus);
 router.put("/:id", protect, adminOnly, updateVolunteer);

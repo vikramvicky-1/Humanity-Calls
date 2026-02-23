@@ -1040,6 +1040,8 @@ const AdminDashboard = ({ defaultTab }) => {
                         disabled={isUploading}
                         value={eventDate}
                         onChange={(e) => setEventDate(e.target.value)}
+                        min="1990-01-01"
+                        max={new Date(new Date().getFullYear() + 1, 11, 31).toISOString().split("T")[0]}
                         className="w-full px-6 py-4 border border-border bg-bg/30 rounded-2xl focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all cursor-pointer disabled:opacity-50"
                       />
                     </div>
@@ -1402,9 +1404,49 @@ const AdminDashboard = ({ defaultTab }) => {
               </div>
               <div className="space-y-2">
                 <label className="text-xs font-bold uppercase tracking-widest text-text-body/60">
+                  Gender
+                </label>
+                <select
+                  required
+                  value={volunteerToEdit.gender}
+                  onChange={(e) =>
+                    setVolunteerToEdit({
+                      ...volunteerToEdit,
+                      gender: e.target.value,
+                    })
+                  }
+                  className="w-full px-5 py-3 border border-border bg-bg/30 rounded-xl focus:border-primary outline-none transition-all"
+                >
+                  <option value="">Select Gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-widest text-text-body/60">
+                  Date of Birth
+                </label>
+                <input
+                  required
+                  type="date"
+                  value={volunteerToEdit.dob ? new Date(volunteerToEdit.dob).toISOString().split("T")[0] : ""}
+                  onChange={(e) =>
+                    setVolunteerToEdit({
+                      ...volunteerToEdit,
+                      dob: e.target.value,
+                    })
+                  }
+                  max={new Date().toISOString().split("T")[0]}
+                  min="1900-01-01"
+                  className="w-full px-5 py-3 border border-border bg-bg/30 rounded-xl focus:border-primary outline-none transition-all"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-widest text-text-body/60">
                   Blood Group
                 </label>
                 <select
+                  required
                   value={volunteerToEdit.bloodGroup}
                   onChange={(e) =>
                     setVolunteerToEdit({
@@ -1414,6 +1456,7 @@ const AdminDashboard = ({ defaultTab }) => {
                   }
                   className="w-full px-5 py-3 border border-border bg-bg/30 rounded-xl focus:border-primary outline-none transition-all"
                 >
+                  <option value="">Select Blood Group</option>
                   {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map(
                     (bg) => (
                       <option key={bg} value={bg}>
@@ -1425,9 +1468,33 @@ const AdminDashboard = ({ defaultTab }) => {
               </div>
               <div className="space-y-2">
                 <label className="text-xs font-bold uppercase tracking-widest text-text-body/60">
+                  Government ID Type
+                </label>
+                <select
+                  required
+                  value={volunteerToEdit.govIdType}
+                  onChange={(e) =>
+                    setVolunteerToEdit({
+                      ...volunteerToEdit,
+                      govIdType: e.target.value,
+                    })
+                  }
+                  className="w-full px-5 py-3 border border-border bg-bg/30 rounded-xl focus:border-primary outline-none transition-all"
+                >
+                  <option value="">Select ID Type</option>
+                  <option value="Aadhar Card">Aadhar Card</option>
+                  <option value="Voter ID">Voter ID</option>
+                  <option value="PAN Card">PAN Card</option>
+                  <option value="Passport">Passport</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-widest text-text-body/60">
                   Interest Area
                 </label>
                 <select
+                  required
                   value={volunteerToEdit.interest}
                   onChange={(e) =>
                     setVolunteerToEdit({
@@ -1437,6 +1504,7 @@ const AdminDashboard = ({ defaultTab }) => {
                   }
                   className="w-full px-5 py-3 border border-border bg-bg/30 rounded-xl focus:border-primary outline-none transition-all"
                 >
+                  <option value="">Select Interest</option>
                   <option value="Blood Donation">Blood Donation</option>
                   <option value="Poor/Needy Support">Poor/Needy Support</option>
                   <option value="Animal Rescue">Animal Rescue</option>
@@ -1511,6 +1579,8 @@ const AdminDashboard = ({ defaultTab }) => {
                       eventDate: e.target.value,
                     })
                   }
+                  min="1990-01-01"
+                  max={new Date(new Date().getFullYear() + 1, 11, 31).toISOString().split("T")[0]}
                   className="w-full px-5 py-4 border border-border bg-bg/30 rounded-xl focus:border-primary outline-none transition-all cursor-pointer"
                 />
               </div>
