@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "../context/UserContext";
 import { toast } from "react-toastify";
@@ -15,8 +15,14 @@ const BecomeAMember = () => {
     password: "",
     acceptTerms: false,
   });
-  const { login, signup } = useUser();
+  const { user, login, signup } = useUser();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user) {
+      navigate("/");
+    }
+  }, [user, navigate]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
