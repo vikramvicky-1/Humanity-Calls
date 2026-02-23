@@ -51,17 +51,29 @@ export const generateIdCard = async (volunteer) => {
   try {
     browser = await puppeteer.launch({
       headless: "new",
-      args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
-      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || null,
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-gpu",
+      ],
+      executablePath:
+        process.env.PUPPETEER_EXECUTABLE_PATH ||
+        "/usr/bin/google-chrome" ||
+        "/usr/bin/chromium-browser",
     });
 
+    console.log("Puppeteer browser launched successfully");
+
     const page = await browser.newPage();
+    console.log("New page created");
 
     // Set content with "load" instead of "networkidle0" to avoid timeouts with large base64 strings
     await page.setContent(html, {
       waitUntil: "load",
-      timeout: 60000, // Increase timeout to 60s
+      timeout: 60000,
     });
+    console.log("Page content set");
 
     // Set viewport to match card dimensions for high quality
     await page.setViewport({
