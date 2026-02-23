@@ -11,7 +11,7 @@ export const generateIdCard = async (volunteer) => {
   let browser;
 
   try {
-    const templatePath = path.join(__dirname, "../IdCardTemplate/Idcard.html");
+    const templatePath = path.join(__dirname, "../IdCardTemplate/idcard.html");
 
     const bgPath = path.join(__dirname, "../IdCardTemplate/assets/idbg.png");
 
@@ -52,6 +52,7 @@ export const generateIdCard = async (volunteer) => {
       .replace("{{volunteerId}}", volunteer.volunteerId)
       .replace("{{qrCode}}", qrCodeImage)
       .replace("./Assets/idbg.png", bgBase64)
+      .replace("assets/idbg.png", bgBase64)
       .replace(".name {", `.name { font-size: ${finalFontSize}px;`);
 
     // ===== Launch Puppeteer (Render Safe) =====
