@@ -114,6 +114,17 @@ const BecomeAMember = () => {
             </div>
           </div>
 
+          {isLogin && (
+            <div className="flex items-center justify-end">
+              <a
+                href="/forgot-password"
+                className="text-sm text-blood hover:underline font-medium"
+              >
+                Forgot your password?
+              </a>
+            </div>
+          )}
+
           {!isLogin && (
             <div className="flex items-center">
               <input

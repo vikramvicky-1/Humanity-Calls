@@ -3,6 +3,8 @@ import cors from "cors";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import mongoose from "mongoose";
+import path from "path";
+import { fileURLToPath } from "url";
 import emailRoutes from "./routes/emailRoutes.js";
 import authRoutes from "./routes/auth.js";
 import galleryRoutes from "./routes/galleryRoutes.js";
@@ -10,7 +12,10 @@ import volunteerRoutes from "./routes/volunteerRoutes.js";
 import idCardRoutes from "./routes/idCardRoutes.js";
 import { initAdmin } from "./controllers/authController.js";
 
-dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+dotenv.config({ path: path.join(__dirname, ".env") });
 
 const app = express();
 const allowedOrigins = process.env.ALLOWED_ORIGINS

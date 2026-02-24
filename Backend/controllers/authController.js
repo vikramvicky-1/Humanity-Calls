@@ -1,6 +1,8 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
 import User from "../models/User.js";
+import { triggerEmail } from "./emailController.js";
 
 // Signup
 export const signup = async (req, res) => {
@@ -160,3 +162,94 @@ export const initAdmin = async () => {
     console.error("Admin initialization error:", error);
   }
 };
+
+// Forgot Password
+export const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found with this email" });
+    }
+
+    // Check if a reset token already exists and is not expired
+    if (user.resetPasswordToken && user.resetPasswordExpire > Date.now()) {
+      return res.status(400).json({ 
+        message: "A reset link has already been sent to your email and is still valid. Please check your inbox or wait for it to expire." 
+      });
+    }
+
+    // Generate reset token
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    user.resetPasswordToken = crypto.createHash("sha256").update(resetToken).digest("hex");
+    user.resetPasswordExpire = Date.now() + 3600000; // 1 hour
+
+    await user.save();
+
+    const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+
+    const emailPayload = {
+      sender: { name: process.env.BREVO_SENDER_NAME || "Humanity Calls", email: process.env.BREVO_SENDER_EMAIL },
+      to: [{ email: user.email }],
+      subject: "Password Reset Request - Humanity Calls",
+      htmlContent: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
+          <h2 style="color: #C62828; text-align: center;">Password Reset Request</h2>
+          <p>Hello ${user.name},</p>
+          <p>You requested a password reset for your Humanity Calls account. Please click the button below to reset your password. This link will expire in 1 hour.</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${resetUrl}" style="background-color: #020887; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">Reset Password</a>
+          </div>
+          <p>If you did not request this, please ignore this email.</p>
+          <p>Best regards,<br>The Humanity Calls Team</p>
+          <hr style="border: 0; border-top: 1px solid #eeeeee; margin: 20px 0;">
+          <p style="font-size: 12px; color: #777777;">If the button above doesn't work, copy and paste this link into your browser:</p>
+          <p style="font-size: 12px; color: #777777; word-break: break-all;">${resetUrl}</p>
+        </div>
+      `,
+    };
+
+    await triggerEmail(emailPayload);
+
+    res.status(200).json({ message: "Reset link sent to your email" });
+  } catch (error) {
+    console.error("Forgot password error:", error);
+    res.status(500).json({ message: error.message || "Something went wrong" });
+  }
+};
+
+// Reset Password
+export const resetPassword = async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { password } = req.body;
+
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+    const user = await User.findOne({
+      resetPasswordToken: hashedToken,
+      resetPasswordExpire: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: "Invalid or expired reset token" });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ message: "Password must be at least 6 characters" });
+    }
+
+    user.password = await bcrypt.hash(password, 12);
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+
+    await user.save();
+
+    res.status(200).json({ message: "Password reset successful" });
+  } catch (error) {
+    console.error("Reset password error:", error);
+    res.status(500).json({ message: "Something went wrong" });
+  }
+};
+

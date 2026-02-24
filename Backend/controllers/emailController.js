@@ -1,28 +1,45 @@
 import axios from "axios";
 import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
 
-dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+dotenv.config({ path: path.join(__dirname, "..", ".env") });
 
 // Reusable Axios client for Brevo
-const brevoClient = axios.create({
-  baseURL: "https://api.brevo.com/v3",
-  headers: {
-    "api-key": process.env.BREVO_API_KEY,
-    "content-type": "application/json",
-    accept: "application/json",
-  },
-  timeout: 5000,
-});
+const getBrevoClient = () => {
+  return axios.create({
+    baseURL: "https://api.brevo.com/v3",
+    headers: {
+      "api-key": process.env.BREVO_API_KEY,
+      "content-type": "application/json",
+      accept: "application/json",
+    },
+    timeout: 5000,
+  });
+};
 
 /**
  * Fire-and-forget email sender
  */
-const triggerEmail = async (emailPayload) => {
+export const triggerEmail = async (emailPayload) => {
   try {
+    console.log(`Attempting to send email to: ${emailPayload.to[0].email}`);
+    const brevoClient = getBrevoClient();
     const response = await brevoClient.post("/smtp/email", emailPayload);
     console.log(`Email sent successfully: ${response.data.messageId}`);
+    return response.data;
   } catch (error) {
-    console.error("Brevo API Error:", error.response?.data || error.message);
+    console.error("Brevo API Error Detail:");
+    if (error.response) {
+      console.error("Status:", error.response.status);
+      console.error("Data:", JSON.stringify(error.response.data, null, 2));
+    } else {
+      console.error("Message:", error.message);
+    }
+    throw error;
   }
 };
 
