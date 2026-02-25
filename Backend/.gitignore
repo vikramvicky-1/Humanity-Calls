@@ -16,6 +16,7 @@ dist
 build
 .env
 .env.local
+.cache
 
 
 # Editor directories and files

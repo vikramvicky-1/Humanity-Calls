@@ -12,19 +12,25 @@ const __dirname = path.dirname(__filename);
 let sharedBrowser = null;
 
 const getBrowser = async () => {
-  if (sharedBrowser && sharedBrowser.connected) return sharedBrowser;
-  sharedBrowser = await puppeteer.launch({
-    headless: true,
-    args: [
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage",
-      "--disable-gpu",
-      "--no-zygote",
-      "--disable-extensions",
-    ],
-  });
-  return sharedBrowser;
+  try {
+    if (sharedBrowser && sharedBrowser.connected) return sharedBrowser;
+    sharedBrowser = await puppeteer.launch({
+      headless: true,
+      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-gpu",
+        "--no-zygote",
+        "--disable-extensions",
+      ],
+    });
+    return sharedBrowser;
+  } catch (error) {
+    console.error("Failed to launch browser:", error);
+    throw error;
+  }
 };
 
 export const generateIdCard = async (volunteer) => {
