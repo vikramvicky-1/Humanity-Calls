@@ -10,7 +10,13 @@ import withFormAuth from "../components/withFormAuth";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const AnimalRescue = ({ user, isFieldDisabled, renderSubmitButton }) => {
+const AnimalRescue = ({
+  user,
+  isFieldDisabled,
+  renderSubmitButton,
+  loadPendingFormData,
+  clearPendingFormData,
+}) => {
   const { t, i18n } = useTranslation();
   const containerRef = useRef(null);
   const [loading, setLoading] = useState(false);
@@ -18,7 +24,7 @@ const AnimalRescue = ({ user, isFieldDisabled, renderSubmitButton }) => {
   useLayoutEffect(() => {
     const isMobile = window.innerWidth < 768;
     const yOffset = isMobile ? 15 : 30;
-    
+
     const ctx = gsap.context(() => {
       const image = document.querySelector('[data-animation="ar-image"]');
       const title = document.querySelector('[data-animation="ar-title"]');
@@ -33,13 +39,13 @@ const AnimalRescue = ({ user, isFieldDisabled, renderSubmitButton }) => {
             opacity: 1,
             scale: 1,
             duration: 0.7,
-            ease: 'power2.out',
+            ease: "power2.out",
             scrollTrigger: {
               trigger: image,
-              start: 'top 80%',
+              start: "top 80%",
               once: true,
             },
-          }
+          },
         );
       }
 
@@ -51,13 +57,13 @@ const AnimalRescue = ({ user, isFieldDisabled, renderSubmitButton }) => {
             opacity: 1,
             y: 0,
             duration: 0.6,
-            ease: 'power2.out',
+            ease: "power2.out",
             scrollTrigger: {
               trigger: title,
-              start: 'top 80%',
+              start: "top 80%",
               once: true,
             },
-          }
+          },
         );
       }
 
@@ -69,13 +75,13 @@ const AnimalRescue = ({ user, isFieldDisabled, renderSubmitButton }) => {
             opacity: 1,
             y: 0,
             duration: 0.7,
-            ease: 'power2.out',
+            ease: "power2.out",
             scrollTrigger: {
               trigger: text,
-              start: 'top 80%',
+              start: "top 80%",
               once: true,
             },
-          }
+          },
         );
       }
 
@@ -88,13 +94,13 @@ const AnimalRescue = ({ user, isFieldDisabled, renderSubmitButton }) => {
             y: 0,
             scale: 1,
             duration: 0.7,
-            ease: 'power2.out',
+            ease: "power2.out",
             scrollTrigger: {
               trigger: form,
-              start: 'top 80%',
+              start: "top 80%",
               once: true,
             },
-          }
+          },
         );
       }
     }, containerRef);
@@ -102,12 +108,17 @@ const AnimalRescue = ({ user, isFieldDisabled, renderSubmitButton }) => {
     return () => ctx.revert();
   }, [i18n.language]);
 
-  const [formData, setFormData] = useState({
-    firstName: user?.name || "",
-    phone: "",
-    email: user?.email || "",
-    address: "",
-    message: "",
+  const [formData, setFormData] = useState(() => {
+    const saved = loadPendingFormData();
+    return (
+      saved || {
+        firstName: user?.name || "",
+        phone: "",
+        email: user?.email || "",
+        address: "",
+        message: "",
+      }
+    );
   });
 
   useEffect(() => {
@@ -128,6 +139,7 @@ const AnimalRescue = ({ user, isFieldDisabled, renderSubmitButton }) => {
     );
 
     if (success) {
+      clearPendingFormData();
       setFormData({
         firstName: user?.name || "",
         phone: "",
@@ -252,7 +264,8 @@ const AnimalRescue = ({ user, isFieldDisabled, renderSubmitButton }) => {
             {renderSubmitButton(
               <Button type="submit" variant="primary" isLoading={loading} className="w-full py-4">
                 {t("poor_needy.submit")}
-              </Button>
+              </Button>,
+              formData,
             )}
           </form>
         </div>

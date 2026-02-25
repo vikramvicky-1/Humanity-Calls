@@ -4,14 +4,27 @@ import Button from "./Button";
 import { sendEmail } from "../utils/email";
 import withFormAuth from "./withFormAuth";
 
-const ContactForm = ({ className = "", dark = false, user, isFieldDisabled, renderSubmitButton }) => {
+const ContactForm = ({
+  className = "",
+  dark = false,
+  user,
+  isFieldDisabled,
+  renderSubmitButton,
+  loadPendingFormData,
+  clearPendingFormData,
+}) => {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    name: user?.name || "",
-    email: user?.email || "",
-    phone: "",
-    message: "",
+  const [formData, setFormData] = useState(() => {
+    const saved = loadPendingFormData();
+    return (
+      saved || {
+        name: user?.name || "",
+        email: user?.email || "",
+        phone: "",
+        message: "",
+      }
+    );
   });
 
   useEffect(() => {
@@ -36,7 +49,13 @@ const ContactForm = ({ className = "", dark = false, user, isFieldDisabled, rend
     );
 
     if (success) {
-      setFormData({ name: user?.name || "", email: user?.email || "", phone: "", message: "" });
+      clearPendingFormData();
+      setFormData({
+        name: user?.name || "",
+        email: user?.email || "",
+        phone: "",
+        message: "",
+      });
     }
     setLoading(false);
   };
@@ -103,7 +122,8 @@ const ContactForm = ({ className = "", dark = false, user, isFieldDisabled, rend
           aria-label={t("form.aria_send")}
         >
           {t("form.send_message")}
-        </Button>
+        </Button>,
+        formData,
       )}
     </form>
   );

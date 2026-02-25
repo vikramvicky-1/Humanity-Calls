@@ -2,114 +2,126 @@ import fs from "fs";
 import path from "path";
 import puppeteer from "puppeteer";
 import QRCode from "qrcode";
+import axios from "axios";
 import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export const generateIdCard = async (volunteer) => {
-  let browser;
+// Shared browser instance for faster subsequent runs
+let sharedBrowser = null;
 
+const getBrowser = async () => {
+  if (sharedBrowser && sharedBrowser.connected) return sharedBrowser;
+  sharedBrowser = await puppeteer.launch({
+    headless: true,
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable-gpu",
+      "--no-zygote",
+      "--disable-extensions",
+    ],
+  });
+  return sharedBrowser;
+};
+
+export const generateIdCard = async (volunteer) => {
   try {
     const templatePath = path.join(__dirname, "../IdCardTemplate/idcard.html");
+    const newBgUrl = "https://res.cloudinary.com/dsryaajna/image/upload/v1772033964/idbg_1_qawbyt.png";
 
-    const bgPath = path.join(__dirname, "../IdCardTemplate/assets/idbg.png");
+    const htmlTemplate = fs.readFileSync(templatePath, "utf-8");
 
-    let html = fs.readFileSync(templatePath, "utf-8");
-
-    // Convert background to base64 (important for production)
-    const bgImage = fs.readFileSync(bgPath);
-    const bgBase64 = `data:image/png;base64,${bgImage.toString("base64")}`;
+    // Parallelize all async data gathering
+    const [bgBase64, qrCodeImage, profileImageBase64] = await Promise.all([
+      // Background Image
+      (async () => {
+        try {
+          const res = await axios.get(newBgUrl, { responseType: "arraybuffer", timeout: 8000 });
+          return `data:${res.headers["content-type"]};base64,${Buffer.from(res.data).toString("base64")}`;
+        } catch (e) {
+          console.error("BG fetch error, using fallback");
+          const bgPath = path.join(__dirname, "../IdCardTemplate/assets/idbg.png");
+          return `data:image/png;base64,${fs.readFileSync(bgPath).toString("base64")}`;
+        }
+      })(),
+      // QR Code
+      QRCode.toDataURL(`https://humanitycalls.org/verify/${volunteer.volunteerId}`, { margin: 1, width: 150 }),
+      // Profile Picture
+      (async () => {
+        if (!volunteer.profilePicture?.startsWith("http")) return "";
+        try {
+          const res = await axios.get(volunteer.profilePicture, { responseType: "arraybuffer", timeout: 8000 });
+          return `data:${res.headers["content-type"]};base64,${Buffer.from(res.data).toString("base64")}`;
+        } catch (e) {
+          console.error("Profile fetch error");
+          return "";
+        }
+      })()
+    ]);
 
     // ===== Dynamic Font Logic =====
     const baseFontSize = 24;
     const maxChars = 12;
     const nameLength = volunteer.fullName.length;
+    const finalFontSize = nameLength > maxChars ? Math.max(14, baseFontSize - (nameLength - maxChars)) : baseFontSize;
 
-    let finalFontSize = baseFontSize;
-
-    if (nameLength > maxChars) {
-      finalFontSize = baseFontSize - (nameLength - maxChars);
-    }
-
-    if (finalFontSize < 14) {
-      finalFontSize = 14;
-    }
-
-    // ===== QR Code =====
-    const qrData = `https://humanitycalls.org/verify/${volunteer.volunteerId}`;
-    const qrCodeImage = await QRCode.toDataURL(qrData);
-
-    // ===== Ensure Profile Picture is Valid =====
-    const profileImage = volunteer.profilePicture?.startsWith("http")
-      ? volunteer.profilePicture
-      : "";
-
-    // ===== Inject Data =====
-    html = html
-      .replace("{{profilePicture}}", profileImage)
+    // Inject data into HTML
+    const html = htmlTemplate
+      .replace("{{profilePicture}}", profileImageBase64)
+      .replace("{{bgBase64}}", bgBase64)
       .replace("{{fullName}}", volunteer.fullName)
       .replace("{{volunteerId}}", volunteer.volunteerId)
       .replace("{{qrCode}}", qrCodeImage)
-      .replace("./Assets/idbg.png", bgBase64)
-      .replace("assets/idbg.png", bgBase64)
-      .replace(".name {", `.name { font-size: ${finalFontSize}px;`);
+      .replace(".name {", `.name { font-size: ${finalFontSize}px;`)
+      // Add strict @page styling to the injected HTML to prevent extra pages
+      .replace("</head>", `
+        <style>
+          @page { 
+            size: 700px 542px; 
+            margin: 0 !important; 
+          }
+          html, body { 
+            margin: 0 !important; 
+            padding: 0 !important; 
+            width: 700px !important;
+            height: 542px !important;
+            overflow: hidden !important; 
+            -webkit-print-color-adjust: exact;
+          }
+          .card {
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+        </style>
+      </head>`);
 
-    // ===== Launch Puppeteer (Render Safe) =====
-    browser = await puppeteer.launch({
-      headless: true,
-      executablePath: puppeteer.executablePath(),
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--disable-gpu",
-        "--single-process",
-        "--no-zygote",
-        "--disable-extensions",
-      ],
-      defaultViewport: {
-        width: 700,
-        height: 542,
-        deviceScaleFactor: 2,
-      },
-    });
-
+    const browser = await getBrowser();
     const page = await browser.newPage();
 
-    await page.setViewport({
-      width: 700,
-      height: 542,
-      deviceScaleFactor: 2,
-    });
+    try {
+      // Set precise viewport
+      await page.setViewport({ width: 700, height: 542, deviceScaleFactor: 2 });
+      
+      // Load content
+      await page.setContent(html, { waitUntil: "load" });
 
-    await page.setContent(html, {
-      waitUntil: "load",
-      timeout: 60000,
-    });
+      const pdfBuffer = await page.pdf({
+        width: "700px",
+        height: "542px",
+        printBackground: true,
+        preferCSSPageSize: true,
+        margin: { top: "0px", right: "0px", bottom: "0px", left: "0px" },
+      });
 
-    const pdfBuffer = await page.pdf({
-      width: "700px",
-      height: "542px",
-      printBackground: true,
-      margin: {
-        top: "0px",
-        right: "0px",
-        bottom: "0px",
-        left: "0px",
-      },
-    });
-
-    await browser.close();
-
-    return pdfBuffer;
+      return pdfBuffer;
+    } finally {
+      await page.close();
+    }
   } catch (error) {
     console.error("❌ ID Card Generation Failed:", error);
-
-    if (browser) {
-      await browser.close();
-    }
-
     throw new Error("PDF generation failed");
   }
 };

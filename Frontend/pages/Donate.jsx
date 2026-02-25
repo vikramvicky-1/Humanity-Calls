@@ -10,7 +10,13 @@ import withFormAuth from "../components/withFormAuth";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const Donate = ({ user, isFieldDisabled, renderSubmitButton }) => {
+const Donate = ({
+  user,
+  isFieldDisabled,
+  renderSubmitButton,
+  loadPendingFormData,
+  clearPendingFormData,
+}) => {
   const { t, i18n } = useTranslation();
   const containerRef = useRef(null);
   const [loading, setLoading] = useState(false);
@@ -64,12 +70,17 @@ const Donate = ({ user, isFieldDisabled, renderSubmitButton }) => {
     return () => ctx.revert();
   }, [i18n.language]);
 
-  const [formData, setFormData] = useState({
-    name: "",
-    email: user?.email || "",
-    phone: "",
-    amount: "",
-    transactionId: "",
+  const [formData, setFormData] = useState(() => {
+    const saved = loadPendingFormData();
+    return (
+      saved || {
+        name: "",
+        email: user?.email || "",
+        phone: "",
+        amount: "",
+        transactionId: "",
+      }
+    );
   });
 
   useEffect(() => {
@@ -94,6 +105,7 @@ const Donate = ({ user, isFieldDisabled, renderSubmitButton }) => {
     );
 
     if (success) {
+      clearPendingFormData();
       setFormData({
         name: "",
         email: user?.email || "",
@@ -261,6 +273,7 @@ const Donate = ({ user, isFieldDisabled, renderSubmitButton }) => {
               >
                 Submit Donation Details
               </Button>,
+              formData,
             )}
             <p className="text-center text-xs text-gray-400 mt-4">
               Your data is secured with end-to-end encryption

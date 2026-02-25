@@ -10,7 +10,13 @@ import withFormAuth from "../components/withFormAuth";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const Collaborate = ({ user, isFieldDisabled, renderSubmitButton }) => {
+const Collaborate = ({
+  user,
+  isFieldDisabled,
+  renderSubmitButton,
+  loadPendingFormData,
+  clearPendingFormData,
+}) => {
   const { t, i18n } = useTranslation();
   const containerRef = useRef(null);
   const [loading, setLoading] = useState(false);
@@ -18,9 +24,11 @@ const Collaborate = ({ user, isFieldDisabled, renderSubmitButton }) => {
   useLayoutEffect(() => {
     const isMobile = window.innerWidth < 768;
     const yOffset = isMobile ? 15 : 30;
-    
+
     const ctx = gsap.context(() => {
-      const content = document.querySelector('[data-animation="collab-content"]');
+      const content = document.querySelector(
+        '[data-animation="collab-content"]',
+      );
       const form = document.querySelector('[data-animation="collab-form"]');
 
       if (content) {
@@ -31,13 +39,13 @@ const Collaborate = ({ user, isFieldDisabled, renderSubmitButton }) => {
             opacity: 1,
             y: 0,
             duration: 0.7,
-            ease: 'power2.out',
+            ease: "power2.out",
             scrollTrigger: {
               trigger: content,
-              start: 'top 80%',
+              start: "top 80%",
               once: true,
             },
-          }
+          },
         );
       }
 
@@ -50,13 +58,13 @@ const Collaborate = ({ user, isFieldDisabled, renderSubmitButton }) => {
             y: 0,
             scale: 1,
             duration: 0.7,
-            ease: 'power2.out',
+            ease: "power2.out",
             scrollTrigger: {
               trigger: form,
-              start: 'top 80%',
+              start: "top 80%",
               once: true,
             },
-          }
+          },
         );
       }
     }, containerRef);
@@ -64,13 +72,18 @@ const Collaborate = ({ user, isFieldDisabled, renderSubmitButton }) => {
     return () => ctx.revert();
   }, [i18n.language]);
 
-  const [formData, setFormData] = useState({
-    institutionName: "",
-    contactPerson: user?.name || "",
-    email: user?.email || "",
-    phone: "",
-    address: "",
-    message: "",
+  const [formData, setFormData] = useState(() => {
+    const saved = loadPendingFormData();
+    return (
+      saved || {
+        institutionName: "",
+        contactPerson: user?.name || "",
+        email: user?.email || "",
+        phone: "",
+        address: "",
+        message: "",
+      }
+    );
   });
 
   useEffect(() => {
@@ -91,6 +104,7 @@ const Collaborate = ({ user, isFieldDisabled, renderSubmitButton }) => {
     );
 
     if (success) {
+      clearPendingFormData();
       setFormData({
         institutionName: "",
         contactPerson: user?.name || "",
@@ -221,7 +235,8 @@ const Collaborate = ({ user, isFieldDisabled, renderSubmitButton }) => {
               {renderSubmitButton(
                 <Button type="submit" isLoading={loading} className="w-full py-4">
                   {t("collaborate.submit")}
-                </Button>
+                </Button>,
+                formData,
               )}
             </form>
           </div>

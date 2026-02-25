@@ -28,11 +28,34 @@ const volunteerSchema = new mongoose.Schema({
   },
   gender: {
     type: String,
-    enum: ["Male", "Female"],
+    enum: ["Male", "Female", "Prefer not to say"],
     required: true,
   },
   interest: {
     type: String,
+    required: true,
+  },
+  occupation: {
+    type: String,
+    required: true,
+  },
+  occupationDetail: {
+    type: String,
+  },
+  skills: {
+    type: String,
+    required: true,
+  },
+  timeCommitment: {
+    type: [String],
+    required: true,
+  },
+  workingMode: {
+    type: [String],
+    required: true,
+  },
+  rolePreference: {
+    type: [String],
     required: true,
   },
   govIdType: {

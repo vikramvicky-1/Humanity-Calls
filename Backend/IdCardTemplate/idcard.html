@@ -62,18 +62,34 @@
         padding: 0;
         z-index: 10;
       }
+      .warn {
+        position: absolute;
+        bottom: -25px;
+        right: 195px;
+        width: 72px;
+        height: 72px;
+        z-index: 10;
+        font-size: 8px;
+        white-space: nowrap;
+      }
     </style>
   </head>
 
   <body>
     <div class="card">
       <img src="{{profilePicture}}" class="profile" />
-      <img src="./Assets/idbg.png" class="bg" />
+      <img
+        src="https://res.cloudinary.com/dsryaajna/image/upload/v1772033964/idbg_1_qawbyt.png"
+        class="bg"
+      />
       <div class="details">
         <div class="name">{{fullName}}</div>
         <div class="id">{{volunteerId}}</div>
       </div>
       <img src="{{qrCode}}" class="qr" />
+      <div class="warn">
+        This ID is electronically generated <br />and strictly non-transferable.
+      </div>
     </div>
   </body>
 </html>

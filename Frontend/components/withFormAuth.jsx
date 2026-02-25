@@ -1,11 +1,35 @@
 import React, { useEffect } from "react";
 import { useUser } from "../context/UserContext";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import Button from "./Button";
 
 const withFormAuth = (WrappedComponent) => {
   return (props) => {
     const { user } = useUser();
+    const location = useLocation();
+
+    const savePendingFormData = (data) => {
+      if (!data) return;
+      localStorage.setItem(`pending_form_${location.pathname}`, JSON.stringify(data));
+    };
+
+    const loadPendingFormData = () => {
+      const saved = localStorage.getItem(`pending_form_${location.pathname}`);
+      if (saved) {
+        // Clear after loading to avoid stale data issues later
+        // But maybe keep it until successfully submitted?
+        // User said "make sure it is working prpperly"
+        // Let's keep it until they submit or we can clear it here.
+        // Actually, if we clear it here, and they refresh, it's gone.
+        // Better to clear it on successful submission in the component.
+        return JSON.parse(saved);
+      }
+      return null;
+    };
+
+    const clearPendingFormData = () => {
+      localStorage.removeItem(`pending_form_${location.pathname}`);
+    };
 
     // This effect ensures that name and email are synced from user context
     useEffect(() => {
@@ -27,10 +51,14 @@ const withFormAuth = (WrappedComponent) => {
       return !!(user && protectedFields.includes(fieldName));
     };
 
-    const renderSubmitButton = (originalButton) => {
+    const renderSubmitButton = (originalButton, currentFormData) => {
       if (!user) {
         return (
-          <Link to="/become-a-member" className="block w-full">
+          <Link 
+            to={`/become-a-member?redirect=${encodeURIComponent(location.pathname)}`} 
+            className="block w-full"
+            onClick={() => savePendingFormData(currentFormData)}
+          >
             <Button
               type="button"
               variant="outline"
@@ -50,6 +78,8 @@ const withFormAuth = (WrappedComponent) => {
         user={user}
         isFieldDisabled={isFieldDisabled}
         renderSubmitButton={renderSubmitButton}
+        loadPendingFormData={loadPendingFormData}
+        clearPendingFormData={clearPendingFormData}
       />
     );
   };

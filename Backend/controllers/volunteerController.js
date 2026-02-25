@@ -8,6 +8,12 @@ export const applyVolunteer = async (req, res) => {
       phone,
       gender,
       interest,
+      occupation,
+      occupationDetail,
+      skills,
+      timeCommitment,
+      workingMode,
+      rolePreference,
       govIdType,
       bloodGroup,
       dob,
@@ -35,6 +41,12 @@ export const applyVolunteer = async (req, res) => {
       phone,
       gender,
       interest,
+      occupation,
+      occupationDetail,
+      skills,
+      timeCommitment,
+      workingMode,
+      rolePreference,
       govIdType,
       govIdImage,
       profilePicture,
@@ -45,9 +57,16 @@ export const applyVolunteer = async (req, res) => {
     });
 
     await newVolunteer.save();
-    res.status(201).json({ message: "Application submitted successfully", volunteer: newVolunteer });
+    res
+      .status(201)
+      .json({
+        message: "Application submitted successfully",
+        volunteer: newVolunteer,
+      });
   } catch (error) {
-    res.status(500).json({ message: "Error submitting application", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Error submitting application", error: error.message });
   }
 };
 
@@ -59,7 +78,12 @@ export const getMyVolunteerStatus = async (req, res) => {
     }
     res.status(200).json({ status: volunteer.status, volunteer });
   } catch (error) {
-    res.status(500).json({ message: "Error fetching volunteer status", error: error.message });
+    res
+      .status(500)
+      .json({
+        message: "Error fetching volunteer status",
+        error: error.message,
+      });
   }
 };
 
@@ -67,10 +91,15 @@ export const getVolunteers = async (req, res) => {
   try {
     const { status } = req.query;
     const filter = status ? { status } : {};
-    const volunteers = await Volunteer.find(filter).populate("user", "name email");
+    const volunteers = await Volunteer.find(filter).populate(
+      "user",
+      "name email",
+    );
     res.status(200).json(volunteers);
   } catch (error) {
-    res.status(500).json({ message: "Error fetching volunteers", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Error fetching volunteers", error: error.message });
   }
 };
 
@@ -101,7 +130,7 @@ export const updateVolunteerStatus = async (req, res) => {
         let finalId = "";
         while (!isUnique) {
           const random = Math.floor(1000 + Math.random() * 9000); // 4 digits
-          finalId = `HC${dateStr}${random}`;
+          finalId = `HCT${dateStr}${random}`;
           const check = await Volunteer.findOne({ volunteerId: finalId });
           if (!check) isUnique = true;
         }
@@ -109,19 +138,21 @@ export const updateVolunteerStatus = async (req, res) => {
       }
     }
 
-    const volunteer = await Volunteer.findByIdAndUpdate(
-      id,
-      updateData,
-      { new: true }
-    );
+    const volunteer = await Volunteer.findByIdAndUpdate(id, updateData, {
+      new: true,
+    });
 
     if (!volunteer) {
       return res.status(404).json({ message: "Volunteer not found" });
     }
 
-    res.status(200).json({ message: `Volunteer marked as ${status}`, volunteer });
+    res
+      .status(200)
+      .json({ message: `Volunteer marked as ${status}`, volunteer });
   } catch (error) {
-    res.status(500).json({ message: "Error updating status", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Error updating status", error: error.message });
   }
 };
 
@@ -130,15 +161,21 @@ export const updateVolunteer = async (req, res) => {
     const { id } = req.params;
     const updateData = req.body;
 
-    const volunteer = await Volunteer.findByIdAndUpdate(id, updateData, { new: true });
+    const volunteer = await Volunteer.findByIdAndUpdate(id, updateData, {
+      new: true,
+    });
 
     if (!volunteer) {
       return res.status(404).json({ message: "Volunteer not found" });
     }
 
-    res.status(200).json({ message: "Volunteer updated successfully", volunteer });
+    res
+      .status(200)
+      .json({ message: "Volunteer updated successfully", volunteer });
   } catch (error) {
-    res.status(500).json({ message: "Error updating volunteer", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Error updating volunteer", error: error.message });
   }
 };
 
@@ -153,6 +190,8 @@ export const deleteVolunteer = async (req, res) => {
 
     res.status(200).json({ message: "Volunteer deleted completely" });
   } catch (error) {
-    res.status(500).json({ message: "Error deleting volunteer", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Error deleting volunteer", error: error.message });
   }
 };

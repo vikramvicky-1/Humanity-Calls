@@ -64,6 +64,13 @@ export const UserProvider = ({ children }) => {
     await axios.post(`${API_URL}/auth/logout`, {}, { withCredentials: true });
     sessionStorage.removeItem("token");
     setUser(null);
+    
+    // Clear all pending form data from localStorage
+    Object.keys(localStorage).forEach((key) => {
+      if (key.startsWith("pending_form_")) {
+        localStorage.removeItem(key);
+      }
+    });
   };
 
   const updateProfile = async (data) => {

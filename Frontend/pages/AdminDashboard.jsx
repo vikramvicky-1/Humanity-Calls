@@ -65,6 +65,8 @@ const AdminDashboard = ({ defaultTab }) => {
   const [volunteerToEdit, setVolunteerToEdit] = useState(null);
   const [isUpdatingVolunteer, setIsUpdatingVolunteer] = useState(false);
   const [showIdModal, setShowIdModal] = useState(false);
+  const [showViewMoreModal, setShowViewMoreModal] = useState(false);
+  const [selectedVolunteerDetails, setSelectedVolunteerDetails] = useState(null);
   const [selectedIdImage, setSelectedIdImage] = useState("");
   const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
 
@@ -377,6 +379,11 @@ const AdminDashboard = ({ defaultTab }) => {
         : "N/A",
       "Gov ID Type": vol.govIdType,
       Interest: vol.interest,
+      Occupation: vol.occupation === "Other" ? vol.occupationDetail : vol.occupation,
+      Skills: vol.skills,
+      "Time Commitment": Array.isArray(vol.timeCommitment) ? vol.timeCommitment.join(", ") : vol.timeCommitment,
+      "Working Mode": Array.isArray(vol.workingMode) ? vol.workingMode.join(", ") : vol.workingMode,
+      "Role Preference": Array.isArray(vol.rolePreference) ? vol.rolePreference.join(", ") : vol.rolePreference,
       Status: vol.status,
       Reason: vol.rejectionReason || vol.banReason || "",
     }));
@@ -404,10 +411,12 @@ const AdminDashboard = ({ defaultTab }) => {
       "Name",
       "Email",
       "Phone",
-      "Gender",
-      "DOB (Age)",
-      "BG",
-      "Joined Date",
+      "Interest",
+      "Occupation",
+      "Skills",
+      "Time",
+      "Mode",
+      "Role",
       "Status",
     ];
     const tableRows = filteredVolunteers.map((vol) => [
@@ -415,10 +424,12 @@ const AdminDashboard = ({ defaultTab }) => {
       vol.fullName,
       vol.email,
       vol.phone,
-      vol.gender || "N/A",
-      vol.dob ? `${new Date(vol.dob).toLocaleDateString("en-GB")} (${calculateAge(vol.dob)}Y)` : "N/A",
-      vol.bloodGroup,
-      vol.joiningDate ? new Date(vol.joiningDate).toLocaleDateString("en-GB") : "N/A",
+      vol.interest,
+      vol.occupation === "Other" ? vol.occupationDetail : vol.occupation,
+      vol.skills,
+      Array.isArray(vol.timeCommitment) ? vol.timeCommitment.join(", ") : vol.timeCommitment,
+      Array.isArray(vol.workingMode) ? vol.workingMode.join(", ") : vol.workingMode,
+      Array.isArray(vol.rolePreference) ? vol.rolePreference.join(", ") : vol.rolePreference,
       vol.status,
     ]);
 
@@ -426,7 +437,7 @@ const AdminDashboard = ({ defaultTab }) => {
       head: [tableColumn],
       body: tableRows,
       startY: 20,
-      styles: { fontSize: 8 },
+      styles: { fontSize: 6 },
     });
     doc.save(
       `Volunteers_${activeTab === "requests" ? "pending" : volunteerStatusTab}_${new Date().toLocaleDateString()}.pdf`,
@@ -709,6 +720,15 @@ const AdminDashboard = ({ defaultTab }) => {
                                 )}
                                 <td className="px-4 py-4">
                                   <div className="flex justify-center gap-2">
+                                    <button
+                                      onClick={() => {
+                                        setSelectedVolunteerDetails(vol);
+                                        setShowViewMoreModal(true);
+                                      }}
+                                      className="text-blue-500 hover:underline text-[11px] font-bold whitespace-nowrap"
+                                    >
+                                      View More
+                                    </button>
                                     {vol.status !== "rejected" && (
                                       <button
                                         onClick={() =>
@@ -894,7 +914,16 @@ const AdminDashboard = ({ defaultTab }) => {
                                   {vol.interest}
                                 </td>
                                 <td className="px-4 py-4">
-                                  <div className="flex justify-center items-center gap-3">
+                                  <div className="flex justify-center items-center gap-4">
+                                    <button
+                                      onClick={() => {
+                                        setSelectedVolunteerDetails(vol);
+                                        setShowViewMoreModal(true);
+                                      }}
+                                      className="text-blue-500 hover:underline text-[11px] font-bold whitespace-nowrap"
+                                    >
+                                      View More
+                                    </button>
                                     <div className="flex gap-2">
                                       <button
                                         onClick={() =>
@@ -1420,6 +1449,7 @@ const AdminDashboard = ({ defaultTab }) => {
                   <option value="">Select Gender</option>
                   <option value="Male">Male</option>
                   <option value="Female">Female</option>
+                  <option value="Prefer not to say">Prefer not to say</option>
                 </select>
               </div>
               <div className="space-y-2">
@@ -1491,7 +1521,7 @@ const AdminDashboard = ({ defaultTab }) => {
               </div>
               <div className="space-y-2">
                 <label className="text-xs font-bold uppercase tracking-widest text-text-body/60">
-                  Interest Area
+                  Area of Interest
                 </label>
                 <select
                   required
@@ -1505,11 +1535,154 @@ const AdminDashboard = ({ defaultTab }) => {
                   className="w-full px-5 py-3 border border-border bg-bg/30 rounded-xl focus:border-primary outline-none transition-all"
                 >
                   <option value="">Select Interest</option>
+                  <option value="Community & Field Engagement">Community & Field Engagement</option>
+                  <option value="Education & Skill Development">Education & Skill Development</option>
+                  <option value="Health & Well-being">Health & Well-being</option>
+                  <option value="Environment & Sustainability">Environment & Sustainability</option>
+                  <option value="Creative & Media Support">Creative & Media Support</option>
+                  <option value="Administration & Management">Administration & Management</option>
+                  <option value="Fundraising & Partnerships">Fundraising & Partnerships</option>
                   <option value="Blood Donation">Blood Donation</option>
                   <option value="Poor/Needy Support">Poor/Needy Support</option>
                   <option value="Animal Rescue">Animal Rescue</option>
                   <option value="Event Organizing">Event Organizing</option>
                 </select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-widest text-text-body/60">
+                  Occupation
+                </label>
+                <select
+                  required
+                  value={volunteerToEdit.occupation}
+                  onChange={(e) =>
+                    setVolunteerToEdit({
+                      ...volunteerToEdit,
+                      occupation: e.target.value,
+                    })
+                  }
+                  className="w-full px-5 py-3 border border-border bg-bg/30 rounded-xl focus:border-primary outline-none transition-all"
+                >
+                  <option value="">Select Occupation</option>
+                  <option value="Student (School / College)">Student (School / College)</option>
+                  <option value="Working Professional">Working Professional</option>
+                  <option value="Business Owner / Entrepreneur">Business Owner / Entrepreneur</option>
+                  <option value="Homemaker">Homemaker</option>
+                  <option value="Retired Professional">Retired Professional</option>
+                  <option value="Freelancer">Freelancer</option>
+                  <option value="Government Employee">Government Employee</option>
+                  <option value="NGO / Social Sector Professional">NGO / Social Sector Professional</option>
+                  <option value="Medical Professional">Medical Professional</option>
+                  <option value="Legal Professional">Legal Professional</option>
+                  <option value="Educator / Teacher">Educator / Teacher</option>
+                  <option value="IT Professional">IT Professional</option>
+                  <option value="Other">Other (Please Specify)</option>
+                </select>
+              </div>
+              {volunteerToEdit.occupation === "Other" && (
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-widest text-text-body/60">
+                    Specify Occupation
+                  </label>
+                  <input
+                    type="text"
+                    value={volunteerToEdit.occupationDetail}
+                    onChange={(e) =>
+                      setVolunteerToEdit({
+                        ...volunteerToEdit,
+                        occupationDetail: e.target.value,
+                      })
+                    }
+                    className="w-full px-5 py-3 border border-border bg-bg/30 rounded-xl focus:border-primary outline-none transition-all"
+                  />
+                </div>
+              )}
+              <div className="md:col-span-2 space-y-2">
+                <label className="text-xs font-bold uppercase tracking-widest text-text-body/60">
+                  Skills
+                </label>
+                <input
+                  type="text"
+                  value={volunteerToEdit.skills}
+                  onChange={(e) =>
+                    setVolunteerToEdit({
+                      ...volunteerToEdit,
+                      skills: e.target.value,
+                    })
+                  }
+                  className="w-full px-5 py-3 border border-border bg-bg/30 rounded-xl focus:border-primary outline-none transition-all"
+                />
+              </div>
+              <div className="md:col-span-2 space-y-4">
+                <h4 className="font-bold text-gray-700 text-sm">Contribute Details</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-text-body/40">Time Commitment</label>
+                    <div className="flex flex-wrap gap-2">
+                      {["One-time Event", "Weekend Volunteer", "Monthly Commitment", "Project-Based", "Long-Term Association"].map(opt => (
+                        <label key={opt} className="flex items-center gap-2 text-xs">
+                          <input
+                            type="checkbox"
+                            checked={volunteerToEdit.timeCommitment?.includes(opt)}
+                            onChange={(e) => {
+                              const current = [...(volunteerToEdit.timeCommitment || [])];
+                              if (e.target.checked) current.push(opt);
+                              else {
+                                const i = current.indexOf(opt);
+                                if (i > -1) current.splice(i, 1);
+                              }
+                              setVolunteerToEdit({ ...volunteerToEdit, timeCommitment: current });
+                            }}
+                          /> {opt}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-text-body/40">Working Mode</label>
+                    <div className="flex flex-wrap gap-2">
+                      {["On-ground (Field Work)", "Remote / Online", "Hybrid"].map(opt => (
+                        <label key={opt} className="flex items-center gap-2 text-xs">
+                          <input
+                            type="checkbox"
+                            checked={volunteerToEdit.workingMode?.includes(opt)}
+                            onChange={(e) => {
+                              const current = [...(volunteerToEdit.workingMode || [])];
+                              if (e.target.checked) current.push(opt);
+                              else {
+                                const i = current.indexOf(opt);
+                                if (i > -1) current.splice(i, 1);
+                              }
+                              setVolunteerToEdit({ ...volunteerToEdit, workingMode: current });
+                            }}
+                          /> {opt}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-text-body/40">Role Preference</label>
+                    <div className="flex flex-wrap gap-2">
+                      {["Team Member", "Team Leader", "Coordinator", "Consultant / Advisor", "Intern"].map(opt => (
+                        <label key={opt} className="flex items-center gap-2 text-xs">
+                          <input
+                            type="checkbox"
+                            checked={volunteerToEdit.rolePreference?.includes(opt)}
+                            onChange={(e) => {
+                              const current = [...(volunteerToEdit.rolePreference || [])];
+                              if (e.target.checked) current.push(opt);
+                              else {
+                                const i = current.indexOf(opt);
+                                if (i > -1) current.splice(i, 1);
+                              }
+                              setVolunteerToEdit({ ...volunteerToEdit, rolePreference: current });
+                            }}
+                          /> {opt}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </div>
               <div className="md:col-span-2 flex justify-end gap-4 mt-4">
                 <button
@@ -1528,6 +1701,125 @@ const AdminDashboard = ({ defaultTab }) => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* View More Modal */}
+      {showViewMoreModal && selectedVolunteerDetails && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setShowViewMoreModal(false)}
+          />
+          <div className="bg-white rounded-3xl p-8 max-w-4xl w-full relative z-10 shadow-2xl border border-border animate-in zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-8">
+              <h3 className="text-3xl font-bold text-primary flex items-center gap-3">
+                <FaUserFriends size={32} /> Volunteer Profile
+              </h3>
+              <button
+                onClick={() => setShowViewMoreModal(false)}
+                className="text-text-body/40 hover:text-blood transition-colors p-2 hover:bg-bg rounded-full"
+              >
+                <FaTimes size={24} />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {/* Sidebar Info */}
+              <div className="space-y-6">
+                <div className="aspect-square rounded-3xl overflow-hidden border-4 border-primary/10 bg-bg shadow-inner">
+                  {selectedVolunteerDetails.profilePicture ? (
+                    <img 
+                      src={selectedVolunteerDetails.profilePicture} 
+                      alt={selectedVolunteerDetails.fullName} 
+                      className="w-full h-full object-cover" 
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-primary/10">
+                      <FaUserFriends size={80} />
+                    </div>
+                  )}
+                </div>
+                <div className="bg-bg/50 rounded-2xl p-5 space-y-4">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-text-body/40 mb-1">Status</p>
+                    <span className={`px-4 py-1.5 rounded-full text-[11px] font-black uppercase tracking-widest border ${
+                      selectedVolunteerDetails.status === 'active' ? 'bg-green-100 text-green-700 border-green-200' :
+                      selectedVolunteerDetails.status === 'pending' ? 'bg-amber-100 text-amber-700 border-amber-200' :
+                      'bg-red-100 text-red-700 border-red-200'
+                    }`}>
+                      {selectedVolunteerDetails.status}
+                    </span>
+                  </div>
+                  {selectedVolunteerDetails.volunteerId && (
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-text-body/40 mb-1">Volunteer ID</p>
+                      <p className="font-bold text-primary text-lg tracking-tighter">{selectedVolunteerDetails.volunteerId}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Main Content */}
+              <div className="md:col-span-2 space-y-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-12">
+                  <DetailItem label="Full Name" value={selectedVolunteerDetails.fullName} />
+                  <DetailItem label="Email Address" value={selectedVolunteerDetails.email} />
+                  <DetailItem label="Phone Number" value={selectedVolunteerDetails.phone} />
+                  <DetailItem label="Date of Birth" value={selectedVolunteerDetails.dob ? `${new Date(selectedVolunteerDetails.dob).toLocaleDateString("en-GB")} (${calculateAge(selectedVolunteerDetails.dob)}Y)` : "N/A"} />
+                  <DetailItem label="Gender" value={selectedVolunteerDetails.gender} />
+                  <DetailItem label="Blood Group" value={selectedVolunteerDetails.bloodGroup} />
+                  <DetailItem label="Interest Area" value={selectedVolunteerDetails.interest} />
+                  <DetailItem label="Occupation" value={selectedVolunteerDetails.occupation === "Other" ? selectedVolunteerDetails.occupationDetail : selectedVolunteerDetails.occupation} />
+                  <div className="sm:col-span-2">
+                    <DetailItem label="Skills Offered" value={selectedVolunteerDetails.skills} />
+                  </div>
+                </div>
+
+                <div className="border-t border-border pt-6 mt-6">
+                  <h4 className="text-sm font-black uppercase tracking-[0.2em] text-primary mb-6">Contribution Details</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                    <DetailList label="Time Commitment" items={selectedVolunteerDetails.timeCommitment} />
+                    <DetailList label="Working Mode" items={selectedVolunteerDetails.workingMode} />
+                    <DetailList label="Role Preference" items={selectedVolunteerDetails.rolePreference} />
+                  </div>
+                </div>
+
+                <div className="border-t border-border pt-6 mt-6">
+                  <h4 className="text-sm font-black uppercase tracking-[0.2em] text-primary mb-4">Identification</h4>
+                  <div className="flex items-center justify-between p-4 bg-bg rounded-2xl border border-border group hover:border-primary/30 transition-all">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-primary shadow-sm">
+                        <FaClipboardList size={20} />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-text-body/40">{selectedVolunteerDetails.govIdType}</p>
+                        <p className="font-bold text-sm">Government ID Proof</p>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => {
+                        setSelectedIdImage(selectedVolunteerDetails.govIdImage);
+                        setShowIdModal(true);
+                      }}
+                      className="px-6 py-2 bg-white border border-border rounded-xl text-xs font-bold hover:bg-primary hover:text-white hover:border-primary transition-all shadow-sm"
+                    >
+                      View ID Image
+                    </button>
+                  </div>
+                </div>
+
+                {(selectedVolunteerDetails.rejectionReason || selectedVolunteerDetails.banReason) && (
+                  <div className="bg-red-50 border border-red-100 rounded-2xl p-6">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-red-400 mb-2">Notice / Reason</p>
+                    <p className="text-sm font-medium text-red-700 leading-relaxed italic">
+                      "{selectedVolunteerDetails.rejectionReason || selectedVolunteerDetails.banReason}"
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -1607,5 +1899,29 @@ const AdminDashboard = ({ defaultTab }) => {
     </div>
   );
 };
+
+const DetailItem = ({ label, value }) => (
+  <div>
+    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-text-body/40 mb-1">{label}</p>
+    <p className="font-bold text-text-body break-words">{value || 'N/A'}</p>
+  </div>
+);
+
+const DetailList = ({ label, items }) => (
+  <div>
+    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-text-body/40 mb-3">{label}</p>
+    <div className="flex flex-wrap gap-2">
+      {items && items.length > 0 ? (
+        items.map((item, i) => (
+          <span key={i} className="px-3 py-1 bg-primary/5 text-primary text-[10px] font-bold rounded-lg border border-primary/10 capitalize">
+            {item}
+          </span>
+        ))
+      ) : (
+        <span className="text-xs text-text-body/40 italic">None selected</span>
+      )}
+    </div>
+  </div>
+);
 
 export default AdminDashboard;

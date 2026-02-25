@@ -10,7 +10,13 @@ import withFormAuth from "../components/withFormAuth";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const RequestDonors = ({ user, isFieldDisabled, renderSubmitButton }) => {
+const RequestDonors = ({
+  user,
+  isFieldDisabled,
+  renderSubmitButton,
+  loadPendingFormData,
+  clearPendingFormData,
+}) => {
   const { t, i18n } = useTranslation();
   const containerRef = useRef(null);
   const [loading, setLoading] = useState(false);
@@ -37,7 +43,7 @@ const RequestDonors = ({ user, isFieldDisabled, renderSubmitButton }) => {
               start: "top 80%",
               once: true,
             },
-          }
+          },
         );
       }
 
@@ -56,7 +62,7 @@ const RequestDonors = ({ user, isFieldDisabled, renderSubmitButton }) => {
               start: "top 80%",
               once: true,
             },
-          }
+          },
         );
       }
     }, containerRef);
@@ -64,14 +70,19 @@ const RequestDonors = ({ user, isFieldDisabled, renderSubmitButton }) => {
     return () => ctx.revert();
   }, [i18n.language]);
 
-  const [formData, setFormData] = useState({
-    verifiedPersonName: user?.name || "",
-    phone: "",
-    email: user?.email || "",
-    patientName: "",
-    bloodGroup: "",
-    bloodRequestType: "",
-    hospitalAddressWithPincode: "",
+  const [formData, setFormData] = useState(() => {
+    const saved = loadPendingFormData();
+    return (
+      saved || {
+        verifiedPersonName: user?.name || "",
+        phone: "",
+        email: user?.email || "",
+        patientName: "",
+        bloodGroup: "",
+        bloodRequestType: "",
+        hospitalAddressWithPincode: "",
+      }
+    );
   });
 
   useEffect(() => {
@@ -92,6 +103,7 @@ const RequestDonors = ({ user, isFieldDisabled, renderSubmitButton }) => {
     );
 
     if (success) {
+      clearPendingFormData();
       setFormData({
         verifiedPersonName: user?.name || "",
         phone: "",
@@ -288,7 +300,8 @@ const RequestDonors = ({ user, isFieldDisabled, renderSubmitButton }) => {
                 className="w-full py-5 text-lg shadow-lg shadow-blood/20"
               >
                 {t("request_donors.submit_request")}
-              </Button>
+              </Button>,
+              formData,
             )}
           </form>
         </div>

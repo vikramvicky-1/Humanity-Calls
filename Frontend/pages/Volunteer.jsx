@@ -12,7 +12,13 @@ import hclogo from "../assets/humanitycallslogo.avif";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const Volunteer = ({ user, isFieldDisabled, renderSubmitButton }) => {
+const Volunteer = ({
+  user,
+  isFieldDisabled,
+  renderSubmitButton,
+  loadPendingFormData,
+  clearPendingFormData,
+}) => {
   const { t, i18n } = useTranslation();
   const containerRef = useRef(null);
   const scrollRef = useRef(null);
@@ -26,6 +32,33 @@ const Volunteer = ({ user, isFieldDisabled, renderSubmitButton }) => {
   const [selectedProfileFile, setSelectedProfileFile] = useState(null);
   const [volunteerStatus, setVolunteerStatus] = useState(null);
   const [isCheckingStatus, setIsCheckingStatus] = useState(true);
+
+  // Helper to convert base64 to File object
+  const base64ToFile = (base64String, fileName) => {
+    if (!base64String) return null;
+    const arr = base64String.split(",");
+    const mime = arr[0].match(/:(.*?);/)[1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new File([u8arr], fileName, { type: mime });
+  };
+
+  useEffect(() => {
+    if (formData.govIdImage && formData.govIdImage.startsWith("data:")) {
+      setGovIdPreview(formData.govIdImage);
+      const file = base64ToFile(formData.govIdImage, "govId.png");
+      setSelectedFile(file);
+    }
+    if (formData.profilePicture && formData.profilePicture.startsWith("data:")) {
+      setProfilePreview(formData.profilePicture);
+      const file = base64ToFile(formData.profilePicture, "profile.png");
+      setSelectedProfileFile(file);
+    }
+  }, []);
 
   useEffect(() => {
     const fetchStatus = async () => {
@@ -92,19 +125,30 @@ const Volunteer = ({ user, isFieldDisabled, renderSubmitButton }) => {
     return () => ctx.revert();
   }, [i18n.language]);
 
-  const [formData, setFormData] = useState({
-    fullName: user?.name || "",
-    email: user?.email || "",
-    phone: "",
-    gender: "",
-    interest: "",
-    govIdType: "",
-    govIdImage: "",
-    profilePicture: "",
-    bloodGroup: "",
-    dob: "",
-    joiningDate: "",
-    termsAccepted: false,
+  const [formData, setFormData] = useState(() => {
+    const saved = loadPendingFormData();
+    return (
+      saved || {
+        fullName: user?.name || "",
+        email: user?.email || "",
+        phone: "",
+        gender: "",
+        interest: "",
+        occupation: "",
+        occupationDetail: "",
+        skills: "",
+        timeCommitment: [],
+        workingMode: [],
+        rolePreference: [],
+        govIdType: "",
+        govIdImage: "",
+        profilePicture: "",
+        bloodGroup: "",
+        dob: "",
+        joiningDate: "",
+        termsAccepted: false,
+      }
+    );
   });
 
   useEffect(() => {
@@ -117,6 +161,12 @@ const Volunteer = ({ user, isFieldDisabled, renderSubmitButton }) => {
     }
   }, [user]);
 
+  useEffect(() => {
+    if (formData) {
+      localStorage.setItem(`pending_form_${window.location.pathname}`, JSON.stringify(formData));
+    }
+  }, [formData]);
+
   const handleFileChange = (e, type = "govId") => {
     const file = e.target.files[0];
     if (!file) return;
@@ -126,13 +176,20 @@ const Volunteer = ({ user, isFieldDisabled, renderSubmitButton }) => {
       return;
     }
 
-    if (type === "profile") {
-      setSelectedProfileFile(file);
-      setProfilePreview(URL.createObjectURL(file));
-    } else {
-      setSelectedFile(file);
-      setGovIdPreview(URL.createObjectURL(file));
-    }
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result;
+      if (type === "profile") {
+        setSelectedProfileFile(file);
+        setProfilePreview(base64String);
+        setFormData((prev) => ({ ...prev, profilePicture: base64String }));
+      } else {
+        setSelectedFile(file);
+        setGovIdPreview(base64String);
+        setFormData((prev) => ({ ...prev, govIdImage: base64String }));
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   const validateAge = (dob) => {
@@ -167,6 +224,19 @@ const Volunteer = ({ user, isFieldDisabled, renderSubmitButton }) => {
     }
     if (!validateAge(formData.dob)) {
       toast.error("You must be at least 18 years old to volunteer");
+      return;
+    }
+
+    if (formData.timeCommitment.length === 0) {
+      toast.error("Please select at least one Time Commitment option");
+      return;
+    }
+    if (formData.workingMode.length === 0) {
+      toast.error("Please select at least one Preferred Working Mode");
+      return;
+    }
+    if (formData.rolePreference.length === 0) {
+      toast.error("Please select at least one Role Preference");
       return;
     }
 
@@ -205,19 +275,33 @@ const Volunteer = ({ user, isFieldDisabled, renderSubmitButton }) => {
       const govIdUrl = govIdResponse.data.imageUrl;
 
       // 3. Submit full application
+      // Create a clean copy of formData without base64 images to avoid large payload if they were still there
+      const finalData = { 
+        ...formData, 
+        govIdImage: govIdUrl, 
+        profilePicture: profileUrl 
+      };
+
       await axios.post(
         `${import.meta.env.VITE_API_URL}/volunteers/apply`,
-        { ...formData, govIdImage: govIdUrl, profilePicture: profileUrl },
+        finalData,
         { headers: { Authorization: `Bearer ${token}` } },
       );
 
       setVolunteerStatus("pending");
       setShowSuccessPopup(true);
+      clearPendingFormData();
       setFormData({
         fullName: user?.name || "",
         email: user?.email || "",
         phone: "",
         interest: "",
+        occupation: "",
+        occupationDetail: "",
+        skills: "",
+        timeCommitment: [],
+        workingMode: [],
+        rolePreference: [],
         govIdType: "",
         govIdImage: "",
         profilePicture: "",
@@ -256,6 +340,19 @@ const Volunteer = ({ user, isFieldDisabled, renderSubmitButton }) => {
       setFormData((prev) => ({ ...prev, [name]: val }));
       return;
     }
+    
+    if (type === "checkbox" && Array.isArray(formData[name])) {
+      const currentArray = [...formData[name]];
+      if (checked) {
+        currentArray.push(value);
+      } else {
+        const index = currentArray.indexOf(value);
+        if (index > -1) currentArray.splice(index, 1);
+      }
+      setFormData((prev) => ({ ...prev, [name]: currentArray }));
+      return;
+    }
+
     setFormData({
       ...formData,
       [name]: type === "checkbox" ? checked : value,
@@ -458,6 +555,7 @@ const Volunteer = ({ user, isFieldDisabled, renderSubmitButton }) => {
                       <option value="">Select Gender</option>
                       <option value="Male">Male</option>
                       <option value="Female">Female</option>
+                      <option value="Prefer not to say">Prefer not to say</option>
                     </select>
                   </div>
                   <div className="space-y-1">
@@ -566,6 +664,13 @@ const Volunteer = ({ user, isFieldDisabled, renderSubmitButton }) => {
                     className={inputClasses}
                   >
                     <option value="">{t("volunteer.interest_area")}</option>
+                    <option value="Community & Field Engagement">Community & Field Engagement</option>
+                    <option value="Education & Skill Development">Education & Skill Development</option>
+                    <option value="Health & Well-being">Health & Well-being</option>
+                    <option value="Environment & Sustainability">Environment & Sustainability</option>
+                    <option value="Creative & Media Support">Creative & Media Support</option>
+                    <option value="Administration & Management">Administration & Management</option>
+                    <option value="Fundraising & Partnerships">Fundraising & Partnerships</option>
                     <option value="Blood Donation">
                       {t("volunteer.interests.blood")}
                     </option>
@@ -579,6 +684,135 @@ const Volunteer = ({ user, isFieldDisabled, renderSubmitButton }) => {
                       {t("volunteer.interests.event")}
                     </option>
                   </select>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-xs text-gray-500 ml-1">
+                      Occupation *
+                    </label>
+                    <select
+                      required
+                      name="occupation"
+                      value={formData.occupation}
+                      onChange={handleChange}
+                      className={inputClasses}
+                    >
+                      <option value="">Select Occupation</option>
+                      <option value="Student (School / College)">Student (School / College)</option>
+                      <option value="Working Professional">Working Professional</option>
+                      <option value="Business Owner / Entrepreneur">Business Owner / Entrepreneur</option>
+                      <option value="Homemaker">Homemaker</option>
+                      <option value="Retired Professional">Retired Professional</option>
+                      <option value="Freelancer">Freelancer</option>
+                      <option value="Government Employee">Government Employee</option>
+                      <option value="NGO / Social Sector Professional">NGO / Social Sector Professional</option>
+                      <option value="Medical Professional">Medical Professional</option>
+                      <option value="Legal Professional">Legal Professional</option>
+                      <option value="Educator / Teacher">Educator / Teacher</option>
+                      <option value="IT Professional">IT Professional</option>
+                      <option value="Other">Other (Please Specify)</option>
+                    </select>
+                  </div>
+                  {formData.occupation === "Other" && (
+                    <div className="space-y-1">
+                      <label className="text-xs text-gray-500 ml-1">
+                        Please Specify Occupation *
+                      </label>
+                      <input
+                        required
+                        type="text"
+                        name="occupationDetail"
+                        value={formData.occupationDetail}
+                        onChange={handleChange}
+                        placeholder="Your occupation"
+                        className={inputClasses}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-4 border-t border-gray-100 pt-6 mt-6">
+                  <h4 className="text-lg font-bold text-primary">How would you like to contribute?</h4>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-gray-700 block">
+                      A. Skill-Based Volunteering *
+                    </label>
+                    <p className="text-xs text-gray-500 mb-2">What skills can you offer? (e.g., Teaching, Designing, Fundraising, Public Speaking, Legal Advice)</p>
+                    <input
+                      required
+                      type="text"
+                      name="skills"
+                      value={formData.skills}
+                      onChange={handleChange}
+                      placeholder="Enter your skills"
+                      className={inputClasses}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-gray-700 block">
+                      B. Time Commitment * (Select at least one)
+                    </label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      {["One-time Event", "Weekend Volunteer", "Monthly Commitment", "Project-Based", "Long-Term Association"].map((opt) => (
+                        <label key={opt} className="flex items-center gap-2 p-2 rounded-lg border border-gray-100 hover:bg-gray-50 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            name="timeCommitment"
+                            value={opt}
+                            checked={formData.timeCommitment.includes(opt)}
+                            onChange={handleChange}
+                            className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
+                          />
+                          <span className="text-sm text-gray-600">{opt}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-gray-700 block">
+                      C. Preferred Working Mode * (Select at least one)
+                    </label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      {["On-ground (Field Work)", "Remote / Online", "Hybrid"].map((opt) => (
+                        <label key={opt} className="flex items-center gap-2 p-2 rounded-lg border border-gray-100 hover:bg-gray-50 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            name="workingMode"
+                            value={opt}
+                            checked={formData.workingMode.includes(opt)}
+                            onChange={handleChange}
+                            className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
+                          />
+                          <span className="text-sm text-gray-600">{opt}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-gray-700 block">
+                      D. Role Preference * (Select at least one)
+                    </label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      {["Team Member", "Team Leader", "Coordinator", "Consultant / Advisor", "Intern"].map((opt) => (
+                        <label key={opt} className="flex items-center gap-2 p-2 rounded-lg border border-gray-100 hover:bg-gray-50 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            name="rolePreference"
+                            value={opt}
+                            checked={formData.rolePreference.includes(opt)}
+                            onChange={handleChange}
+                            className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
+                          />
+                          <span className="text-sm text-gray-600">{opt}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-2 px-1 py-2">
@@ -611,6 +845,7 @@ const Volunteer = ({ user, isFieldDisabled, renderSubmitButton }) => {
                   >
                     Submit Request
                   </Button>,
+                  formData,
                 )}
               </form>
             </>

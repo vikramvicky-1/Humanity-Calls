@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useUser } from "../context/UserContext";
 import { toast } from "react-toastify";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
@@ -17,12 +17,16 @@ const BecomeAMember = () => {
   });
   const { user, login, signup } = useUser();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const queryParams = new URLSearchParams(location.search);
+  const redirectPath = queryParams.get("redirect") || "/";
 
   useEffect(() => {
     if (user) {
-      navigate("/");
+      navigate(redirectPath);
     }
-  }, [user, navigate]);
+  }, [user, navigate, redirectPath]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -48,7 +52,7 @@ const BecomeAMember = () => {
         await signup(formData);
         toast.success("Account created successfully!");
       }
-      navigate("/");
+      navigate(redirectPath);
     } catch (error) {
       toast.error(error.response?.data?.message || "Something went wrong");
     } finally {
