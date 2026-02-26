@@ -15,6 +15,7 @@ import {
   FaBan,
   FaIdCard,
   FaCalendarAlt,
+  FaPen,
 } from "react-icons/fa";
 import { MdVerified } from "react-icons/md";
 import { useUser } from "../context/UserContext";
@@ -65,6 +66,7 @@ const Profile = () => {
   const { user, logout, updateProfile } = useUser();
   const navigate = useNavigate();
   const [name, setName] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [volunteerStatus, setVolunteerStatus] = useState(null);
   const [volunteerData, setVolunteerData] = useState(null);
@@ -106,12 +108,16 @@ const Profile = () => {
 
   const handleUpdate = async (e) => {
     e.preventDefault();
-    if (name === user.name) return;
+    if (name === user.name) {
+      setIsEditing(false);
+      return;
+    }
 
     setIsUpdating(true);
     try {
       await updateProfile({ name });
       toast.success("Profile updated successfully!");
+      setIsEditing(false);
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to update profile");
     } finally {
@@ -409,15 +415,31 @@ const Profile = () => {
 
             <form onSubmit={handleUpdate} className="space-y-6">
               <div className="space-y-2">
-                <label className="text-xs font-bold text-text-body uppercase tracking-widest flex items-center gap-2">
-                  {t("profile.full_name")} <span className="text-blood">*</span>
+                <label className="text-xs font-bold text-text-body uppercase tracking-widest flex items-center justify-between gap-2">
+                  <span className="flex items-center gap-2">
+                    {t("profile.full_name")} <span className="text-blood">*</span>
+                  </span>
+                  {!isEditing && (
+                    <button
+                      type="button"
+                      onClick={() => setIsEditing(true)}
+                      className="flex items-center gap-1.5 text-[10px] font-black px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors uppercase tracking-widest"
+                    >
+                      <FaPen size={10} /> Edit
+                    </button>
+                  )}
                 </label>
                 <div className="relative">
                   <input
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full px-6 py-4 border border-border bg-bg/30 rounded-2xl focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all font-medium"
+                    readOnly={!isEditing}
+                    className={`w-full px-6 py-4 border rounded-2xl outline-none transition-all font-medium ${
+                      isEditing
+                        ? "border-primary bg-bg/30 focus:ring-1 focus:ring-primary cursor-text"
+                        : "border-border bg-gray-50 text-text-body/70 cursor-default select-none"
+                    }`}
                     placeholder={t("profile.full_name_placeholder")}
                     required
                   />
@@ -436,22 +458,33 @@ const Profile = () => {
                 </div>
               </div>
 
-              <button
-                type="submit"
-                disabled={isUpdating || name === user.name}
-                className="w-full bg-primary text-white font-bold py-5 rounded-2xl hover:bg-primary/90 transition-all shadow-xl shadow-primary/20 active:scale-[0.98] uppercase tracking-widest flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isUpdating ? (
-                  <>
-                    <span className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin"></span>
-                    {t("profile.updating")}
-                  </>
-                ) : (
-                  <>
-                    <FaSave /> {t("profile.save_changes")}
-                  </>
-                )}
-              </button>
+              {isEditing && (
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => { setName(user.name); setIsEditing(false); }}
+                    className="flex-1 border border-border text-text-body font-bold py-4 rounded-2xl hover:bg-gray-50 transition-all uppercase tracking-widest"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isUpdating}
+                    className="flex-[2] bg-primary text-white font-bold py-4 rounded-2xl hover:bg-primary/90 transition-all shadow-xl shadow-primary/20 active:scale-[0.98] uppercase tracking-widest flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isUpdating ? (
+                      <>
+                        <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                        {t("profile.updating")}
+                      </>
+                    ) : (
+                      <>
+                        <FaSave /> {t("profile.save_changes")}
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
             </form>
           </div>
 

@@ -12,6 +12,7 @@ import Navbar from "./components/Navbar";
 import ContactFloatingButton from "./components/WhatsAppButton";
 import Home from "./pages/Home";
 
+
 // Lazy load Footer and other pages
 const Footer = lazy(() => import("./components/Footer"));
 const About = lazy(() => import("./pages/About"));

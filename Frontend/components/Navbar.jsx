@@ -76,11 +76,11 @@ const Navbar = () => {
     { label: t("nav.poor_needy"), href: "/poor-needy" },
     { label: t("nav.animal_rescue"), href: "/animal-rescue" },
     { label: t("nav.wall_of_fame"), href: "/wall-of-fame" },
+    { label: t("nav.volunteer"), href: "/volunteer" },
   ];
 
   const dropdownLinks = [
     { label: t("nav.donations_made"), href: "/donations-made" },
-    { label: t("nav.volunteer"), href: "/volunteer" },
 
     {
       label: t("nav.contact_us"),
@@ -188,25 +188,6 @@ const Navbar = () => {
             </div>
 
             <div className="flex items-center space-x-3 border-l pl-4 border-border">
-              <Link to="/request-donors">
-                <Button
-                  variant="blood"
-                  className="text-[12px] py-2 px-3 min-h-[40px] font-semibold"
-                  data-animation="cta-button"
-                >
-                  {t("nav.request_for_donors")}
-                </Button>
-              </Link>
-              <Link to="/donate">
-                <Button
-                  className={`text-[12px] py-2 px-3 shadow-md min-h-[40px] font-semibold ${
-                    isActive("/donate") ? "brightness-110" : ""
-                  }`}
-                  data-animation="cta-button"
-                >
-                  {t("nav.donate_now")}
-                </Button>
-              </Link>
               {!user ? (
                 <>
                   <Link to="/become-a-member">
@@ -372,19 +353,6 @@ const Navbar = () => {
               </div>
             </div>
             <div className="flex flex-col space-y-3 pt-10 px-4">
-              <Link to="/request-donors" onClick={() => setIsOpen(false)}>
-                <Button
-                  variant="blood"
-                  className="w-full py-4 text-base font-bold"
-                >
-                  {t("nav.request_for_donors")}
-                </Button>
-              </Link>
-              <Link to="/donate" onClick={() => setIsOpen(false)}>
-                <Button className="w-full py-4 text-base font-bold">
-                  {t("nav.donate_now")}
-                </Button>
-              </Link>
               {!user && (
                 <Link to="/become-a-member" onClick={() => setIsOpen(false)}>
                   <Button

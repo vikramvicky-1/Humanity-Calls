@@ -487,7 +487,7 @@ const Home = () => {
 
       {/* Poor/Needy Section */}
       <section
-        className="bg-[#1a1c2c] text-white py-24 overflow-hidden"
+        className="bg-[#1a1c2c] text-white py-12 overflow-hidden"
         data-animation="poor-needy-section"
       >
         <div className="max-w-none mx-auto px-[5%]">
@@ -527,7 +527,7 @@ const Home = () => {
 
       {/* Animal Rescue Section */}
       <section
-        className="bg-[#0f1f0f] text-white py-24 overflow-hidden"
+        className="bg-[#0f1f0f] text-white py-12 overflow-hidden"
         data-animation="animal-rescue-section"
       >
         <div className="max-w-none mx-auto px-[5%]">
@@ -566,7 +566,7 @@ const Home = () => {
       </section>
       {/* Blood Donation Section */}
       <section
-        className="bg-blood text-white py-24 overflow-hidden border-y border-border"
+        className="bg-blood text-white py-12 overflow-hidden border-y border-border"
         data-animation="blood-section"
       >
         <div className="max-w-none mx-auto px-[5%]">
@@ -578,14 +578,24 @@ const Home = () => {
               <p className="text-lg text-white/90 leading-relaxed">
                 {t("home.blood_donation_paragraph")}
               </p>
-              <Link to="/donate">
-                <Button
-                  variant="white"
-                  className="!bg-white !text-[#1a1c2c] hover:!bg-primary hover:!text-white transition-all"
-                >
-                  {t("home.donate_today")}
-                </Button>
-              </Link>
+              <div className="flex flex-wrap gap-4">
+                <Link to="/donate">
+                  <Button
+                    variant="white"
+                    className="!bg-white !text-[#1a1c2c] hover:!bg-primary hover:!text-white transition-all"
+                  >
+                    {t("nav.donate_now")}
+                  </Button>
+                </Link>
+                <Link to="/request-donors">
+                  <Button
+                    variant="white"
+                    className="!bg-transparent !text-white border-2 border-white hover:!bg-white hover:!text-blood transition-all"
+                  >
+                    {t("nav.request_for_donors")}
+                  </Button>
+                </Link>
+              </div>
             </div>
             <div className="relative">
               <div className="absolute inset-0 bg-white/10 blur-3xl rounded-full -z-10"></div>
@@ -633,15 +643,16 @@ const Home = () => {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {PROGRAMS.slice(0, visibleCount).map((p, idx) => (
-              <div
+              <Link
                 key={`${p.id}-${idx}`}
-                className="bg-[#2A2A2A] rounded-xl overflow-hidden hover:scale-105 transition-transform flex flex-col"
+                to={`/programs/${p.id}`}
+                className="bg-[#2A2A2A] rounded-xl overflow-hidden hover:scale-105 hover:shadow-xl transition-all flex flex-col group cursor-pointer"
                 data-animation="program-card"
               >
                 <img
                   src={p.image}
                   alt={p.alt}
-                  className="w-full h-48 object-cover opacity-80"
+                  className="w-full h-48 object-cover opacity-80 group-hover:opacity-100 transition-opacity"
                   loading="lazy"
                   decoding="async"
                   width="400"
@@ -652,19 +663,16 @@ const Home = () => {
                   <h3 className="text-xl font-bold mb-3 text-white uppercase">
                     {t(`about.programs.${p.id}.title`)}
                   </h3>
-                  <p className="text-gray-400 text-sm lowercase mb-6 flex-grow">
+                  <p className="text-gray-400 text-sm lowercase mb-4 flex-grow">
                     {t(`about.programs.${p.id}.desc`)}
                   </p>
-                  <Link to={`/programs/${p.id}`} className="mt-auto">
-                    <Button
-                      variant="white"
-                      className="w-full !bg-white/10 !text-white hover:!bg-primary hover:!text-white transition-all text-xs uppercase tracking-widest py-2"
-                    >
-                      {t("common.view_more") || "View More"}
-                    </Button>
-                  </Link>
+                  <div className="mt-auto flex justify-end">
+                    <span className="text-[11px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-lg bg-white/10 text-white/70 group-hover:bg-primary group-hover:text-white transition-all">
+                      {t("common.view_more") || "View More"} →
+                    </span>
+                  </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
           {visibleCount < PROGRAMS.length && (
@@ -739,7 +747,7 @@ const Home = () => {
 
       {/* How You Can Help Section */}
       <section
-        className="bg-secondary text-white py-24 overflow-hidden border-y border-border"
+        className="bg-secondary text-white py-12 overflow-hidden border-y border-border"
         data-animation="help-section"
       >
         <div className="max-w-none mx-auto px-[5%]">
