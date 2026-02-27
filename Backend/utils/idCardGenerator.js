@@ -144,8 +144,21 @@ export const generateIdCard = async (volunteer) => {
     color: rgb(0x37 / 255, 0x44 / 255, 0x70 / 255),
   });
 
+  // Emergency contact (if present)
+  if (volunteer.emergencyContact) {
+    const EC_SZ = 8.5;
+    const ecLabel = `Emergency: ${volunteer.emergencyContact}`;
+    const ecW = regularFont.widthOfTextAtSize(ecLabel, EC_SZ);
+    page.drawText(ecLabel, {
+      x: DL + (DW - ecW) / 2,
+      y: DY + 12,
+      size: EC_SZ,
+      font: regularFont,
+      color: rgb(0.45, 0.18, 0.18),
+    });
+  }
+
   // Disclaimer — two lines matching the HTML template
-  // CSS: position:absolute; bottom:-25px; right:195px → approx x:362, bottom of card
   const warnColor = rgb(0.35, 0.35, 0.35);
   const WARN_SIZE = 7.5;
   const WARN_X = 450;

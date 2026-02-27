@@ -31,6 +31,7 @@ import { toast } from "react-toastify";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import ProfilePictureCropper from "../components/ProfilePictureCropper";
 
 const AdminDashboard = ({ defaultTab }) => {
   const navigate = useNavigate();
@@ -100,6 +101,10 @@ const AdminDashboard = ({ defaultTab }) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [volunteerToDelete, setVolunteerToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Admin volunteer profile-image crop
+  const [rawVolPicSrc, setRawVolPicSrc] = useState("");
+  const [isUploadingVolPic, setIsUploadingVolPic] = useState(false);
 
   useEffect(() => {
     const token = sessionStorage.getItem("adminToken");
@@ -478,6 +483,7 @@ const AdminDashboard = ({ defaultTab }) => {
       "Full Name": vol.fullName,
       Email: vol.email,
       Phone: vol.phone,
+      "Emergency Contact": vol.emergencyContact || "N/A",
       Gender: vol.gender || "N/A",
       "DOB (Age)": vol.dob ? `${new Date(vol.dob).toLocaleDateString("en-GB")} (${calculateAge(vol.dob)}Y)` : "N/A",
       "Blood Group": vol.bloodGroup,
@@ -518,6 +524,7 @@ const AdminDashboard = ({ defaultTab }) => {
       "Name",
       "Email",
       "Phone",
+      "Emergency Contact",
       "Interest",
       "Occupation",
       "Skills",
@@ -531,6 +538,7 @@ const AdminDashboard = ({ defaultTab }) => {
       vol.fullName,
       vol.email,
       vol.phone,
+      vol.emergencyContact || "N/A",
       vol.interest,
       vol.occupation === "Other" ? vol.occupationDetail : vol.occupation,
       vol.skills,
@@ -782,6 +790,9 @@ const AdminDashboard = ({ defaultTab }) => {
                                   <div className="text-[11px] text-text-body/40 font-bold">
                                     {vol.phone}
                                   </div>
+                                  <div className="text-[11px] text-blood/70 font-bold">
+                                    🆘 {vol.emergencyContact || "N/A"}
+                                  </div>
                                 </td>
                                 <td className="px-4 py-4 whitespace-nowrap font-bold text-text-body/70 uppercase text-xs">
                                   {vol.gender || "N/A"}
@@ -988,6 +999,9 @@ const AdminDashboard = ({ defaultTab }) => {
                                   <div className="text-sm font-bold">{vol.email}</div>
                                   <div className="text-[11px] text-text-body/40 font-bold">
                                     {vol.phone}
+                                  </div>
+                                  <div className="text-[11px] text-blood/70 font-bold">
+                                    🆘 {vol.emergencyContact || "N/A"}
                                   </div>
                                 </td>
                                 <td className="px-4 py-4 whitespace-nowrap font-bold text-text-body/70 uppercase text-xs">
@@ -1548,6 +1562,46 @@ const AdminDashboard = ({ defaultTab }) => {
               onSubmit={handleVolunteerUpdate}
               className="grid grid-cols-1 md:grid-cols-2 gap-6"
             >
+              {/* ── Profile Picture ── */}
+              <div className="md:col-span-2 space-y-3">
+                <label className="text-xs font-bold uppercase tracking-widest text-text-body/60">
+                  Profile Picture
+                </label>
+                <div className="flex items-center gap-6">
+                  <div className="w-24 h-24 rounded-2xl overflow-hidden border-2 border-primary/20 bg-bg shadow-inner shrink-0">
+                    {volunteerToEdit.profilePicture ? (
+                      <img src={volunteerToEdit.profilePicture} alt="Profile" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-primary/20">
+                        <FaUserFriends size={36} />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="cursor-pointer inline-flex items-center gap-2 px-5 py-2.5 bg-primary/10 text-primary rounded-xl font-bold text-sm hover:bg-primary/20 transition-all">
+                      <FaCrop size={14} /> Choose & Crop Photo
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          const reader = new FileReader();
+                          reader.onload = () => {
+                            setRawVolPicSrc(reader.result);
+                          };
+                          reader.readAsDataURL(file);
+                          e.target.value = "";
+                        }}
+                      />
+                    </label>
+                    {isUploadingVolPic && (
+                      <span className="text-xs text-primary/60 font-medium animate-pulse">Uploading photo...</span>
+                    )}
+                  </div>
+                </div>
+              </div>
               <div className="md:col-span-2 space-y-2">
                 <label className="text-xs font-bold uppercase tracking-widest text-text-body/60">
                   Full Name (as per Gov ID)
@@ -1597,6 +1651,23 @@ const AdminDashboard = ({ defaultTab }) => {
                       phone: e.target.value,
                     })
                   }
+                  className="w-full px-5 py-3 border border-border bg-bg/30 rounded-xl focus:border-primary outline-none transition-all"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-widest text-text-body/60">
+                  Emergency Contact (Parent / Guardian)
+                </label>
+                <input
+                  type="tel"
+                  value={volunteerToEdit.emergencyContact || ""}
+                  onChange={(e) =>
+                    setVolunteerToEdit({
+                      ...volunteerToEdit,
+                      emergencyContact: e.target.value,
+                    })
+                  }
+                  placeholder="Emergency contact number"
                   className="w-full px-5 py-3 border border-border bg-bg/30 rounded-xl focus:border-primary outline-none transition-all"
                 />
               </div>
@@ -1936,6 +2007,7 @@ const AdminDashboard = ({ defaultTab }) => {
                   <DetailItem label="Full Name" value={selectedVolunteerDetails.fullName} />
                   <DetailItem label="Email Address" value={selectedVolunteerDetails.email} />
                   <DetailItem label="Phone Number" value={selectedVolunteerDetails.phone} />
+                  <DetailItem label="Emergency Contact" value={selectedVolunteerDetails.emergencyContact} />
                   <DetailItem label="Date of Birth" value={selectedVolunteerDetails.dob ? `${new Date(selectedVolunteerDetails.dob).toLocaleDateString("en-GB")} (${calculateAge(selectedVolunteerDetails.dob)}Y)` : "N/A"} />
                   <DetailItem label="Gender" value={selectedVolunteerDetails.gender} />
                   <DetailItem label="Blood Group" value={selectedVolunteerDetails.bloodGroup} />
@@ -1991,6 +2063,34 @@ const AdminDashboard = ({ defaultTab }) => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Volunteer Profile Image Crop — shared ProfilePictureCropper */}
+      {rawVolPicSrc && (
+        <ProfilePictureCropper
+          imageSrc={rawVolPicSrc}
+          onCancel={() => setRawVolPicSrc("")}
+          onCropDone={async (croppedFile) => {
+            setRawVolPicSrc("");
+            setIsUploadingVolPic(true);
+            try {
+              const token = sessionStorage.getItem("adminToken");
+              const fd = new FormData();
+              fd.append("image", croppedFile, "profile.jpg");
+              const res = await axios.post(
+                `${import.meta.env.VITE_API_URL}/volunteers/upload`,
+                fd,
+                { headers: { "Content-Type": "multipart/form-data", Authorization: `Bearer ${token}` } }
+              );
+              setVolunteerToEdit(prev => ({ ...prev, profilePicture: res.data.imageUrl }));
+              toast.success("Profile picture cropped — hit Save Changes to apply.");
+            } catch {
+              toast.error("Upload failed, please try again.");
+            } finally {
+              setIsUploadingVolPic(false);
+            }
+          }}
+        />
       )}
 
       {/* Gallery Edit Modal */}

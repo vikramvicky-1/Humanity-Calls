@@ -144,6 +144,7 @@ const Volunteer = ({
         fullName: user?.name || "",
         email: user?.email || "",
         phone: "",
+        emergencyContact: "",
         gender: "",
         interest: "",
         occupation: "",
@@ -322,6 +323,7 @@ const Volunteer = ({
         fullName: user?.name || "",
         email: user?.email || "",
         phone: "",
+        emergencyContact: "",
         interest: "",
         occupation: "",
         occupationDetail: "",
@@ -549,11 +551,42 @@ const Volunteer = ({
                       type="tel"
                       name="phone"
                       value={formData.phone}
-                      onChange={handleChange}
-                      placeholder="Phone Number"
+                      onChange={(e) => {
+                        const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
+                        handleChange({ target: { name: "phone", value: digits } });
+                      }}
+                      placeholder="10-digit mobile number"
+                      pattern="[0-9]{10}"
+                      minLength={10}
+                      maxLength={10}
+                      title="Enter a valid 10-digit phone number"
                       className={inputClasses}
                     />
                   </div>
+                  <div className="space-y-1">
+                    <label className="text-xs text-gray-500 ml-1">
+                      Emergency Contact (Parent / Guardian) *
+                    </label>
+                    <input
+                      required
+                      type="tel"
+                      name="emergencyContact"
+                      value={formData.emergencyContact}
+                      onChange={(e) => {
+                        const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
+                        handleChange({ target: { name: "emergencyContact", value: digits } });
+                      }}
+                      placeholder="10-digit emergency number"
+                      pattern="[0-9]{10}"
+                      minLength={10}
+                      maxLength={10}
+                      title="Enter a valid 10-digit emergency contact number"
+                      className={inputClasses}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <label className="text-xs text-gray-500 ml-1">
                       Blood Group *

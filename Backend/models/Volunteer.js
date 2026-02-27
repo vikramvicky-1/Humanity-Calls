@@ -26,6 +26,10 @@ const volunteerSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  emergencyContact: {
+    type: String,
+    required: true,
+  },
   gender: {
     type: String,
     enum: ["Male", "Female", "Prefer not to say"],
