@@ -93,6 +93,16 @@ const AdminDashboard = ({ defaultTab }) => {
   const [showApprovalPopup, setShowApprovalPopup] = useState(false);
   const [approvedVolunteer, setApprovedVolunteer] = useState(null);
 
+  // Pre-approval popup (with temporary toggle)
+  const [showPreApprovePopup, setShowPreApprovePopup] = useState(false);
+  const [preApproveTarget, setPreApproveTarget] = useState(null); // vol object
+  const [isTemporaryToggle, setIsTemporaryToggle] = useState(false);
+  const [isSubmittingApproval, setIsSubmittingApproval] = useState(false);
+
+  // Update Status popup (replaces inline ban)
+  const [showUpdateStatusPopup, setShowUpdateStatusPopup] = useState(false);
+  const [updateStatusTarget, setUpdateStatusTarget] = useState(null);
+
   // Reason Modal State
   const [showReasonModal, setShowReasonModal] = useState(false);
   const [reasonData, setReasonData] = useState({ id: "", status: "", reason: "" });
@@ -567,6 +577,9 @@ const AdminDashboard = ({ defaultTab }) => {
     { id: "add-gallery", label: "Add Gallery", icon: <FaPlusCircle /> },
   ];
 
+  // ── Volunteers tab list (active / temporary / banned / rejected) ──
+  const volunteerTabs = ["active", "temporary", "banned", "rejected"];
+
   return (
     <div className="h-screen bg-bg flex flex-col overflow-hidden">
       {/* Navbar */}
@@ -710,13 +723,20 @@ const AdminDashboard = ({ defaultTab }) => {
 
                   {/* Single line tabs below heading */}
                   <div className="flex flex-wrap items-center gap-2 mb-8 bg-bg p-1.5 rounded-2xl w-fit">
-                    {["active", "banned", "rejected"].map((tab) => (
+                    {volunteerTabs.map((tab) => (
                       <button
                         key={tab}
                         onClick={() => setVolunteerStatusTab(tab)}
-                        className={`px-4 py-2 rounded-xl font-bold transition-all capitalize flex items-center gap-2 text-sm ${volunteerStatusTab === tab ? "bg-primary text-white shadow-md" : "text-text-body/60 hover:text-primary hover:bg-white"}`}
+                        className={`px-4 py-2 rounded-xl font-bold transition-all capitalize flex items-center gap-2 text-sm ${
+                          volunteerStatusTab === tab
+                            ? tab === "temporary"
+                              ? "bg-amber-500 text-white shadow-md"
+                              : "bg-primary text-white shadow-md"
+                            : "text-text-body/60 hover:text-primary hover:bg-white"
+                        }`}
                       >
                         {tab === "active" && <FaCheck size={12} />}
+                        {tab === "temporary" && <span className="text-[10px]">⏳</span>}
                         {tab === "banned" && <FaBan size={12} />}
                         {tab === "rejected" && <FaTimes size={12} />}
                         {tab}
@@ -837,7 +857,7 @@ const AdminDashboard = ({ defaultTab }) => {
                                   </td>
                                 )}
                                 <td className="px-4 py-4">
-                                  <div className="flex justify-center gap-2">
+                                  <div className="flex justify-center gap-2 items-center">
                                     <button
                                       onClick={() => {
                                         setSelectedVolunteerDetails(vol);
@@ -849,49 +869,22 @@ const AdminDashboard = ({ defaultTab }) => {
                                     </button>
                                     {vol.status !== "rejected" && (
                                       <button
-                                        onClick={() =>
-                                          openVolunteerEditModal(vol)
-                                        }
+                                        onClick={() => openVolunteerEditModal(vol)}
                                         className="p-1.5 text-primary hover:bg-primary/10 rounded-lg transition-colors"
                                         title="Edit"
                                       >
                                         <FaEdit size={14} />
                                       </button>
                                     )}
-                                    {vol.status === "active" && (
-                                      <button
-                                        onClick={() =>
-                                          handleVolunteerStatus(
-                                            vol._id,
-                                            "banned",
-                                          )
-                                        }
-                                        className="p-1.5 text-blood hover:bg-blood/10 rounded-lg transition-colors"
-                                        title="Ban"
-                                      >
-                                        <FaBan size={14} />
-                                      </button>
-                                    )}
-                                    {vol.status !== "active" &&
-                                      vol.status !== "rejected" && (
-                                        <button
-                                          onClick={() =>
-                                            handleVolunteerStatus(
-                                              vol._id,
-                                              "active",
-                                            )
-                                          }
-                                          className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                                          title="Activate"
-                                        >
-                                          <FaCheck size={14} />
-                                        </button>
-                                      )}
                                     <button
-                                      onClick={() => {
-                                        setVolunteerToDelete(vol);
-                                        setShowDeleteModal(true);
-                                      }}
+                                      onClick={() => { setUpdateStatusTarget(vol); setShowUpdateStatusPopup(true); }}
+                                      className="px-3 py-1.5 bg-primary/10 text-primary rounded-lg font-bold text-[11px] hover:bg-primary/20 transition-all whitespace-nowrap"
+                                      title="Update Status"
+                                    >
+                                      ⚙ Status
+                                    </button>
+                                    <button
+                                      onClick={() => { setVolunteerToDelete(vol); setShowDeleteModal(true); }}
                                       className="p-1.5 text-blood hover:bg-blood/10 rounded-lg transition-colors"
                                       title="Delete Completely"
                                     >
@@ -1035,7 +1028,7 @@ const AdminDashboard = ({ defaultTab }) => {
                                   {vol.interest}
                                 </td>
                                 <td className="px-4 py-4">
-                                  <div className="flex justify-center items-center gap-4">
+                                  <div className="flex justify-center items-center gap-2">
                                     <button
                                       onClick={() => {
                                         setSelectedVolunteerDetails(vol);
@@ -1047,9 +1040,11 @@ const AdminDashboard = ({ defaultTab }) => {
                                     </button>
                                     <div className="flex gap-2">
                                       <button
-                                        onClick={() =>
-                                          handleVolunteerStatus(vol._id, "active")
-                                        }
+                                        onClick={() => {
+                                          setPreApproveTarget(vol);
+                                          setIsTemporaryToggle(false);
+                                          setShowPreApprovePopup(true);
+                                        }}
                                         className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-green-700 transition-all shadow-md shadow-green-200"
                                       >
                                         <FaCheck /> Accept
@@ -1064,10 +1059,7 @@ const AdminDashboard = ({ defaultTab }) => {
                                       </button>
                                     </div>
                                     <button
-                                      onClick={() => {
-                                        setVolunteerToDelete(vol);
-                                        setShowDeleteModal(true);
-                                      }}
+                                      onClick={() => { setVolunteerToDelete(vol); setShowDeleteModal(true); }}
                                       className="p-2 text-blood hover:bg-blood/10 rounded-lg transition-colors"
                                       title="Delete Completely"
                                     >
@@ -2165,6 +2157,164 @@ const AdminDashboard = ({ defaultTab }) => {
           </div>
         </div>
       )}
+      {/* ── Pre-Approval Popup (with Temporary toggle) ── */}
+      {showPreApprovePopup && preApproveTarget && (
+        <div className="fixed inset-0 z-[400] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md animate-in zoom-in-95 duration-200 overflow-hidden">
+            <div className="px-8 pt-8 pb-6">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 rounded-2xl bg-green-100 flex items-center justify-center text-green-600">
+                  <FaCheck size={20} />
+                </div>
+                <div>
+                  <h3 className="text-xl font-black text-gray-800">Accept Volunteer</h3>
+                  <p className="text-sm text-gray-400 font-medium">{preApproveTarget.fullName}</p>
+                </div>
+              </div>
+
+              {/* Temporary toggle */}
+              <div className="flex items-center justify-between bg-amber-50 border border-amber-200 rounded-2xl px-5 py-4 mb-6">
+                <div>
+                  <p className="font-bold text-amber-800 text-sm">Mark as Temporary?</p>
+                  <p className="text-xs text-amber-600 mt-0.5">Will be placed in the Temporary tab, but still gets an ID & email.</p>
+                </div>
+                <button
+                  onClick={() => setIsTemporaryToggle(!isTemporaryToggle)}
+                  className={`w-12 h-6 rounded-full transition-all duration-200 relative flex-shrink-0 ${isTemporaryToggle ? "bg-amber-500" : "bg-gray-200"}`}
+                >
+                  <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all duration-200 ${isTemporaryToggle ? "left-6" : "left-0.5"}`} />
+                </button>
+              </div>
+
+              {!isTemporaryToggle && (
+                <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl px-4 py-3 mb-6 text-sm text-green-700 font-medium">
+                  <FaCheck size={12} /> Volunteer will be fully active immediately
+                </div>
+              )}
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => { setShowPreApprovePopup(false); setPreApproveTarget(null); }}
+                  className="flex-1 py-3 rounded-2xl border border-gray-200 text-gray-500 font-bold text-sm hover:bg-gray-50 transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  disabled={isSubmittingApproval}
+                  onClick={async () => {
+                    setIsSubmittingApproval(true);
+                    try {
+                      await handleVolunteerStatus(
+                        preApproveTarget._id,
+                        isTemporaryToggle ? "temporary" : "active"
+                      );
+                      setShowPreApprovePopup(false);
+                      setPreApproveTarget(null);
+                    } finally {
+                      setIsSubmittingApproval(false);
+                    }
+                  }}
+                  className={`flex-[2] py-3 rounded-2xl font-bold text-sm text-white shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-60 ${isTemporaryToggle ? "bg-amber-500 shadow-amber-200 hover:bg-amber-600" : "bg-green-600 shadow-green-200 hover:bg-green-700"}`}
+                >
+                  {isSubmittingApproval ? (
+                    <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Processing...</>
+                  ) : isTemporaryToggle ? (
+                    <><span>⏳</span> Save as Temporary</>
+                  ) : (
+                    <><FaCheck size={12} /> Create ID & Approve</>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Update Status Popup ── */}
+      {showUpdateStatusPopup && updateStatusTarget && (
+        <div className="fixed inset-0 z-[400] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm animate-in zoom-in-95 duration-200 overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
+              <div>
+                <h3 className="text-base font-black text-gray-800">Update Status</h3>
+                <p className="text-xs text-gray-400 font-medium mt-0.5 truncate max-w-[200px]">{updateStatusTarget.fullName}</p>
+              </div>
+              <button onClick={() => setShowUpdateStatusPopup(false)} className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 transition-all">
+                <FaTimes size={14} />
+              </button>
+            </div>
+            <div className="p-4 flex flex-col gap-2">
+              {/* Move to Active */}
+              {updateStatusTarget.status !== "active" && (
+                <button
+                  onClick={async () => {
+                    await handleVolunteerStatus(updateStatusTarget._id, "active");
+                    setShowUpdateStatusPopup(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-5 py-3.5 rounded-2xl bg-green-50 text-green-700 font-bold text-sm hover:bg-green-100 transition-all"
+                >
+                  <FaCheck size={14} />
+                  <div className="text-left">
+                    <div>Move to Active</div>
+                    <div className="text-[11px] font-normal text-green-500">Full active access & ID privileges</div>
+                  </div>
+                </button>
+              )}
+              {/* Move to Temporary */}
+              {updateStatusTarget.status !== "temporary" && (
+                <button
+                  onClick={async () => {
+                    await handleVolunteerStatus(updateStatusTarget._id, "temporary");
+                    setShowUpdateStatusPopup(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-5 py-3.5 rounded-2xl bg-amber-50 text-amber-700 font-bold text-sm hover:bg-amber-100 transition-all"
+                >
+                  <span>⏳</span>
+                  <div className="text-left">
+                    <div>Move to Temporary</div>
+                    <div className="text-[11px] font-normal text-amber-500">Moves to Temporary tab</div>
+                  </div>
+                </button>
+              )}
+              {/* Ban */}
+              {updateStatusTarget.status !== "banned" && (
+                <button
+                  onClick={() => {
+                    setShowUpdateStatusPopup(false);
+                    setReasonData({ id: updateStatusTarget._id, status: "banned", reason: "" });
+                    setShowReasonModal(true);
+                  }}
+                  className="w-full flex items-center gap-3 px-5 py-3.5 rounded-2xl bg-red-50 text-red-700 font-bold text-sm hover:bg-red-100 transition-all"
+                >
+                  <FaBan size={14} />
+                  <div className="text-left">
+                    <div>Ban Volunteer</div>
+                    <div className="text-[11px] font-normal text-red-400">Requires a reason</div>
+                  </div>
+                </button>
+              )}
+              {/* Reject */}
+              {updateStatusTarget.status !== "rejected" && (
+                <button
+                  onClick={() => {
+                    setShowUpdateStatusPopup(false);
+                    setReasonData({ id: updateStatusTarget._id, status: "rejected", reason: "" });
+                    setShowReasonModal(true);
+                  }}
+                  className="w-full flex items-center gap-3 px-5 py-3.5 rounded-2xl bg-gray-50 text-gray-600 font-bold text-sm hover:bg-gray-100 transition-all"
+                >
+                  <FaTimes size={14} />
+                  <div className="text-left">
+                    <div>Reject</div>
+                    <div className="text-[11px] font-normal text-gray-400">Requires a reason</div>
+                  </div>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Crop Modal */}
       {cropModalOpen && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">

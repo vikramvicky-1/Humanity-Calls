@@ -30,6 +30,11 @@ export const applyVolunteer = async (req, res) => {
     } = req.body;
 
     const existingVolunteer = await Volunteer.findOne({ user: req.user.id });
+    if (phone === emergencyContact) {
+      return res.status(400).json({
+        message: "Phone number and emergency contact cannot be the same.",
+      });
+    }
     if (existingVolunteer) {
       if (existingVolunteer.status === "rejected") {
         await Volunteer.deleteOne({ _id: existingVolunteer._id });
@@ -137,7 +142,7 @@ export const updateVolunteerStatus = async (req, res) => {
     const { id } = req.params;
     const { status, reason } = req.body;
 
-    if (!["pending", "active", "rejected", "banned"].includes(status)) {
+    if (!["pending", "active", "temporary", "rejected", "banned"].includes(status)) {
       return res.status(400).json({ message: "Invalid status" });
     }
 
@@ -145,7 +150,8 @@ export const updateVolunteerStatus = async (req, res) => {
     if (status === "rejected") updateData.rejectionReason = reason;
     if (status === "banned") updateData.banReason = reason;
 
-    if (status === "active") {
+    // Generate volunteerId when moving to active or temporary
+    if (status === "active" || status === "temporary") {
       const existing = await Volunteer.findById(id);
       if (existing && !existing.volunteerId) {
         // Generate Unique ID: HC + DDMMYY + 4 Random Numbers
@@ -175,8 +181,8 @@ export const updateVolunteerStatus = async (req, res) => {
       return res.status(404).json({ message: "Volunteer not found" });
     }
 
-    // Fire-and-forget: notify volunteer on approval
-    if (status === "active" && volunteer.email) {
+    // Fire-and-forget: notify volunteer on approval (active or temporary)
+    if ((status === "active" || status === "temporary") && volunteer.email) {
       const senderEmail = process.env.BREVO_SENDER_EMAIL;
       const senderName = process.env.BREVO_SENDER_NAME || "Humanity Calls";
       const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";

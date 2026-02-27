@@ -409,14 +409,17 @@ const Profile = () => {
                       ? "bg-green-50 border-green-100 text-green-700"
                       : volunteerStatus === "pending"
                         ? "bg-amber-50 border-amber-100 text-amber-700"
-                        : volunteerStatus === "rejected"
-                          ? "bg-red-50 border-red-100 text-red-700"
-                          : "bg-gray-50 border-gray-100 text-gray-700"
+                        : volunteerStatus === "temporary"
+                          ? "bg-orange-50 border-orange-200 text-orange-700"
+                          : volunteerStatus === "rejected"
+                            ? "bg-red-50 border-red-100 text-red-700"
+                            : "bg-gray-50 border-gray-100 text-gray-700"
                   }`}
                 >
                   <div className="text-2xl shrink-0">
                     {volunteerStatus === "active" && <FaCheckCircle />}
                     {volunteerStatus === "pending" && <FaClock />}
+                    {volunteerStatus === "temporary" && <FaCheckCircle />}
                     {volunteerStatus === "rejected" && <FaTimesCircle />}
                     {volunteerStatus === "banned" && <FaBan />}
                   </div>
@@ -432,6 +435,8 @@ const Profile = () => {
                         "Your application is under review."}
                       {volunteerStatus === "active" &&
                         "You are an official volunteer! Thank you."}
+                      {volunteerStatus === "temporary" &&
+                        "You are an active temporary volunteer!"}
                       {volunteerStatus === "rejected" &&
                         "Your application was not approved."}
                       {volunteerStatus === "banned" &&
@@ -471,6 +476,21 @@ const Profile = () => {
                       <span className="text-lg">Download ID Card</span>
                     </div>
                   </button>
+                )}
+
+                {volunteerStatus === "temporary" && (
+                  <div className="w-full p-6 bg-gradient-to-br from-orange-100 to-amber-50 border-2 border-orange-200 border-dashed rounded-2xl flex items-center gap-4">
+                    <div className="p-3 bg-orange-200/60 rounded-xl shrink-0">
+                      <FaIdCard className="text-2xl text-orange-500" />
+                    </div>
+                    <div className="text-left">
+                      <span className="block text-xs font-black tracking-[0.1em] text-orange-600 uppercase mb-1">
+                        Temporary ID Card
+                      </span>
+                      <span className="text-sm font-bold text-orange-700">Your ID card will be available soon...</span>
+                      <p className="text-xs text-orange-500 mt-0.5">We will notify you when it's ready to download.</p>
+                    </div>
+                  </div>
                 )}
 
                 {volunteerStatus === "rejected" && (

@@ -254,6 +254,10 @@ const Volunteer = ({
       toast.error("Phone number must be exactly 10 digits");
       return;
     }
+    if (formData.phone === formData.emergencyContact) {
+      toast.error("Phone number and emergency contact cannot be the same");
+      return;
+    }
     if (!validateAge(formData.dob)) {
       toast.error("You must be at least 18 years old to volunteer");
       return;
@@ -451,12 +455,17 @@ const Volunteer = ({
                 <FaInfoCircle size={40} />
               </div>
               <h3 className="text-2xl font-bold text-gray-800">Application Already Submitted</h3>
-              <div className="inline-block px-6 py-2 rounded-full font-black uppercase tracking-widest text-sm bg-primary/10 text-primary border border-primary/20">
+              <div className={`inline-block px-6 py-2 rounded-full font-black uppercase tracking-widest text-sm border ${
+                volunteerStatus === "temporary"
+                  ? "bg-orange-100 text-orange-700 border-orange-300"
+                  : "bg-primary/10 text-primary border-primary/20"
+              }`}>
                 Status: {volunteerStatus}
               </div>
               <p className="text-gray-600 leading-relaxed max-w-sm mx-auto">
                 {volunteerStatus === "pending" && "Your application is currently under review by our team. We'll contact you soon."}
                 {volunteerStatus === "active" && "Congratulations! You are an active volunteer. Thank you for your service to humanity."}
+                {volunteerStatus === "temporary" && "Congratulations! You've been accepted as a temporary volunteer. Your ID card will be available soon."}
                 {volunteerStatus === "banned" && "Your volunteer account has been suspended. Please contact the administrator for clarification."}
               </p>
               {volunteerStatus === "active" && (
