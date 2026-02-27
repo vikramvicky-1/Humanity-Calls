@@ -427,12 +427,38 @@ const AdminDashboard = ({ defaultTab }) => {
     }
   };
 
-  const filteredVolunteers = volunteers.filter((vol) =>
-    vol.fullName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    vol.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    vol.phone?.includes(searchQuery) ||
-    vol.volunteerId?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredVolunteers = volunteers.filter((vol) => {
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) return true;
+    const dobFormatted = vol.dob
+      ? new Date(vol.dob).toLocaleDateString("en-GB")
+      : "";
+    const timeCommitment = Array.isArray(vol.timeCommitment)
+      ? vol.timeCommitment.join(", ")
+      : vol.timeCommitment || "";
+    const workingMode = Array.isArray(vol.workingMode)
+      ? vol.workingMode.join(", ")
+      : vol.workingMode || "";
+    const rolePreference = Array.isArray(vol.rolePreference)
+      ? vol.rolePreference.join(", ")
+      : vol.rolePreference || "";
+    return (
+      vol.fullName?.toLowerCase().includes(q) ||
+      vol.email?.toLowerCase().includes(q) ||
+      vol.phone?.includes(q) ||
+      vol.volunteerId?.toLowerCase().includes(q) ||
+      vol.gender?.toLowerCase().includes(q) ||
+      vol.bloodGroup?.toLowerCase().includes(q) ||
+      vol.interest?.toLowerCase().includes(q) ||
+      vol.occupation?.toLowerCase().includes(q) ||
+      vol.occupationDetail?.toLowerCase().includes(q) ||
+      vol.skills?.toLowerCase().includes(q) ||
+      timeCommitment.toLowerCase().includes(q) ||
+      workingMode.toLowerCase().includes(q) ||
+      rolePreference.toLowerCase().includes(q) ||
+      dobFormatted.includes(q)
+    );
+  });
 
   const calculateAge = (dob) => {
     if (!dob) return "N/A";
@@ -1322,19 +1348,29 @@ const AdminDashboard = ({ defaultTab }) => {
       {/* Gov ID Image Modal */}
       {showIdModal && (
         <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
-          <div className="relative max-w-4xl w-full max-h-[90vh] bg-white rounded-3xl p-4 overflow-hidden">
-            <button
-              onClick={() => setShowIdModal(false)}
-              className="absolute top-6 right-6 z-10 bg-blood text-white p-2 rounded-full shadow-lg hover:scale-110 active:scale-95 transition-all"
-            >
-              <FaTimes />
-            </button>
-            <div className="w-full h-full overflow-auto flex items-center justify-center p-4">
-              <img
-                src={selectedIdImage}
-                alt="Gov ID"
-                className="max-w-full h-auto rounded-xl shadow-lg"
-              />
+          <div className="relative max-w-4xl w-full bg-white rounded-3xl shadow-2xl animate-in zoom-in-95 duration-300">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+              <h3 className="text-lg font-bold text-primary flex items-center gap-2">
+                <FaEye /> Government ID
+              </h3>
+              <button
+                onClick={() => setShowIdModal(false)}
+                className="p-2 hover:bg-bg rounded-xl transition-colors text-text-body/40 hover:text-blood"
+              >
+                <FaTimes size={20} />
+              </button>
+            </div>
+            {/* Image area — scrollable so any size ID shows fully */}
+            <div className="overflow-auto" style={{ maxHeight: "80vh" }}>
+              <div className="flex items-center justify-center p-6 bg-[#111] min-h-[300px]">
+                <img
+                  src={selectedIdImage}
+                  alt="Gov ID"
+                  style={{ maxWidth: "100%", maxHeight: "75vh", objectFit: "contain", display: "block" }}
+                  className="rounded-xl shadow-2xl"
+                />
+              </div>
             </div>
           </div>
         </div>

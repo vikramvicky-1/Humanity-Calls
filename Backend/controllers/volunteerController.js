@@ -1,4 +1,9 @@
 import Volunteer from "../models/Volunteer.js";
+import { triggerEmail } from "../controllers/emailController.js";
+import {
+  volunteerApplicationReceivedTemplate,
+  volunteerApprovalTemplate,
+} from "../utils/emailTemplates.js";
 
 export const applyVolunteer = async (req, res) => {
   try {
@@ -57,12 +62,27 @@ export const applyVolunteer = async (req, res) => {
     });
 
     await newVolunteer.save();
-    res
-      .status(201)
-      .json({
-        message: "Application submitted successfully",
-        volunteer: newVolunteer,
-      });
+
+    // Fire-and-forget: notify admin about new application
+    const adminEmail = process.env.EMAIL_TO;
+    const senderEmail = process.env.BREVO_SENDER_EMAIL;
+    const senderName = process.env.BREVO_SENDER_NAME || "Humanity Calls";
+
+    if (adminEmail && senderEmail && process.env.BREVO_API_KEY) {
+      triggerEmail({
+        sender: { name: senderName, email: senderEmail },
+        to: [{ email: adminEmail, name: "Humanity Calls Admin" }],
+        subject: `📋 New Volunteer Application — ${fullName}`,
+        htmlContent: volunteerApplicationReceivedTemplate(newVolunteer),
+      }).catch((err) =>
+        console.error("Admin notification email failed:", err.message)
+      );
+    }
+
+    res.status(201).json({
+      message: "Application submitted successfully",
+      volunteer: newVolunteer,
+    });
   } catch (error) {
     res
       .status(500)
@@ -78,12 +98,10 @@ export const getMyVolunteerStatus = async (req, res) => {
     }
     res.status(200).json({ status: volunteer.status, volunteer });
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        message: "Error fetching volunteer status",
-        error: error.message,
-      });
+    res.status(500).json({
+      message: "Error fetching volunteer status",
+      error: error.message,
+    });
   }
 };
 
@@ -93,7 +111,7 @@ export const getVolunteers = async (req, res) => {
     const filter = status ? { status } : {};
     const volunteers = await Volunteer.find(filter).populate(
       "user",
-      "name email",
+      "name email"
     );
     res.status(200).json(volunteers);
   } catch (error) {
@@ -146,6 +164,24 @@ export const updateVolunteerStatus = async (req, res) => {
       return res.status(404).json({ message: "Volunteer not found" });
     }
 
+    // Fire-and-forget: notify volunteer on approval
+    if (status === "active" && volunteer.email) {
+      const senderEmail = process.env.BREVO_SENDER_EMAIL;
+      const senderName = process.env.BREVO_SENDER_NAME || "Humanity Calls";
+      const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+
+      if (senderEmail && process.env.BREVO_API_KEY) {
+        triggerEmail({
+          sender: { name: senderName, email: senderEmail },
+          to: [{ email: volunteer.email, name: volunteer.fullName }],
+          subject: `🎉 Congratulations! You're Approved as a Humanity Calls Volunteer`,
+          htmlContent: volunteerApprovalTemplate(volunteer, frontendUrl),
+        }).catch((err) =>
+          console.error("Volunteer approval email failed:", err.message)
+        );
+      }
+    }
+
     res
       .status(200)
       .json({ message: `Volunteer marked as ${status}`, volunteer });
@@ -160,7 +196,9 @@ export const updateMyProfilePicture = async (req, res) => {
   try {
     const { profilePicture } = req.body;
     if (!profilePicture) {
-      return res.status(400).json({ message: "Profile picture URL is required" });
+      return res
+        .status(400)
+        .json({ message: "Profile picture URL is required" });
     }
 
     const volunteer = await Volunteer.findOneAndUpdate(
@@ -175,7 +213,10 @@ export const updateMyProfilePicture = async (req, res) => {
 
     res.status(200).json({ message: "Profile picture updated", volunteer });
   } catch (error) {
-    res.status(500).json({ message: "Error updating profile picture", error: error.message });
+    res.status(500).json({
+      message: "Error updating profile picture",
+      error: error.message,
+    });
   }
 };
 
