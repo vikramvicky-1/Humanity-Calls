@@ -33,6 +33,7 @@ const Volunteer = ({
   const [selectedProfileFile, setSelectedProfileFile] = useState(null);
   const [volunteerStatus, setVolunteerStatus] = useState(null);
   const [isCheckingStatus, setIsCheckingStatus] = useState(true);
+  const [activeCount, setActiveCount] = useState(null);
   // Crop modal state
   const [rawProfileImage, setRawProfileImage] = useState(null);
   const [showCropModal, setShowCropModal] = useState(false);
@@ -66,15 +67,17 @@ const Volunteer = ({
 
   useEffect(() => {
     const fetchStatus = async () => {
-      const token = sessionStorage.getItem("token");
-      if (!token || !user) {
+      if (!user) {
         setIsCheckingStatus(false);
         return;
       }
+      const token = sessionStorage.getItem("token");
+      const headers = {};
+      if (token) headers["Authorization"] = `Bearer ${token}`;
       try {
         const response = await axios.get(
           `${import.meta.env.VITE_API_URL}/volunteers/my-status`,
-          { headers: { Authorization: `Bearer ${token}` } }
+          { headers, withCredentials: true }
         );
         if (response.data.status !== "none") {
           setVolunteerStatus(response.data.status);
@@ -86,6 +89,11 @@ const Volunteer = ({
       }
     };
     fetchStatus();
+
+    // Fetch active volunteer count (public, no auth)
+    axios.get(`${import.meta.env.VITE_API_URL}/volunteers/count`)
+      .then(res => setActiveCount(res.data.count))
+      .catch(() => setActiveCount(null));
   }, [user]);
 
   useLayoutEffect(() => {
@@ -266,6 +274,7 @@ const Volunteer = ({
     setLoading(true);
     try {
       const token = sessionStorage.getItem("token");
+      const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
 
       // 1. Upload Profile Picture
       const profileData = new FormData();
@@ -274,10 +283,8 @@ const Volunteer = ({
         `${import.meta.env.VITE_API_URL}/volunteers/upload`,
         profileData,
         {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { "Content-Type": "multipart/form-data", ...authHeaders },
+          withCredentials: true,
         },
       );
       const profileUrl = profileResponse.data.imageUrl;
@@ -289,16 +296,13 @@ const Volunteer = ({
         `${import.meta.env.VITE_API_URL}/volunteers/upload`,
         govIdData,
         {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { "Content-Type": "multipart/form-data", ...authHeaders },
+          withCredentials: true,
         },
       );
       const govIdUrl = govIdResponse.data.imageUrl;
 
       // 3. Submit full application
-      // Create a clean copy of formData without base64 images to avoid large payload if they were still there
       const finalData = { 
         ...formData, 
         govIdImage: govIdUrl, 
@@ -308,7 +312,7 @@ const Volunteer = ({
       await axios.post(
         `${import.meta.env.VITE_API_URL}/volunteers/apply`,
         finalData,
-        { headers: { Authorization: `Bearer ${token}` } },
+        { headers: authHeaders, withCredentials: true },
       );
 
       setVolunteerStatus("pending");
@@ -412,7 +416,7 @@ const Volunteer = ({
         description={t("volunteer.seo_desc")}
       />
 
-      <div className="max-w-none mx-auto px-[5%] grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+      <div className="max-w-none mx-auto px-[5%] grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
         <div data-animation="vol-title">
           <h1 className="text-4xl font-bold text-[#1A1A1A] mb-8">
             {t("volunteer.title")}
@@ -420,13 +424,13 @@ const Volunteer = ({
           <p className="text-xl text-gray-600 leading-relaxed mb-12">
             {t("volunteer.description")}
           </p>
-          <div className="grid grid-cols-2 gap-8">
-            <div className="space-y-2">
-              <h3 className="text-3xl font-bold text-primary">10+</h3>
-              <p className="text-gray-500 font-medium">
-                {t("volunteer.active_volunteers")}
-              </p>
-            </div>
+          <div className="space-y-2">
+            <h3 className="text-3xl font-bold text-primary">
+              {activeCount !== null ? activeCount : "—"}
+            </h3>
+            <p className="text-gray-500 font-medium">
+              {t("volunteer.active_volunteers")}
+            </p>
           </div>
         </div>
 

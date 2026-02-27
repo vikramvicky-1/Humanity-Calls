@@ -26,12 +26,14 @@ const Navbar = () => {
 
   useEffect(() => {
     const fetchStatus = async () => {
+      if (!user) return;
       const token = sessionStorage.getItem("token");
-      if (!token || !user) return;
+      const headers = {};
+      if (token) headers["Authorization"] = `Bearer ${token}`;
       try {
         const response = await axios.get(
           `${import.meta.env.VITE_API_URL}/volunteers/my-status`,
-          { headers: { Authorization: `Bearer ${token}` } },
+          { headers, withCredentials: true },
         );
         if (response.data.status !== "none") {
           setVolunteerStatus(response.data.status);

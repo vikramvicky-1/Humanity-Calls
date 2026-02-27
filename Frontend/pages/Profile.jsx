@@ -94,11 +94,12 @@ const Profile = () => {
 
   const fetchVolunteerStatus = async () => {
     const token = sessionStorage.getItem("token");
-    if (!token) return;
+    const headers = {};
+    if (token) headers["Authorization"] = `Bearer ${token}`;
     try {
       const response = await axios.get(
         `${import.meta.env.VITE_API_URL}/volunteers/my-status`,
-        { headers: { Authorization: `Bearer ${token}` } },
+        { headers, withCredentials: true },
       );
       if (response.data.status !== "none") {
         setVolunteerStatus(response.data.status);
@@ -160,10 +161,13 @@ const Profile = () => {
 
     try {
       const token = sessionStorage.getItem("token");
+      const headers = {};
+      if (token) headers["Authorization"] = `Bearer ${token}`;
       const response = await axios.get(
         `${import.meta.env.VITE_API_URL}/id-card/download/${volunteerData._id}`,
         {
-          headers: { Authorization: `Bearer ${token}` },
+          headers,
+          withCredentials: true,
           responseType: "blob",
           cancelToken: source.token,
         },
@@ -231,13 +235,14 @@ const Profile = () => {
     setIsUploadingPhoto(true);
     try {
       const token = sessionStorage.getItem("token");
+      const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
       // 1. Upload to Cloudinary via existing upload endpoint
       const uploadData = new FormData();
       uploadData.append("image", croppedFile);
       const uploadRes = await axios.post(
         `${import.meta.env.VITE_API_URL}/volunteers/upload`,
         uploadData,
-        { headers: { "Content-Type": "multipart/form-data", Authorization: `Bearer ${token}` } }
+        { headers: { "Content-Type": "multipart/form-data", ...authHeaders }, withCredentials: true }
       );
       const newUrl = uploadRes.data.imageUrl;
 
@@ -245,7 +250,7 @@ const Profile = () => {
       await axios.patch(
         `${import.meta.env.VITE_API_URL}/volunteers/my-profile-picture`,
         { profilePicture: newUrl },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: authHeaders, withCredentials: true }
       );
 
       // 3. Refresh local volunteer data

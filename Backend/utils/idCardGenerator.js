@@ -45,7 +45,7 @@ export const generateIdCard = async (volunteer) => {
 
   // ── 1. Fetch all assets in parallel ────────────────────────────────────────
   const BG_URL =
-    "https://res.cloudinary.com/dsryaajna/image/upload/v1772033964/idbg_1_qawbyt.png";
+    "https://res.cloudinary.com/dsryaajna/image/upload/v1772193889/Vikram_V_S_qmnk2w.png";
 
   const [bgBytes, qrDataUrl, profileBytes] = await Promise.all([
     fetchBytes(BG_URL).catch(() => {
@@ -104,7 +104,7 @@ export const generateIdCard = async (volunteer) => {
   // ── 5. QR Code ─────────────────────────────────────────────────────────────
   // HTML/CSS: bottom:11 right:269.5, size:72×72
   const QS = 72;
-  const QX = W - 269.5 - QS;
+  const QX = W - 264 - QS;
   const QY = 11;
   const qrImg = await pdfDoc.embedPng(
     new Uint8Array(Buffer.from(qrDataUrl.replace(/^data:image\/png;base64,/, ""), "base64"))

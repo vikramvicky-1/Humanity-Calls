@@ -105,6 +105,15 @@ export const getMyVolunteerStatus = async (req, res) => {
   }
 };
 
+export const getActiveVolunteerCount = async (req, res) => {
+  try {
+    const count = await Volunteer.countDocuments({ status: "active" });
+    res.status(200).json({ count });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching volunteer count", error: error.message });
+  }
+};
+
 export const getVolunteers = async (req, res) => {
   try {
     const { status } = req.query;
