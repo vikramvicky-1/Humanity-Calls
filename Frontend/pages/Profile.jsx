@@ -68,6 +68,7 @@ const Profile = () => {
   const { user, logout, updateProfile } = useUser();
   const navigate = useNavigate();
   const [name, setName] = useState("");
+  const [isSubscribedForMail, setIsSubscribedForMail] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [volunteerStatus, setVolunteerStatus] = useState(null);
@@ -88,6 +89,7 @@ const Profile = () => {
       navigate("/become-a-member");
     } else {
       setName(user.name);
+      setIsSubscribedForMail(user.isSubscribedForMail !== undefined ? user.isSubscribedForMail : true);
       fetchVolunteerStatus();
     }
   }, [user, navigate]);
@@ -116,14 +118,14 @@ const Profile = () => {
 
   const handleUpdate = async (e) => {
     e.preventDefault();
-    if (name === user.name) {
+    if (name === user.name && isSubscribedForMail === (user.isSubscribedForMail !== undefined ? user.isSubscribedForMail : true)) {
       setIsEditing(false);
       return;
     }
 
     setIsUpdating(true);
     try {
-      await updateProfile({ name });
+      await updateProfile({ name, isSubscribedForMail });
       toast.success("Profile updated successfully!");
       setIsEditing(false);
     } catch (err) {
@@ -565,11 +567,47 @@ const Profile = () => {
                 </div>
               </div>
 
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-text-body/40 uppercase tracking-widest">
+                  Newsletter Status
+                </label>
+                <div className="relative">
+                  {isEditing ? (
+                    <div className="flex items-center gap-3 w-full px-6 py-4 border border-border bg-gray-50 rounded-2xl">
+                      <input
+                        type="checkbox"
+                        id="newsletter-checkbox"
+                        className="h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary"
+                        checked={isSubscribedForMail}
+                        onChange={(e) => setIsSubscribedForMail(e.target.checked)}
+                      />
+                      <label htmlFor="newsletter-checkbox" className="text-sm font-medium text-text-body cursor-pointer">
+                        Subscribe to newsletter & get updates on events
+                      </label>
+                    </div>
+                  ) : (
+                    <div className="w-full px-6 py-4 border border-border bg-gray-50 rounded-2xl text-text-body/50 font-medium flex items-center justify-between">
+                      <span className="flex items-center gap-3">
+                        <FaEnvelope className="text-gray-300" />
+                        Marketing & Event Updates
+                      </span>
+                      <span className={`px-3 py-1 rounded-full text-xs items-center font-bold ${user.isSubscribedForMail === false ? 'bg-gray-200 text-gray-600' : 'bg-green-100 text-green-700'}`}>
+                        {user.isSubscribedForMail === false ? "Unsubscribed" : "Subscribed"}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               {isEditing && (
                 <div className="flex gap-3">
                   <button
                     type="button"
-                    onClick={() => { setName(user.name); setIsEditing(false); }}
+                    onClick={() => { 
+                      setName(user.name); 
+                      setIsSubscribedForMail(user.isSubscribedForMail !== undefined ? user.isSubscribedForMail : true);
+                      setIsEditing(false); 
+                    }}
                     className="flex-1 border border-border text-text-body font-bold py-4 rounded-2xl hover:bg-gray-50 transition-all uppercase tracking-widest"
                   >
                     Cancel

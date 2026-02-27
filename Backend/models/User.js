@@ -27,6 +27,10 @@ const userSchema = new mongoose.Schema({
     enum: ["user", "admin"],
     default: "user",
   },
+  isSubscribedForMail: {
+    type: Boolean,
+    default: true,
+  },
   resetPasswordToken: String,
   resetPasswordExpire: Date,
   createdAt: {

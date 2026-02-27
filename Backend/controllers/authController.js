@@ -2,12 +2,91 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import User from "../models/User.js";
+import Otp from "../models/Otp.js";
 import { triggerEmail } from "./emailController.js";
+
+// Send OTP
+export const sendOtp = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    // Generate a 6-digit numeric OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Upsert the OTP record (replaces old unverified OTPs for the same email)
+    await Otp.findOneAndUpdate(
+      { email: email.toLowerCase() },
+      { otp, verified: false, createdAt: Date.now() },
+      { upsert: true, new: true }
+    );
+
+    // Send the email via Brevo
+    const emailPayload = {
+      sender: {
+        name: process.env.BREVO_SENDER_NAME || "Humanity Calls",
+        email: process.env.BREVO_SENDER_EMAIL,
+      },
+      to: [{ email }],
+      subject: "Your Humanity Calls Verification Code",
+      htmlContent: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
+          <h2 style="color: #C62828; text-align: center;">Verify Your Email</h2>
+          <p>Thank you for starting your registration with Humanity Calls.</p>
+          <p>Please use the following 6-digit code to verify your email address. This code will expire in 10 minutes.</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <span style="font-size: 32px; font-weight: bold; letter-spacing: 4px; color: #020887; background-color: #f5f5f5; padding: 15px 30px; border-radius: 8px;">${otp}</span>
+          </div>
+          <p>If you did not request this, please ignore this email.</p>
+          <p>Best regards,<br>The Humanity Calls Team</p>
+        </div>
+      `,
+    };
+
+    await triggerEmail(emailPayload);
+
+    res.status(200).json({ message: "OTP sent to your email" });
+  } catch (error) {
+    console.error("Send OTP error:", error);
+    res.status(500).json({ message: "Failed to send OTP" });
+  }
+};
+
+// Verify OTP
+export const verifyOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    if (!email || !otp) {
+      return res.status(400).json({ message: "Email and OTP are required" });
+    }
+
+    const otpRecord = await Otp.findOne({ email: email.toLowerCase() });
+
+    if (!otpRecord) {
+      return res.status(400).json({ message: "OTP expired or not found. Please request a new one." });
+    }
+
+    if (otpRecord.otp !== otp) {
+      return res.status(400).json({ message: "Invalid verification code" });
+    }
+
+    // Mark as verified
+    otpRecord.verified = true;
+    await otpRecord.save();
+
+    res.status(200).json({ message: "Email verified successfully" });
+  } catch (error) {
+    console.error("Verify OTP error:", error);
+    res.status(500).json({ message: "Failed to verify OTP" });
+  }
+};
 
 // Signup
 export const signup = async (req, res) => {
   try {
-    const { name, email, password, acceptTerms } = req.body;
+    const { name, email, password, acceptTerms, isSubscribedForMail } = req.body;
 
     if (!acceptTerms) {
       return res.status(400).json({ message: "You must accept terms and conditions" });
@@ -22,14 +101,24 @@ export const signup = async (req, res) => {
       return res.status(400).json({ message: "User already exists" });
     }
 
+    // Ensure OTP was verified
+    const verifiedOtp = await Otp.findOne({ email: email.toLowerCase(), verified: true });
+    if (!verifiedOtp) {
+      return res.status(403).json({ message: "Email must be verified to sign up" });
+    }
+
     const hashedPassword = await bcrypt.hash(password, 12);
     const user = new User({
       name,
       email,
       password: hashedPassword,
+      isSubscribedForMail: isSubscribedForMail !== undefined ? isSubscribedForMail : true,
     });
 
     await user.save();
+
+    // Clean up verified OTP
+    await Otp.deleteOne({ _id: verifiedOtp._id });
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || "fallback_secret", {
       expiresIn: "30d",
@@ -44,7 +133,7 @@ export const signup = async (req, res) => {
 
     res.status(201).json({
       message: "User created successfully",
-      user: { id: user._id, name: user.name, email: user.email },
+      user: { id: user._id, name: user.name, email: user.email, isSubscribedForMail: user.isSubscribedForMail },
       token,
     });
   } catch (error) {
@@ -83,7 +172,7 @@ export const login = async (req, res) => {
 
     res.status(200).json({
       message: "Logged in successfully",
-      user: { id: user._id, name: user.name, email: user.email, username: user.username, role: user.role },
+      user: { id: user._id, name: user.name, email: user.email, username: user.username, role: user.role, isSubscribedForMail: user.isSubscribedForMail },
       token,
     });
   } catch (error) {
@@ -114,7 +203,7 @@ export const logout = (req, res) => {
 // Update Profile
 export const updateProfile = async (req, res) => {
   try {
-    const { name } = req.body;
+    const { name, isSubscribedForMail } = req.body;
     if (!name) {
       return res.status(400).json({ message: "Name is required" });
     }
@@ -125,6 +214,9 @@ export const updateProfile = async (req, res) => {
     }
 
     user.name = name;
+    if (isSubscribedForMail !== undefined) {
+      user.isSubscribedForMail = isSubscribedForMail;
+    }
     await user.save();
 
     res.status(200).json({
@@ -135,6 +227,7 @@ export const updateProfile = async (req, res) => {
         email: user.email,
         username: user.username,
         role: user.role,
+        isSubscribedForMail: user.isSubscribedForMail,
       },
     });
   } catch (error) {
