@@ -156,6 +156,29 @@ export const updateVolunteerStatus = async (req, res) => {
   }
 };
 
+export const updateMyProfilePicture = async (req, res) => {
+  try {
+    const { profilePicture } = req.body;
+    if (!profilePicture) {
+      return res.status(400).json({ message: "Profile picture URL is required" });
+    }
+
+    const volunteer = await Volunteer.findOneAndUpdate(
+      { user: req.user.id },
+      { profilePicture },
+      { new: true }
+    );
+
+    if (!volunteer) {
+      return res.status(404).json({ message: "Volunteer record not found" });
+    }
+
+    res.status(200).json({ message: "Profile picture updated", volunteer });
+  } catch (error) {
+    res.status(500).json({ message: "Error updating profile picture", error: error.message });
+  }
+};
+
 export const updateVolunteer = async (req, res) => {
   try {
     const { id } = req.params;

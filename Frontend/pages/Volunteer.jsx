@@ -5,9 +5,10 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import SEO from "../components/SEO";
 import Button from "../components/Button";
 import withFormAuth from "../components/withFormAuth";
+import ProfilePictureCropper from "../components/ProfilePictureCropper";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { FaCheckCircle, FaTimes, FaCamera, FaInfoCircle } from "react-icons/fa";
+import { FaCheckCircle, FaTimes, FaCamera, FaInfoCircle, FaPen } from "react-icons/fa";
 import hclogo from "../assets/humanitycallslogo.avif";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -32,6 +33,9 @@ const Volunteer = ({
   const [selectedProfileFile, setSelectedProfileFile] = useState(null);
   const [volunteerStatus, setVolunteerStatus] = useState(null);
   const [isCheckingStatus, setIsCheckingStatus] = useState(true);
+  // Crop modal state
+  const [rawProfileImage, setRawProfileImage] = useState(null);
+  const [showCropModal, setShowCropModal] = useState(false);
 
   // Helper to convert base64 to File object
   const base64ToFile = (base64String, fileName) => {
@@ -180,9 +184,9 @@ const Volunteer = ({
     reader.onloadend = () => {
       const base64String = reader.result;
       if (type === "profile") {
-        setSelectedProfileFile(file);
-        setProfilePreview(base64String);
-        setFormData((prev) => ({ ...prev, profilePicture: base64String }));
+        // Open crop modal instead of using directly
+        setRawProfileImage(base64String);
+        setShowCropModal(true);
       } else {
         setSelectedFile(file);
         setGovIdPreview(base64String);
@@ -190,6 +194,25 @@ const Volunteer = ({
       }
     };
     reader.readAsDataURL(file);
+    // Reset input so same file can be re-selected
+    e.target.value = "";
+  };
+
+  const handleProfileCropDone = (croppedFile) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setProfilePreview(reader.result);
+      setFormData((prev) => ({ ...prev, profilePicture: reader.result }));
+    };
+    reader.readAsDataURL(croppedFile);
+    setSelectedProfileFile(croppedFile);
+    setShowCropModal(false);
+    setRawProfileImage(null);
+  };
+
+  const handleProfileCropCancel = () => {
+    setShowCropModal(false);
+    setRawProfileImage(null);
   };
 
   const validateAge = (dob) => {
@@ -491,16 +514,24 @@ const Volunteer = ({
                       />
                       <label
                         htmlFor="profile-upload"
-                        className="w-16 h-16 rounded-full border-2 border-dashed border-primary/30 flex items-center justify-center cursor-pointer hover:bg-bg/50 overflow-hidden transition-all"
+                        className="relative w-16 h-16 rounded-full border-2 border-dashed border-primary/30 flex items-center justify-center cursor-pointer overflow-hidden transition-all hover:border-primary/60"
                       >
                         {profilePreview ? (
-                          <img src={profilePreview} alt="Profile" className="w-full h-full object-cover" />
+                          <>
+                            <img src={profilePreview} alt="Profile" className="w-full h-full object-cover" />
+                            <span className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-full">
+                              <FaPen className="text-white text-xs" />
+                            </span>
+                          </>
                         ) : (
                           <FaCamera className="text-primary/40" />
                         )}
                       </label>
                     </div>
-                    <p className="text-[10px] text-gray-400">Please upload a clear portrait photo. Max 5MB.</p>
+                    <div>
+                      <p className="text-[10px] text-gray-400 leading-relaxed">Upload a clear portrait photo. Max 5MB.</p>
+                      <p className="text-[10px] text-primary/60 font-semibold mt-0.5">📐 Will be cropped to 1:1 square</p>
+                    </div>
                   </div>
                 </div>
 
@@ -852,6 +883,15 @@ const Volunteer = ({
           )}
         </div>
       </div>
+
+      {/* Profile Picture Crop Modal */}
+      {showCropModal && rawProfileImage && (
+        <ProfilePictureCropper
+          imageSrc={rawProfileImage}
+          onCropDone={handleProfileCropDone}
+          onCancel={handleProfileCropCancel}
+        />
+      )}
 
       {/* Success Popup */}
       {showSuccessPopup && (

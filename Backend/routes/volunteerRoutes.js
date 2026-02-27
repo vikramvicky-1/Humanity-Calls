@@ -8,6 +8,7 @@ import {
   getVolunteers,
   updateVolunteerStatus,
   updateVolunteer,
+  updateMyProfilePicture,
   deleteVolunteer,
 } from "../controllers/volunteerController.js";
 import { uploadFileOnly } from "../controllers/galleryController.js";
@@ -54,6 +55,7 @@ const upload = multer({
 
 router.post("/apply", protect, applyVolunteer);
 router.get("/my-status", protect, getMyVolunteerStatus);
+router.patch("/my-profile-picture", protect, updateMyProfilePicture);
 router.post("/upload", protect, (req, res, next) => {
   upload.single("image")(req, res, (err) => {
     if (err) {

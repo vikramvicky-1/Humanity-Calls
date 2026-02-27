@@ -1,133 +1,161 @@
-import fs from "fs";
-import path from "path";
-import puppeteer from "puppeteer";
+/**
+ * idCardGenerator.js
+ *
+ * Generates the volunteer ID card PDF using pdf-lib — no browser, no Chrome.
+ * Works locally AND on Render / any Node.js host.
+ */
+
+import {
+  PDFDocument,
+  rgb,
+  pushGraphicsState,
+  popGraphicsState,
+  clip,
+  endPath,
+  concatTransformationMatrix,
+  drawObject,
+  drawEllipsePath,
+} from "pdf-lib";
+import fontkit from "@pdf-lib/fontkit";
 import QRCode from "qrcode";
 import axios from "axios";
+import fs from "fs";
+import path from "path";
 import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __dirname  = path.dirname(__filename);
 
-// Shared browser instance for faster subsequent runs
-let sharedBrowser = null;
+// ─── Fetch URL → Uint8Array ───────────────────────────────────────────────────
+async function fetchBytes(url, timeoutMs = 8000) {
+  const res = await axios.get(url, { responseType: "arraybuffer", timeout: timeoutMs });
+  return new Uint8Array(res.data);
+}
 
-const getBrowser = async () => {
-  try {
-    if (sharedBrowser && sharedBrowser.connected) return sharedBrowser;
-    sharedBrowser = await puppeteer.launch({
-      headless: true,
-      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--disable-gpu",
-        "--no-zygote",
-        "--disable-extensions",
-      ],
-    });
-    return sharedBrowser;
-  } catch (error) {
-    console.error("Failed to launch browser:", error);
-    throw error;
-  }
-};
+// ─── Embed PNG then JPEG fallback ────────────────────────────────────────────
+async function embedImg(pdfDoc, bytes) {
+  try { return await pdfDoc.embedPng(bytes); } catch {}
+  try { return await pdfDoc.embedJpg(bytes); } catch {}
+  return null;
+}
 
+// ─── Main export ─────────────────────────────────────────────────────────────
 export const generateIdCard = async (volunteer) => {
-  try {
-    const templatePath = path.join(__dirname, "../IdCardTemplate/idcard.html");
-    const newBgUrl = "https://res.cloudinary.com/dsryaajna/image/upload/v1772033964/idbg_1_qawbyt.png";
+  const W = 700, H = 542;
 
-    const htmlTemplate = fs.readFileSync(templatePath, "utf-8");
+  // ── 1. Fetch all assets in parallel ────────────────────────────────────────
+  const BG_URL =
+    "https://res.cloudinary.com/dsryaajna/image/upload/v1772033964/idbg_1_qawbyt.png";
 
-    // Parallelize all async data gathering
-    const [bgBase64, qrCodeImage, profileImageBase64] = await Promise.all([
-      // Background Image
-      (async () => {
-        try {
-          const res = await axios.get(newBgUrl, { responseType: "arraybuffer", timeout: 8000 });
-          return `data:${res.headers["content-type"]};base64,${Buffer.from(res.data).toString("base64")}`;
-        } catch (e) {
-          console.error("BG fetch error, using fallback");
-          const bgPath = path.join(__dirname, "../IdCardTemplate/assets/idbg.png");
-          return `data:image/png;base64,${fs.readFileSync(bgPath).toString("base64")}`;
-        }
-      })(),
-      // QR Code
-      QRCode.toDataURL(`https://humanitycalls.org/verify/${volunteer.volunteerId}`, { margin: 1, width: 150 }),
-      // Profile Picture
-      (async () => {
-        if (!volunteer.profilePicture?.startsWith("http")) return "";
-        try {
-          const res = await axios.get(volunteer.profilePicture, { responseType: "arraybuffer", timeout: 8000 });
-          return `data:${res.headers["content-type"]};base64,${Buffer.from(res.data).toString("base64")}`;
-        } catch (e) {
-          console.error("Profile fetch error");
-          return "";
-        }
-      })()
-    ]);
+  const [bgBytes, qrDataUrl, profileBytes] = await Promise.all([
+    fetchBytes(BG_URL).catch(() => {
+      const fb = path.join(__dirname, "../IdCardTemplate/assets/idbg.png");
+      return fs.existsSync(fb) ? new Uint8Array(fs.readFileSync(fb)) : null;
+    }),
+    QRCode.toDataURL(
+      `https://humanitycalls.org/verify/${volunteer.volunteerId}`,
+      { margin: 1, width: 150, errorCorrectionLevel: "M" }
+    ),
+    volunteer.profilePicture?.startsWith("http")
+      ? fetchBytes(volunteer.profilePicture).catch(() => null)
+      : Promise.resolve(null),
+  ]);
 
-    // ===== Dynamic Font Logic =====
-    const baseFontSize = 24;
-    const maxChars = 12;
-    const nameLength = volunteer.fullName.length;
-    const finalFontSize = nameLength > maxChars ? Math.max(14, baseFontSize - (nameLength - maxChars)) : baseFontSize;
+  // ── 2. Create PDF ──────────────────────────────────────────────────────────
+  const pdfDoc = await PDFDocument.create();
+  pdfDoc.registerFontkit(fontkit);
+  const page = pdfDoc.addPage([W, H]);
 
-    // Inject data into HTML
-    const html = htmlTemplate
-      .replace("{{profilePicture}}", profileImageBase64)
-      .replace("{{bgBase64}}", bgBase64)
-      .replace("{{fullName}}", volunteer.fullName)
-      .replace("{{volunteerId}}", volunteer.volunteerId)
-      .replace("{{qrCode}}", qrCodeImage)
-      .replace(".name {", `.name { font-size: ${finalFontSize}px;`)
-      // Add strict @page styling to the injected HTML to prevent extra pages
-      .replace("</head>", `
-        <style>
-          @page { 
-            size: 700px 542px; 
-            margin: 0 !important; 
-          }
-          html, body { 
-            margin: 0 !important; 
-            padding: 0 !important; 
-            width: 700px !important;
-            height: 542px !important;
-            overflow: hidden !important; 
-            -webkit-print-color-adjust: exact;
-          }
-          .card {
-            margin: 0 !important;
-            padding: 0 !important;
-          }
-        </style>
-      </head>`);
-
-    const browser = await getBrowser();
-    const page = await browser.newPage();
-
-    try {
-      // Set precise viewport
-      await page.setViewport({ width: 700, height: 542, deviceScaleFactor: 2 });
-      
-      // Load content
-      await page.setContent(html, { waitUntil: "load" });
-
-      const pdfBuffer = await page.pdf({
-        width: "700px",
-        height: "542px",
-        printBackground: true,
-        preferCSSPageSize: true,
-        margin: { top: "0px", right: "0px", bottom: "0px", left: "0px" },
-      });
-
-      return pdfBuffer;
-    } finally {
-      await page.close();
-    }
-  } catch (error) {
-    console.error("❌ ID Card Generation Failed:", error);
-    throw new Error("PDF generation failed");
+  // ── 3. Background (full bleed) ─────────────────────────────────────────────
+  if (bgBytes) {
+    const img = await embedImg(pdfDoc, bgBytes);
+    if (img) page.drawImage(img, { x: 0, y: 0, width: W, height: H });
   }
+
+  // ── 4. Profile picture — circular clip ────────────────────────────────────
+  // HTML/CSS: top:274 left:111, size:118×118
+  const PL = 111, PS = 118;
+  const PY = H - 274 - PS;   // CSS top → PDF bottom-origin
+  const PR = PS / 2;
+  const PCX = PL + PR, PCY = PY + PR;
+
+  if (profileBytes) {
+    const profImg = await embedImg(pdfDoc, profileBytes);
+    if (profImg) {
+      // Register image as XObject so we can draw it via drawObject
+      const imgName = page.node.newXObject("ProfImg", profImg.ref);
+
+      page.pushOperators(
+        // Save state
+        pushGraphicsState(),
+        // Set circle clip path using drawEllipsePath (built-in pdf-lib helper)
+        ...drawEllipsePath({ x: PCX, y: PCY, xScale: PR, yScale: PR }),
+        clip(),
+        endPath(),
+        // Place image: scale PS×PS then translate to position (PL, PY)
+        concatTransformationMatrix(PS, 0, 0, PS, PL, PY),
+        drawObject(imgName),
+        // Restore state → removes clip
+        popGraphicsState(),
+      );
+    }
+  }
+
+  // ── 5. QR Code ─────────────────────────────────────────────────────────────
+  // HTML/CSS: bottom:11 right:269.5, size:72×72
+  const QS = 72;
+  const QX = W - 269.5 - QS;
+  const QY = 11;
+  const qrImg = await pdfDoc.embedPng(
+    new Uint8Array(Buffer.from(qrDataUrl.replace(/^data:image\/png;base64,/, ""), "base64"))
+  );
+  page.drawImage(qrImg, { x: QX, y: QY, width: QS, height: QS });
+
+  // ── 6. Text ────────────────────────────────────────────────────────────────
+  // HTML/CSS: .details { top:455 left:95 width:175 height:80 }
+  const DL = 95, DW = 175;
+  const DY = H - 455 - 80;
+
+  const boldFont    = await pdfDoc.embedFont("Helvetica-Bold");
+  const regularFont = await pdfDoc.embedFont("Helvetica");
+
+  // Dynamic font size for long names
+  const nameLen      = volunteer.fullName.length;
+  const nameFontSize = nameLen > 12 ? Math.max(10, 16 - (nameLen - 12) * 0.9) : 16;
+
+  // Centred name
+  const nameW = boldFont.widthOfTextAtSize(volunteer.fullName, nameFontSize);
+  page.drawText(volunteer.fullName, {
+    x: DL + (DW - nameW) / 2,
+    y: DY + 46,
+    size: nameFontSize,
+    font: boldFont,
+    color: rgb(0x2a / 255, 0x3f / 255, 0x83 / 255),
+  });
+
+  // Centred volunteer ID
+  const ID_SZ = 11;
+  const idW   = regularFont.widthOfTextAtSize(volunteer.volunteerId, ID_SZ);
+  page.drawText(volunteer.volunteerId, {
+    x: DL + (DW - idW) / 2,
+    y: DY + 28,
+    size: ID_SZ,
+    font: regularFont,
+    color: rgb(0x37 / 255, 0x44 / 255, 0x70 / 255),
+  });
+
+  // Disclaimer — two lines matching the HTML template
+  // CSS: position:absolute; bottom:-25px; right:195px → approx x:362, bottom of card
+  const warnColor = rgb(0.35, 0.35, 0.35);
+  const WARN_SIZE = 7.5;
+  const WARN_X = 450;
+  page.drawText("This ID is electronically generated", {
+    x: WARN_X, y: 36, size: WARN_SIZE, font: regularFont, color: warnColor,
+  });
+  page.drawText("and strictly non-transferable.", {
+    x: WARN_X, y: 26, size: WARN_SIZE, font: regularFont, color: warnColor,
+  });
+
+  // ── 7. Return Buffer ───────────────────────────────────────────────────────
+  return Buffer.from(await pdfDoc.save());
 };

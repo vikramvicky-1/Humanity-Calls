@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
@@ -16,12 +16,14 @@ import {
   FaIdCard,
   FaCalendarAlt,
   FaPen,
+  FaCamera,
 } from "react-icons/fa";
 import { MdVerified } from "react-icons/md";
 import { useUser } from "../context/UserContext";
 import axios from "axios";
 import { toast } from "react-toastify";
 import SEO from "../components/SEO";
+import ProfilePictureCropper from "../components/ProfilePictureCropper";
 
 const LanguageSelectorProfile = () => {
   const { i18n } = useTranslation();
@@ -75,6 +77,11 @@ const Profile = () => {
   const [progress, setProgress] = useState(0);
   const [showModal, setShowModal] = useState(false);
   const [cancelToken, setCancelToken] = useState(null);
+  // Profile picture crop state
+  const [rawProfileImage, setRawProfileImage] = useState(null);
+  const [showPhotoCropModal, setShowPhotoCropModal] = useState(false);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const photoInputRef = useRef(null);
 
   useEffect(() => {
     if (!user) {
@@ -202,6 +209,56 @@ const Profile = () => {
     }
   };
 
+  const handleProfilePictureChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("File size should be less than 5MB");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setRawProfileImage(reader.result);
+      setShowPhotoCropModal(true);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  };
+
+  const handleProfileCropDone = async (croppedFile) => {
+    setShowPhotoCropModal(false);
+    setRawProfileImage(null);
+    setIsUploadingPhoto(true);
+    try {
+      const token = sessionStorage.getItem("token");
+      // 1. Upload to Cloudinary via existing upload endpoint
+      const uploadData = new FormData();
+      uploadData.append("image", croppedFile);
+      const uploadRes = await axios.post(
+        `${import.meta.env.VITE_API_URL}/volunteers/upload`,
+        uploadData,
+        { headers: { "Content-Type": "multipart/form-data", Authorization: `Bearer ${token}` } }
+      );
+      const newUrl = uploadRes.data.imageUrl;
+
+      // 2. Patch volunteer record
+      await axios.patch(
+        `${import.meta.env.VITE_API_URL}/volunteers/my-profile-picture`,
+        { profilePicture: newUrl },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      // 3. Refresh local volunteer data
+      setVolunteerData((prev) => ({ ...prev, profilePicture: newUrl }));
+      toast.success("Profile picture updated!");
+    } catch (err) {
+      console.error("Photo update error:", err);
+      toast.error(err.response?.data?.message || "Failed to update profile picture");
+    } finally {
+      setIsUploadingPhoto(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] pt-32 pb-20 px-4">
       <SEO title="My Profile | Humanity Calls" />
@@ -226,7 +283,7 @@ const Profile = () => {
             <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary to-blood"></div>
           )}
 
-          <div className="relative inline-block mb-6">
+          <div className="relative inline-block mb-6 group/avatar">
             <div
               className={`w-28 h-28 rounded-full flex items-center justify-center text-4xl font-bold mx-auto shadow-xl border-4 border-white overflow-hidden bg-bg transition-transform duration-500 ${volunteerStatus === "active" ? "scale-110 shadow-primary/20 ring-4 ring-primary/10" : ""}`}
             >
@@ -242,8 +299,33 @@ const Profile = () => {
                 </span>
               )}
             </div>
+
+            {!!volunteerStatus ? (
+              <>
+                <input
+                  ref={photoInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleProfilePictureChange}
+                  className="hidden"
+                  id="profile-photo-edit"
+                />
+                <label
+                  htmlFor="profile-photo-edit"
+                  title="Change profile photo"
+                  className="absolute inset-0 rounded-full flex items-center justify-center bg-black/0 group-hover/avatar:bg-black/45 transition-all cursor-pointer"
+                >
+                  {isUploadingPhoto ? (
+                    <span className="w-6 h-6 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <FaCamera className="text-white text-xl opacity-0 group-hover/avatar:opacity-100 transition-opacity drop-shadow-lg" />
+                  )}
+                </label>
+              </>
+            ) : null}
+
             {volunteerStatus === "active" && (
-              <div className="absolute -right-2 -bottom-2 bg-blue-600 rounded-full p-1.5 shadow-lg animate-bounce-slow">
+              <div className="absolute -right-2 -bottom-2 bg-blue-600 rounded-full p-1.5 shadow-lg animate-bounce-slow pointer-events-none">
                 <MdVerified className="text-white text-2xl" />
               </div>
             )}
@@ -517,6 +599,15 @@ const Profile = () => {
           </div>
         </div>
       </div>
+
+      {/* Profile Picture Crop Modal */}
+      {showPhotoCropModal && rawProfileImage && (
+        <ProfilePictureCropper
+          imageSrc={rawProfileImage}
+          onCropDone={handleProfileCropDone}
+          onCancel={() => { setShowPhotoCropModal(false); setRawProfileImage(null); }}
+        />
+      )}
 
       {showModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
