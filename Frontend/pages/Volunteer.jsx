@@ -465,12 +465,26 @@ const Volunteer = ({
               <p className="text-gray-600 leading-relaxed max-w-sm mx-auto">
                 {volunteerStatus === "pending" && "Your application is currently under review by our team. We'll contact you soon."}
                 {volunteerStatus === "active" && "Congratulations! You are an active volunteer. Thank you for your service to humanity."}
-                {volunteerStatus === "temporary" && "Congratulations! You've been accepted as a temporary volunteer. Your ID card will be available soon."}
+                {volunteerStatus === "temporary" && "Congratulations! You've been accepted as a temporary volunteer. Your verification QR code is available in your profile."}
                 {volunteerStatus === "banned" && "Your volunteer account has been suspended. Please contact the administrator for clarification."}
               </p>
               {volunteerStatus === "active" && (
                 <Button onClick={() => window.location.href = '/'} className="w-full mt-4">Back to Home</Button>
               )}
+            </div>
+          ) : !user?.isVerified ? (
+            <div className="text-center py-8 space-y-6">
+              <div className="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <FaInfoCircle size={40} />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-800">Email Verification Required</h3>
+              <p className="text-gray-600 leading-relaxed max-w-sm mx-auto">
+                To submit a volunteer application, you must first verify your email address. 
+                Please go to your profile to receive a verification code.
+              </p>
+              <Button onClick={() => window.location.href = '/profile'} className="w-full mt-4 bg-primary text-white hover:bg-primary/90">
+                Go to Profile
+              </Button>
             </div>
           ) : (
             <>

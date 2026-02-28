@@ -16,8 +16,9 @@ const getBrevoClient = () => {
       "api-key": process.env.BREVO_API_KEY,
       "content-type": "application/json",
       accept: "application/json",
+      Connection: "close" 
     },
-    timeout: 5000,
+    timeout: 10000,
   });
 };
 
@@ -25,21 +26,28 @@ const getBrevoClient = () => {
  * Fire-and-forget email sender
  */
 export const triggerEmail = async (emailPayload) => {
-  try {
-    console.log(`Attempting to send email to: ${emailPayload.to[0].email}`);
-    const brevoClient = getBrevoClient();
-    const response = await brevoClient.post("/smtp/email", emailPayload);
-    console.log(`Email sent successfully: ${response.data.messageId}`);
-    return response.data;
-  } catch (error) {
-    console.error("Brevo API Error Detail:");
-    if (error.response) {
-      console.error("Status:", error.response.status);
-      console.error("Data:", JSON.stringify(error.response.data, null, 2));
-    } else {
-      console.error("Message:", error.message);
+  const maxRetries = 3;
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`Attempt ${attempt} to send email to: ${emailPayload.to[0].email}`);
+      const brevoClient = getBrevoClient();
+      const response = await brevoClient.post("/smtp/email", emailPayload);
+      console.log(`Email sent successfully: ${response.data.messageId}`);
+      return response.data;
+    } catch (error) {
+      if (attempt === maxRetries) {
+        console.error("Brevo API Error Detail:");
+        if (error.response) {
+          console.error("Status:", error.response.status);
+          console.error("Data:", JSON.stringify(error.response.data, null, 2));
+        } else {
+          console.error("Message:", error.message);
+        }
+        throw error;
+      }
+      console.warn(`Attempt ${attempt} failed with error: ${error.message}. Retrying in 1s...`);
+      await new Promise(res => setTimeout(res, 1000));
     }
-    throw error;
   }
 };
 

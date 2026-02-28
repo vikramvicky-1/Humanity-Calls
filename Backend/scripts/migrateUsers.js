@@ -10,12 +10,18 @@ const migrateUsers = async () => {
     console.log("Connected to MongoDB");
 
     // Update all users who don't have isSubscribedForMail explicitly set to false
-    const result = await User.updateMany(
+    const subscriptionResult = await User.updateMany(
       { isSubscribedForMail: { $ne: false } },
       { $set: { isSubscribedForMail: true } }
     );
 
-    console.log(`Migration completed successfully. Modified ${result.modifiedCount} users.`);
+    // Update all existing users to be unverified by default
+    const verificationResult = await User.updateMany(
+      { isVerified: { $ne: true } },
+      { $set: { isVerified: false } }
+    );
+
+    console.log(`Migration completed. Subscriptions configured: ${subscriptionResult.modifiedCount}, Verification set: ${verificationResult.modifiedCount} users.`);
     process.exit(0);
   } catch (error) {
     console.error("Migration failed:", error);

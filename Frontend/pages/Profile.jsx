@@ -24,6 +24,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import SEO from "../components/SEO";
 import ProfilePictureCropper from "../components/ProfilePictureCropper";
+import QRCode from "react-qr-code";
 
 const LanguageSelectorProfile = () => {
   const { i18n } = useTranslation();
@@ -65,10 +66,10 @@ const LanguageSelectorProfile = () => {
 
 const Profile = () => {
   const { t } = useTranslation();
-  const { user, logout, updateProfile } = useUser();
+  const { user, logout, updateProfile, verifyProfileEmail } = useUser();
   const navigate = useNavigate();
   const [name, setName] = useState("");
-  const [isSubscribedForMail, setIsSubscribedForMail] = useState(true);
+  const [phone, setPhone] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [volunteerStatus, setVolunteerStatus] = useState(null);
@@ -77,6 +78,10 @@ const Profile = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
   const [showModal, setShowModal] = useState(false);
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
+  const [verificationOtp, setVerificationOtp] = useState("");
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
   const [cancelToken, setCancelToken] = useState(null);
   // Profile picture crop state
   const [rawProfileImage, setRawProfileImage] = useState(null);
@@ -89,7 +94,7 @@ const Profile = () => {
       navigate("/become-a-member");
     } else {
       setName(user.name);
-      setIsSubscribedForMail(user.isSubscribedForMail !== undefined ? user.isSubscribedForMail : true);
+      setPhone(user.phone || "");
       fetchVolunteerStatus();
     }
   }, [user, navigate]);
@@ -106,6 +111,9 @@ const Profile = () => {
       if (response.data.status !== "none") {
         setVolunteerStatus(response.data.status);
         setVolunteerData(response.data.volunteer);
+        if (response.data.volunteer.phone) {
+          setPhone(response.data.volunteer.phone);
+        }
       }
     } catch (err) {
       console.error("Failed to fetch volunteer status", err);
@@ -118,14 +126,14 @@ const Profile = () => {
 
   const handleUpdate = async (e) => {
     e.preventDefault();
-    if (name === user.name && isSubscribedForMail === (user.isSubscribedForMail !== undefined ? user.isSubscribedForMail : true)) {
+    if (name === user.name && phone === (user.phone || "")) {
       setIsEditing(false);
       return;
     }
 
     setIsUpdating(true);
     try {
-      await updateProfile({ name, isSubscribedForMail });
+      await updateProfile({ name, phone });
       toast.success("Profile updated successfully!");
       setIsEditing(false);
     } catch (err) {
@@ -138,10 +146,41 @@ const Profile = () => {
   const handleLogout = async () => {
     try {
       await logout();
-      toast.info("Logged out successfully");
       navigate("/");
+      toast.success("Logged out successfully");
     } catch (err) {
-      toast.error("Logout failed");
+      toast.error("Failed to logout");
+    }
+  };
+
+  const handleSendVerificationOtp = async () => {
+    setIsSendingOtp(true);
+    try {
+      await axios.post(`${import.meta.env.VITE_API_URL}/auth/send-otp`, { email: user.email });
+      toast.success("Verification code sent to your email!");
+      setShowVerificationModal(true);
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to send verification code.");
+    } finally {
+      setIsSendingOtp(false);
+    }
+  };
+
+  const handleVerifyEmail = async () => {
+    if (!verificationOtp || verificationOtp.length !== 6) {
+      toast.error("Please enter a valid 6-digit OTP.");
+      return;
+    }
+    setIsVerifyingOtp(true);
+    try {
+      await verifyProfileEmail(verificationOtp);
+      toast.success("Email verified successfully!");
+      setShowVerificationModal(false);
+      setVerificationOtp("");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Invalid or expired verification code.");
+    } finally {
+      setIsVerifyingOtp(false);
     }
   };
 
@@ -331,8 +370,8 @@ const Profile = () => {
               </>
             ) : null}
 
-            {volunteerStatus === "active" && (
-              <div className="absolute -right-2 -bottom-2 bg-blue-600 rounded-full p-1.5 shadow-lg animate-bounce-slow pointer-events-none">
+            {(volunteerStatus === "active" || volunteerStatus === "temporary") && (
+              <div className={`absolute -right-2 -bottom-2 rounded-full p-1.5 shadow-lg animate-bounce-slow pointer-events-none ${volunteerStatus === "active" ? "bg-blue-600" : "bg-orange-500"}`}>
                 <MdVerified className="text-white text-2xl" />
               </div>
             )}
@@ -343,14 +382,14 @@ const Profile = () => {
               {user.name}
             </h1>
 
-            {volunteerStatus === "active" && volunteerData?.volunteerId && (
+            {(volunteerStatus === "active" || volunteerStatus === "temporary") && volunteerData?.volunteerId && (
               <div className="flex flex-col items-center gap-1">
-                <div className="flex items-center gap-2 px-4 py-1.5 bg-amber-600 text-white text-xs font-black rounded-full uppercase tracking-[0.2em] shadow-lg shadow-amber-600/20">
+                <div className={`flex items-center gap-2 px-4 py-1.5 text-white text-xs font-black rounded-full uppercase tracking-[0.2em] shadow-lg ${volunteerStatus === "active" ? "bg-amber-600 shadow-amber-600/20" : "bg-orange-600 shadow-orange-600/20"}`}>
                   <FaIdCard className="text-white/80" />{" "}
                   {volunteerData.volunteerId}
                 </div>
-                <span className="text-[10px] font-bold text-amber-600 uppercase tracking-widest opacity-60">
-                  Verified Volunteer
+                <span className={`text-[10px] font-bold uppercase tracking-widest opacity-60 ${volunteerStatus === "active" ? "text-amber-600" : "text-orange-600"}`}>
+                  {volunteerStatus === "active" ? "Verified Volunteer" : "Temporary Volunteer"}
                 </span>
               </div>
             )}
@@ -368,6 +407,76 @@ const Profile = () => {
                   .toUpperCase()}
               </p>
             )}
+
+            <div className={`mt-4 w-full flex items-center justify-center p-3 rounded-2xl border ${user.isVerified ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+              {user.isVerified ? (
+                <div className="flex flex-col items-center">
+                   <div className="flex items-center gap-2 text-green-700 font-bold uppercase tracking-widest text-xs">
+                     <MdVerified className="text-xl" /> Email Verified
+                   </div>
+                </div>
+              ) : (
+                <div className="flex flex-col w-full gap-4 px-2">
+                   <div className="flex items-center justify-between">
+                     <div className="flex items-center gap-2 text-red-700 font-bold uppercase tracking-widest text-xs content-center">
+                       <FaTimesCircle className="text-xl" /> Email Unverified
+                     </div>
+                     {!showVerificationModal && (
+                       <button
+                         onClick={handleSendVerificationOtp}
+                         disabled={isSendingOtp}
+                         className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl shadow-lg shadow-red-600/20 active:scale-95 transition-all uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                       >
+                         {isSendingOtp ? (
+                           <>
+                             <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                             Sending...
+                           </>
+                         ) : (
+                           "Verify Now"
+                         )}
+                       </button>
+                     )}
+                   </div>
+                   
+                   {/* Inline OTP Field */}
+                   {showVerificationModal && (
+                     <div className="mt-2 p-4 bg-white rounded-xl border border-red-100 flex flex-col gap-3">
+                       <p className="text-xs text-gray-500 font-medium">Enter the 6-digit code sent to your email:</p>
+                       <div className="flex flex-col sm:flex-row gap-2">
+                         <input
+                           type="text"
+                           maxLength="6"
+                           value={verificationOtp}
+                           onChange={(e) => setVerificationOtp(e.target.value.replace(/\D/g, ""))}
+                           placeholder="000000"
+                           className="w-full sm:flex-1 text-center text-lg font-black tracking-[0.2em] px-3 py-3 sm:py-2 border-2 border-gray-200 rounded-lg focus:border-red-400 focus:ring-2 focus:ring-red-100 outline-none transition-all placeholder:text-gray-300"
+                         />
+                         <button
+                           onClick={handleVerifyEmail}
+                           disabled={isVerifyingOtp || verificationOtp.length !== 6}
+                           className="w-full sm:w-auto px-6 py-3 sm:py-2 bg-red-600 text-white font-bold rounded-lg shadow-md active:scale-95 transition-all text-sm uppercase tracking-widest disabled:opacity-50 flex items-center justify-center sm:min-w-[100px]"
+                         >
+                           {isVerifyingOtp ? (
+                             <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                           ) : (
+                             "Verify"
+                           )}
+                         </button>
+                       </div>
+                       <button
+                         onClick={handleSendVerificationOtp}
+                         disabled={isSendingOtp}
+                         className="text-[10px] font-bold text-red-600 hover:text-red-800 transition-colors uppercase tracking-widest self-start mt-1"
+                       >
+                         {isSendingOtp ? "Resending..." : "Resend Code"}
+                       </button>
+                     </div>
+                   )}
+                </div>
+              )}
+            </div>
+
           </div>
         </div>
 
@@ -463,36 +572,62 @@ const Profile = () => {
                 </div>
 
                 {volunteerStatus === "active" && (
-                  <button
-                    onClick={handleDownloadIDCard}
-                    disabled={isGenerating}
-                    className="w-full p-6 bg-gradient-to-br from-amber-500 to-amber-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-amber-600/20 hover:shadow-amber-600/40 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-4 group disabled:opacity-70 disabled:cursor-not-allowed"
-                  >
-                    <div className="p-3 bg-white/20 rounded-xl group-hover:bg-white/30 transition-colors">
-                      <FaIdCard className="text-2xl" />
+                  !user?.isVerified ? (
+                    <div className="w-full p-6 bg-gray-100 border border-gray-200 text-gray-400 rounded-2xl font-black uppercase tracking-widest text-center flex flex-col items-center justify-center gap-2 cursor-not-allowed">
+                      <FaTimesCircle className="text-2xl text-red-400 mb-1" />
+                      Verify Mail to Download ID
                     </div>
-                    <div className="text-left">
-                      <span className="block text-xs opacity-80 font-bold tracking-[0.1em]">
-                        Official Membership
-                      </span>
-                      <span className="text-lg">Download ID Card</span>
-                    </div>
-                  </button>
+                  ) : (
+                    <button
+                      onClick={handleDownloadIDCard}
+                      disabled={isGenerating}
+                      className="w-full p-6 bg-gradient-to-br from-amber-500 to-amber-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-amber-600/20 hover:shadow-amber-600/40 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-4 group disabled:opacity-70 disabled:cursor-not-allowed"
+                    >
+                      <div className="p-3 bg-white/20 rounded-xl group-hover:bg-white/30 transition-colors">
+                        <FaIdCard className="text-2xl" />
+                      </div>
+                      <div className="text-left">
+                        <span className="block text-xs opacity-80 font-bold tracking-[0.1em]">
+                          Official Membership
+                        </span>
+                        <span className="text-lg">Download ID Card</span>
+                      </div>
+                    </button>
+                  )
                 )}
 
-                {volunteerStatus === "temporary" && (
-                  <div className="w-full p-6 bg-gradient-to-br from-orange-100 to-amber-50 border-2 border-orange-200 border-dashed rounded-2xl flex items-center gap-4">
-                    <div className="p-3 bg-orange-200/60 rounded-xl shrink-0">
-                      <FaIdCard className="text-2xl text-orange-500" />
+                {volunteerStatus === "temporary" && volunteerData?.volunteerId && (
+                  !user?.isVerified ? (
+                    <div className="w-full p-6 bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-200 rounded-2xl flex flex-col items-center justify-center gap-4 cursor-not-allowed">
+                      <div className="w-12 h-12 bg-gray-200 text-gray-400 rounded-full flex items-center justify-center text-xl mb-2">
+                        <FaTimesCircle />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-gray-500 mb-1 text-center">
+                          Verify Mail to Access Your ID
+                        </h3>
+                        <p className="text-gray-400 text-sm font-medium text-center">
+                          You must verify your email address to view your QR code.
+                        </p>
+                      </div>
                     </div>
-                    <div className="text-left">
-                      <span className="block text-xs font-black tracking-[0.1em] text-orange-600 uppercase mb-1">
-                        Temporary ID Card
+                  ) : (
+                    <div className="w-full p-6 bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-200 rounded-2xl flex flex-col items-center justify-center gap-4">
+                      <span className="block text-xs font-black tracking-[0.1em] text-orange-600 uppercase text-center">
+                        Temporary ID Verification
                       </span>
-                      <span className="text-sm font-bold text-orange-700">Your ID card will be available soon...</span>
-                      <p className="text-xs text-orange-500 mt-0.5">We will notify you when it's ready to download.</p>
+                      <div className="bg-white p-4 rounded-xl shadow-sm border border-orange-100 flex items-center justify-center">
+                        <QRCode
+                          value={`https://humanitycalls.org/verify/${volunteerData.volunteerId}`}
+                          size={150}
+                          level="M"
+                        />
+                      </div>
+                      <p className="text-xs font-bold text-orange-700 text-center max-w-xs">
+                        Scan this QR code to verify your temporary volunteer identity.
+                      </p>
                     </div>
-                  </div>
+                  )
                 )}
 
                 {volunteerStatus === "rejected" && (
@@ -568,34 +703,27 @@ const Profile = () => {
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-bold text-text-body/40 uppercase tracking-widest">
-                  Newsletter Status
+                <label className="text-xs font-bold text-text-body uppercase tracking-widest flex items-center justify-between gap-2">
+                  <span className="flex items-center gap-2">
+                    Phone Number
+                  </span>
                 </label>
                 <div className="relative">
-                  {isEditing ? (
-                    <div className="flex items-center gap-3 w-full px-6 py-4 border border-border bg-gray-50 rounded-2xl">
-                      <input
-                        type="checkbox"
-                        id="newsletter-checkbox"
-                        className="h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary"
-                        checked={isSubscribedForMail}
-                        onChange={(e) => setIsSubscribedForMail(e.target.checked)}
-                      />
-                      <label htmlFor="newsletter-checkbox" className="text-sm font-medium text-text-body cursor-pointer">
-                        Subscribe to newsletter & get updates on events
-                      </label>
-                    </div>
-                  ) : (
-                    <div className="w-full px-6 py-4 border border-border bg-gray-50 rounded-2xl text-text-body/50 font-medium flex items-center justify-between">
-                      <span className="flex items-center gap-3">
-                        <FaEnvelope className="text-gray-300" />
-                        Marketing & Event Updates
-                      </span>
-                      <span className={`px-3 py-1 rounded-full text-xs items-center font-bold ${user.isSubscribedForMail === false ? 'bg-gray-200 text-gray-600' : 'bg-green-100 text-green-700'}`}>
-                        {user.isSubscribedForMail === false ? "Unsubscribed" : "Subscribed"}
-                      </span>
-                    </div>
-                  )}
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, "").slice(0, 10);
+                      setPhone(val);
+                    }}
+                    readOnly={!isEditing}
+                    className={`w-full px-6 py-4 border rounded-2xl outline-none transition-all font-medium ${
+                      isEditing
+                        ? "border-primary bg-bg/30 focus:ring-1 focus:ring-primary cursor-text"
+                        : "border-border bg-gray-50 text-text-body/70 cursor-default select-none"
+                    }`}
+                    placeholder="10-digit mobile number"
+                  />
                 </div>
               </div>
 
@@ -605,7 +733,7 @@ const Profile = () => {
                     type="button"
                     onClick={() => { 
                       setName(user.name); 
-                      setIsSubscribedForMail(user.isSubscribedForMail !== undefined ? user.isSubscribedForMail : true);
+                      setPhone(user.phone || "");
                       setIsEditing(false); 
                     }}
                     className="flex-1 border border-border text-text-body font-bold py-4 rounded-2xl hover:bg-gray-50 transition-all uppercase tracking-widest"
@@ -710,6 +838,7 @@ const Profile = () => {
           </div>
         </div>
       )}
+
     </div>
   );
 };

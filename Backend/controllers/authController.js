@@ -68,7 +68,7 @@ export const verifyOtp = async (req, res) => {
       return res.status(400).json({ message: "OTP expired or not found. Please request a new one." });
     }
 
-    if (otpRecord.otp !== otp) {
+    if (otpRecord.otp !== String(otp).trim()) {
       return res.status(400).json({ message: "Invalid verification code" });
     }
 
@@ -113,6 +113,7 @@ export const signup = async (req, res) => {
       email,
       password: hashedPassword,
       isSubscribedForMail: isSubscribedForMail !== undefined ? isSubscribedForMail : true,
+      isVerified: true,  // Automatically set to true since OTP was just verified
     });
 
     await user.save();
@@ -133,7 +134,7 @@ export const signup = async (req, res) => {
 
     res.status(201).json({
       message: "User created successfully",
-      user: { id: user._id, name: user.name, email: user.email, isSubscribedForMail: user.isSubscribedForMail },
+      user: { id: user._id, name: user.name, email: user.email, phone: user.phone, isSubscribedForMail: user.isSubscribedForMail, isVerified: user.isVerified },
       token,
     });
   } catch (error) {
@@ -172,7 +173,7 @@ export const login = async (req, res) => {
 
     res.status(200).json({
       message: "Logged in successfully",
-      user: { id: user._id, name: user.name, email: user.email, username: user.username, role: user.role, isSubscribedForMail: user.isSubscribedForMail },
+      user: { id: user._id, name: user.name, email: user.email, username: user.username, phone: user.phone, role: user.role, isSubscribedForMail: user.isSubscribedForMail, isVerified: user.isVerified },
       token,
     });
   } catch (error) {
@@ -203,7 +204,7 @@ export const logout = (req, res) => {
 // Update Profile
 export const updateProfile = async (req, res) => {
   try {
-    const { name, isSubscribedForMail } = req.body;
+    const { name, phone, isSubscribedForMail } = req.body;
     if (!name) {
       return res.status(400).json({ message: "Name is required" });
     }
@@ -214,6 +215,9 @@ export const updateProfile = async (req, res) => {
     }
 
     user.name = name;
+    if (phone !== undefined) {
+      user.phone = phone;
+    }
     if (isSubscribedForMail !== undefined) {
       user.isSubscribedForMail = isSubscribedForMail;
     }
@@ -226,8 +230,10 @@ export const updateProfile = async (req, res) => {
         name: user.name,
         email: user.email,
         username: user.username,
+        phone: user.phone,
         role: user.role,
         isSubscribedForMail: user.isSubscribedForMail,
+        isVerified: user.isVerified,
       },
     });
   } catch (error) {
@@ -343,6 +349,52 @@ export const resetPassword = async (req, res) => {
   } catch (error) {
     console.error("Reset password error:", error);
     res.status(500).json({ message: "Something went wrong" });
+  }
+};
+
+// Verify Email from Profile
+export const verifyEmailProfile = async (req, res) => {
+  try {
+    const { otp } = req.body;
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (user.isVerified) {
+      return res.status(400).json({ message: "Email is already verified" });
+    }
+
+    const otpRecord = await Otp.findOne({ email: user.email.toLowerCase() });
+
+    if (!otpRecord) {
+      return res.status(400).json({ message: "OTP expired or not found. Please request a new one." });
+    }
+
+    if (otpRecord.otp !== String(otp).trim()) {
+      return res.status(400).json({ message: "Invalid verification code" });
+    }
+
+    user.isVerified = true;
+    await user.save();
+    
+    // Clean up used OTP
+    await Otp.deleteOne({ _id: otpRecord._id });
+
+    res.status(200).json({ 
+      message: "Email verified successfully",
+      user: { 
+        id: user._id, name: user.name, email: user.email, 
+        username: user.username, phone: user.phone, 
+        role: user.role, isSubscribedForMail: user.isSubscribedForMail, 
+        isVerified: user.isVerified 
+      }
+    });
+
+  } catch (error) {
+    console.error("Profile verify OTP error:", error);
+    res.status(500).json({ message: "Failed to verify OTP" });
   }
 };
 

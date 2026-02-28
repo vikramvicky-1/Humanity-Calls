@@ -29,6 +29,13 @@ export const applyVolunteer = async (req, res) => {
       profilePicture,
     } = req.body;
 
+    const user = await import("../models/User.js").then(m => m.default).then(User => User.findById(req.user.id));
+    if (!user || user.isVerified !== true) {
+      return res.status(403).json({
+        message: "You must verify your email address before applying to volunteer.",
+      });
+    }
+
     const existingVolunteer = await Volunteer.findOne({ user: req.user.id });
     if (phone === emergencyContact) {
       return res.status(400).json({

@@ -88,9 +88,24 @@ export const UserProvider = ({ children }) => {
     return response.data;
   };
 
+  const verifyProfileEmail = async (otp) => {
+    const token = sessionStorage.getItem("token");
+    const headers = {};
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
+    const response = await axios.post(`${API_URL}/auth/verify-profile-email`, { otp }, {
+      withCredentials: true,
+      headers,
+    });
+    setUser(response.data.user);
+    return response.data;
+  };
+
   return (
     <UserContext.Provider
-      value={{ user, loading, login, signup, logout, checkAuth, updateProfile }}
+      value={{ user, loading, login, signup, logout, checkAuth, updateProfile, verifyProfileEmail }}
     >
       {children}
     </UserContext.Provider>

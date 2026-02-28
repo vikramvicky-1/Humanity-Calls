@@ -22,6 +22,9 @@ const userSchema = new mongoose.Schema({
     required: true,
     minlength: 6,
   },
+  phone: {
+    type: String,
+  },
   role: {
     type: String,
     enum: ["user", "admin"],
@@ -30,6 +33,10 @@ const userSchema = new mongoose.Schema({
   isSubscribedForMail: {
     type: Boolean,
     default: true,
+  },
+  isVerified: {
+    type: Boolean,
+    default: false,
   },
   resetPasswordToken: String,
   resetPasswordExpire: Date,
