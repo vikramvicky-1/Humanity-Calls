@@ -216,7 +216,7 @@ const Terms = () => {
 
           <h2 className="text-2xl font-bold mt-8 mb-4">{t("terms.content.contact_us_section_title")}</h2>
           <p className="lowercase">
-            {t("terms.content.contact_us_section_para")} humanitycalls20@gmail.com
+            {t("terms.content.contact_us_section_para")} humanitycallsnotify@gmail.com
           </p>
         </div>
 

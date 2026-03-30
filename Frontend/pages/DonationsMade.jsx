@@ -15,7 +15,7 @@ const DonationsMade = () => {
         <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-[#1A1A1A] tracking-tighter uppercase leading-none">
           {t("donations_made.hero_text")}
           <br />
-          <span className="text-blood-red">{t("donations_made.our_members")}</span>
+          <span className="text-primary">{t("donations_made.our_members")}</span>
         </h1>
       </div>
 

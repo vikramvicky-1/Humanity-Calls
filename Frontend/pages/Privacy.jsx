@@ -217,7 +217,7 @@ const Privacy = () => {
 
           <h2 className="text-2xl font-bold mt-8 mb-4">{t("privacy.content.contact_us_section_title")}</h2>
           <p>
-            {t("privacy.content.contact_us_section_para")} <strong>humanitycalls20@gmail.com</strong>
+            {t("privacy.content.contact_us_section_para")} <strong>humanitycallsnotify@gmail.com</strong>
           </p>
         </div>
 

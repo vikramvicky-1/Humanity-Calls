@@ -1,22 +1,30 @@
-import React, { useState, useLayoutEffect, useRef } from "react";
+import React, { useState, useLayoutEffect, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import SEO from "../components/SEO";
 import Button from "../components/Button";
 import { IMAGE_ALTS } from "../constants";
-import { redirectToWhatsApp } from "../utils/whatsapp";
+import { sendEmail } from "../utils/email";
+import withFormAuth from "../components/withFormAuth";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const PoorNeedy = () => {
+const PoorNeedy = ({
+  user,
+  isFieldDisabled,
+  renderSubmitButton,
+  loadPendingFormData,
+  clearPendingFormData,
+}) => {
   const { t, i18n } = useTranslation();
   const containerRef = useRef(null);
+  const [loading, setLoading] = useState(false);
 
   useLayoutEffect(() => {
     const isMobile = window.innerWidth < 768;
     const yOffset = isMobile ? 15 : 30;
-    
+
     const ctx = gsap.context(() => {
       const image = document.querySelector('[data-animation="pn-image"]');
       const title = document.querySelector('[data-animation="pn-title"]');
@@ -31,13 +39,13 @@ const PoorNeedy = () => {
             opacity: 1,
             scale: 1,
             duration: 0.7,
-            ease: 'power2.out',
+            ease: "power2.out",
             scrollTrigger: {
               trigger: image,
-              start: 'top 80%',
+              start: "top 80%",
               once: true,
             },
-          }
+          },
         );
       }
 
@@ -49,13 +57,13 @@ const PoorNeedy = () => {
             opacity: 1,
             y: 0,
             duration: 0.6,
-            ease: 'power2.out',
+            ease: "power2.out",
             scrollTrigger: {
               trigger: title,
-              start: 'top 80%',
+              start: "top 80%",
               once: true,
             },
-          }
+          },
         );
       }
 
@@ -67,13 +75,13 @@ const PoorNeedy = () => {
             opacity: 1,
             y: 0,
             duration: 0.7,
-            ease: 'power2.out',
+            ease: "power2.out",
             scrollTrigger: {
               trigger: text,
-              start: 'top 80%',
+              start: "top 80%",
               once: true,
             },
-          }
+          },
         );
       }
 
@@ -86,31 +94,61 @@ const PoorNeedy = () => {
             y: 0,
             scale: 1,
             duration: 0.7,
-            ease: 'power2.out',
+            ease: "power2.out",
             scrollTrigger: {
               trigger: form,
-              start: 'top 80%',
+              start: "top 80%",
               once: true,
             },
-          }
+          },
         );
       }
     }, containerRef);
 
     return () => ctx.revert();
   }, [i18n.language]);
-  const [formData, setFormData] = useState({
-    firstName: "",
-    phone: "",
-    email: "",
-    address: "",
-    message: "",
+
+  const [formData, setFormData] = useState(() => {
+    const saved = loadPendingFormData();
+    return (
+      saved || {
+        firstName: user?.name || "",
+        phone: "",
+        email: user?.email || "",
+        address: "",
+        message: "",
+      }
+    );
   });
 
-  const handleSubmit = (e) => {
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({ ...prev, firstName: user.name, email: user.email }));
+    }
+  }, [user]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const msg = `${t("poor_needy.whatsapp_request_header")}:\n\n${t("poor_needy.first_name")}: ${formData.firstName}\n${t("form.phone")}: ${formData.phone}\n${t("form.email")}: ${formData.email}\n${t("poor_needy.address_location")}: ${formData.address}\n${t("poor_needy.requirement_details")}: ${formData.message}`;
-    redirectToWhatsApp(msg);
+    if (!user) return;
+    setLoading(true);
+    
+    const success = await sendEmail(
+      "Poor & Needy Support Request",
+      formData,
+      `New Support Request from ${formData.firstName}`
+    );
+
+    if (success) {
+      clearPendingFormData();
+      setFormData({
+        firstName: user?.name || "",
+        phone: "",
+        email: user?.email || "",
+        address: "",
+        message: "",
+      });
+    }
+    setLoading(false);
   };
 
   const handleChange = (e) => {
@@ -133,14 +171,14 @@ const PoorNeedy = () => {
             data-animation="pn-image"
           />
           <div className="space-y-8">
-            <h1 className="text-4xl font-bold text-blood-red" data-animation="pn-title">
+            <h1 className="text-4xl font-bold text-primary" data-animation="pn-title">
               {t("poor_needy.title")}
             </h1>
             <p className="text-lg text-gray-700 leading-relaxed" data-animation="pn-text">
               {t("poor_needy.main_text")}
             </p>
-            <div className="p-8 bg-gray-50 rounded-2xl border-l-8 border-blood-red">
-              <h2 className="text-2xl font-bold mb-2">{t("poor_needy.direct_impact_title")}</h2>
+            <div className="p-8 bg-white rounded-2xl border-l-8 border-primary shadow-sm border border-gray-100">
+              <h2 className="text-2xl font-bold mb-2 text-primary">{t("poor_needy.direct_impact_title")}</h2>
               <p className="text-gray-600">
                 {t("poor_needy.direct_impact_desc")}
               </p>
@@ -150,8 +188,8 @@ const PoorNeedy = () => {
       </section>
 
       <div className="max-w-none mx-auto px-[5%]">
-        <div className="bg-[#F5F5F5] p-8 md:p-12 rounded-3xl border border-gray-200" data-animation="pn-form">
-          <h3 className="text-2xl font-bold mb-8 text-center">
+        <div className="bg-white p-8 md:p-12 rounded-3xl border border-border shadow-xl" data-animation="pn-form">
+          <h3 className="text-2xl font-bold mb-8 text-center text-primary">
             {t("poor_needy.form_title")}
           </h3>
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -163,8 +201,10 @@ const PoorNeedy = () => {
                 <input
                   required
                   name="firstName"
+                  value={formData.firstName}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                  className="w-full px-4 py-3 border border-border bg-white rounded-lg focus:ring-2 focus:ring-primary outline-none transition-all shadow-sm disabled:opacity-70 disabled:cursor-not-allowed"
+                  disabled={isFieldDisabled("firstName")}
                 />
               </div>
               <div className="space-y-2">
@@ -174,8 +214,11 @@ const PoorNeedy = () => {
                 <input
                   required
                   name="phone"
+                  value={formData.phone}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                  minLength={10}
+                  maxLength={10}
+                  className="w-full px-4 py-3 border border-border bg-white rounded-lg focus:ring-2 focus:ring-primary outline-none transition-all shadow-sm"
                 />
               </div>
             </div>
@@ -187,8 +230,10 @@ const PoorNeedy = () => {
                 required
                 type="email"
                 name="email"
+                value={formData.email}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                className="w-full px-4 py-3 border border-border bg-white rounded-lg focus:ring-2 focus:ring-primary outline-none transition-all shadow-sm disabled:opacity-70 disabled:cursor-not-allowed"
+                disabled={isFieldDisabled("email")}
               />
             </div>
             <div className="space-y-2">
@@ -198,8 +243,9 @@ const PoorNeedy = () => {
               <input
                 required
                 name="address"
+                value={formData.address}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                className="w-full px-4 py-3 border border-border bg-white rounded-lg focus:ring-2 focus:ring-primary outline-none transition-all shadow-sm"
               />
             </div>
             <div className="space-y-2">
@@ -209,14 +255,18 @@ const PoorNeedy = () => {
               <textarea
                 required
                 name="message"
+                value={formData.message}
                 onChange={handleChange}
                 rows={4}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                className="w-full px-4 py-3 border border-border bg-white rounded-lg focus:ring-2 focus:ring-primary outline-none transition-all shadow-sm"
               ></textarea>
             </div>
-            <Button type="submit" className="w-full py-4">
-              {t("poor_needy.submit")}
-            </Button>
+            {renderSubmitButton(
+              <Button type="submit" isLoading={loading} className="w-full py-4">
+                {t("poor_needy.submit")}
+              </Button>,
+              formData,
+            )}
           </form>
         </div>
       </div>
@@ -224,4 +274,4 @@ const PoorNeedy = () => {
   );
 };
 
-export default PoorNeedy;
+export default withFormAuth(PoorNeedy);

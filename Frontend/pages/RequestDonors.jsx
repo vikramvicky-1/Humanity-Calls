@@ -1,22 +1,30 @@
-import React, { useState, useLayoutEffect, useRef } from "react";
+import React, { useState, useLayoutEffect, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import SEO from "../components/SEO";
 import Button from "../components/Button";
 import { IMAGE_ALTS } from "../constants";
-import { redirectToWhatsApp } from "../utils/whatsapp";
+import { sendEmail } from "../utils/email";
+import withFormAuth from "../components/withFormAuth";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const RequestDonors = () => {
+const RequestDonors = ({
+  user,
+  isFieldDisabled,
+  renderSubmitButton,
+  loadPendingFormData,
+  clearPendingFormData,
+}) => {
   const { t, i18n } = useTranslation();
   const containerRef = useRef(null);
+  const [loading, setLoading] = useState(false);
 
   useLayoutEffect(() => {
     const isMobile = window.innerWidth < 768;
     const yOffset = isMobile ? 15 : 30;
-    
+
     const ctx = gsap.context(() => {
       const title = document.querySelector('[data-animation="req-title"]');
       const form = document.querySelector('[data-animation="req-form"]');
@@ -29,13 +37,13 @@ const RequestDonors = () => {
             opacity: 1,
             y: 0,
             duration: 0.7,
-            ease: 'power2.out',
+            ease: "power2.out",
             scrollTrigger: {
               trigger: title,
-              start: 'top 80%',
+              start: "top 80%",
               once: true,
             },
-          }
+          },
         );
       }
 
@@ -48,32 +56,65 @@ const RequestDonors = () => {
             y: 0,
             scale: 1,
             duration: 0.7,
-            ease: 'power2.out',
+            ease: "power2.out",
             scrollTrigger: {
               trigger: form,
-              start: 'top 80%',
+              start: "top 80%",
               once: true,
             },
-          }
+          },
         );
       }
     }, containerRef);
 
     return () => ctx.revert();
   }, [i18n.language]);
-  const [formData, setFormData] = useState({
-    verifiedPersonName: "",
-    phone: "",
-    email: "",
-    patientName: "",
-    bloodGroup: "",
-    hospitalAddressWithPincode: "",
+
+  const [formData, setFormData] = useState(() => {
+    const saved = loadPendingFormData();
+    return (
+      saved || {
+        verifiedPersonName: user?.name || "",
+        phone: "",
+        email: user?.email || "",
+        patientName: "",
+        bloodGroup: "",
+        bloodRequestType: "",
+        hospitalAddressWithPincode: "",
+      }
+    );
   });
 
-  const handleSubmit = (e) => {
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({ ...prev, verifiedPersonName: user.name, email: user.email }));
+    }
+  }, [user]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const msg = `${t("request_donors.title")}:\n\n${t("request_donors.verified_person")}: ${formData.verifiedPersonName}\n${t("form.phone")}: ${formData.phone}\n${t("form.email")}: ${formData.email}\n${t("request_donors.patient_name")}: ${formData.patientName}\n${t("request_donors.blood_group")}: ${formData.bloodGroup}\n${t("request_donors.hospital_address")}: ${formData.hospitalAddressWithPincode}`;
-    redirectToWhatsApp(msg);
+    if (!user) return;
+    setLoading(true);
+
+    const success = await sendEmail(
+      "Donor Request",
+      formData,
+      `New Blood Donor Request for ${formData.patientName}`
+    );
+
+    if (success) {
+      clearPendingFormData();
+      setFormData({
+        verifiedPersonName: user?.name || "",
+        phone: "",
+        email: user?.email || "",
+        patientName: "",
+        bloodGroup: "",
+        bloodRequestType: "",
+        hospitalAddressWithPincode: "",
+      });
+    }
+    setLoading(false);
   };
 
   const handleChange = (e) => {
@@ -81,7 +122,7 @@ const RequestDonors = () => {
   };
 
   return (
-    <div className="bg-[#F5F5F5] min-h-screen" ref={containerRef}>
+    <div className="bg-bg min-h-screen" ref={containerRef}>
       <SEO
         title={`${t("request_donors.title")} | Humanity Calls`}
         description={t("request_donors.seo_desc")}
@@ -93,21 +134,29 @@ const RequestDonors = () => {
           alt={IMAGE_ALTS.bloodDonation}
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-black/40 flex items-center justify-center" data-animation="req-title">
+        <div
+          className="absolute inset-0 bg-black/40 flex items-center justify-center"
+          data-animation="req-title"
+        >
           <h1 className="text-4xl md:text-7xl font-black text-white text-center px-4 tracking-tighter">
             {t("request_donors.hero_title_part1")}{" "}
-            <span className="text-blood-red">{t("request_donors.hero_title_part2")}</span>{" "}
+            <span className="text-blood">
+              {t("request_donors.hero_title_part2")}
+            </span>{" "}
           </h1>
         </div>
       </div>
 
       <div className="max-w-none mx-auto px-[5%] pb-24">
-        <div className="bg-white p-8 md:p-12 rounded-3xl shadow-xl border border-gray-100" data-animation="req-form">
+        <div
+          className="bg-white p-8 md:p-12 rounded-3xl shadow-xl border border-border"
+          data-animation="req-form"
+        >
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-[#1A1A1A] mb-4">
+            <h2 className="text-3xl font-bold text-blood mb-4">
               {t("request_donors.form_title")}
             </h2>
-            <p className="text-gray-500">
+            <p className="text-text-body">
               {t("request_donors.form_subtitle")}
             </p>
           </div>
@@ -115,64 +164,73 @@ const RequestDonors = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-600 uppercase tracking-widest">
+                <label className="text-xs font-bold text-blood-dark uppercase tracking-widest">
                   {t("request_donors.verified_person")}
                 </label>
                 <input
                   required
                   name="verifiedPersonName"
+                  value={formData.verifiedPersonName}
                   onChange={handleChange}
-                  className="w-full px-4 py-4 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blood-red outline-none transition-all"
+                  className="w-full px-4 py-4 bg-white border border-border rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all text-text-body shadow-sm disabled:opacity-70 disabled:cursor-not-allowed"
+                  disabled={isFieldDisabled("verifiedPersonName")}
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-600 uppercase tracking-widest">
+                <label className="text-xs font-bold text-blood-dark uppercase tracking-widest">
                   {t("form.phone")}
                 </label>
                 <input
                   required
                   type="tel"
                   name="phone"
+                  value={formData.phone}
                   onChange={handleChange}
-                  className="w-full px-4 py-4 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blood-red outline-none transition-all"
+                  minLength={10}
+                  maxLength={10}
+                  className="w-full px-4 py-4 bg-white border border-border rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all text-text-body shadow-sm"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-600 uppercase tracking-widest">
+              <label className="text-xs font-bold text-blood-dark uppercase tracking-widest">
                 {t("form.email")}
               </label>
               <input
                 required
                 type="email"
                 name="email"
+                value={formData.email}
                 onChange={handleChange}
-                className="w-full px-4 py-4 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blood-red outline-none transition-all"
+                className="w-full px-4 py-4 bg-white border border-border rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all text-text-body shadow-sm disabled:opacity-70 disabled:cursor-not-allowed"
+                disabled={isFieldDisabled("email")}
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-600 uppercase tracking-widest">
+                <label className="text-xs font-bold text-blood-dark uppercase tracking-widest">
                   {t("request_donors.patient_name")}
                 </label>
                 <input
                   required
                   name="patientName"
+                  value={formData.patientName}
                   onChange={handleChange}
-                  className="w-full px-4 py-4 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blood-red outline-none transition-all"
+                  className="w-full px-4 py-4 bg-white border border-border rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all text-text-body shadow-sm"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-600 uppercase tracking-widest">
+                <label className="text-xs font-bold text-blood-dark uppercase tracking-widest">
                   {t("request_donors.blood_group")}
                 </label>
                 <select
                   required
                   name="bloodGroup"
+                  value={formData.bloodGroup}
                   onChange={handleChange}
-                  className="w-full px-4 py-4 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blood-red outline-none transition-all"
+                  className="w-full px-4 py-4 bg-white border border-border rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all text-text-body shadow-sm"
                 >
                   <option value="">{t("request_donors.select_group")}</option>
                   <option value="A+">A+</option>
@@ -185,28 +243,66 @@ const RequestDonors = () => {
                   <option value="AB-">AB-</option>
                 </select>
               </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-blood-dark uppercase tracking-widest">
+                  {t("request_donors.blood_request_type")}
+                </label>
+                <select
+                  required
+                  name="bloodRequestType"
+                  value={formData.bloodRequestType}
+                  onChange={handleChange}
+                  className="w-full px-4 py-4 bg-white border border-border rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all text-text-body shadow-sm"
+                >
+                  <option value="">{t("request_donors.select_type")}</option>
+                  <option value={t("request_donors.blood_request_options.whole_blood")}>
+                    {t("request_donors.blood_request_options.whole_blood")}
+                  </option>
+                  <option value={t("request_donors.blood_request_options.rbc")}>
+                    {t("request_donors.blood_request_options.rbc")}
+                  </option>
+                  <option value={t("request_donors.blood_request_options.platelets")}>
+                    {t("request_donors.blood_request_options.platelets")}
+                  </option>
+                  <option value={t("request_donors.blood_request_options.plasma")}>
+                    {t("request_donors.blood_request_options.plasma")}
+                  </option>
+                  <option value={t("request_donors.blood_request_options.cyroprecipitate")}>
+                    {t("request_donors.blood_request_options.cyroprecipitate")}
+                  </option>
+                  <option value={t("request_donors.blood_request_options.wbc")}>
+                    {t("request_donors.blood_request_options.wbc")}
+                  </option>
+                </select>
+              </div>
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-600 uppercase tracking-widest">
+              <label className="text-xs font-bold text-blood-dark uppercase tracking-widest">
                 {t("request_donors.hospital_address")}
               </label>
               <textarea
                 required
                 name="hospitalAddressWithPincode"
+                value={formData.hospitalAddressWithPincode}
                 onChange={handleChange}
                 rows="3"
                 placeholder={t("request_donors.hospital_address_placeholder")}
-                className="w-full px-4 py-4 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blood-red outline-none transition-all"
+                className="w-full px-4 py-4 bg-white border border-border rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all text-text-body shadow-sm"
               ></textarea>
             </div>
 
-            <Button
-              type="submit"
-              className="w-full py-5 text-lg shadow-lg shadow-blood-red/20"
-            >
-              {t("request_donors.submit_request")}
-            </Button>
+            {renderSubmitButton(
+              <Button
+                type="submit"
+                variant="blood"
+                isLoading={loading}
+                className="w-full py-5 text-lg shadow-lg shadow-blood/20"
+              >
+                {t("request_donors.submit_request")}
+              </Button>,
+              formData,
+            )}
           </form>
         </div>
       </div>
@@ -214,4 +310,4 @@ const RequestDonors = () => {
   );
 };
 
-export default RequestDonors;
+export default withFormAuth(RequestDonors);
