@@ -3,6 +3,9 @@ import { triggerEmail } from "../controllers/emailController.js";
 import {
   volunteerApplicationReceivedTemplate,
   volunteerApprovalTemplate,
+  activeToTemporaryTemplate,
+  temporaryToInactiveTemplate,
+  temporaryToActiveTemplate,
 } from "../utils/emailTemplates.js";
 
 export const applyVolunteer = async (req, res) => {
@@ -153,8 +156,13 @@ export const updateVolunteerStatus = async (req, res) => {
     const { id } = req.params;
     const { status, reason } = req.body;
 
-    if (!["pending", "active", "temporary", "rejected", "banned"].includes(status)) {
+    if (!["pending", "active", "temporary", "inactive", "rejected", "banned"].includes(status)) {
       return res.status(400).json({ message: "Invalid status" });
+    }
+
+    const previous = await Volunteer.findById(id);
+    if (!previous) {
+      return res.status(404).json({ message: "Volunteer not found" });
     }
 
     const updateData = { status };
@@ -184,13 +192,7 @@ export const updateVolunteerStatus = async (req, res) => {
       }
     }
 
-    const volunteer = await Volunteer.findByIdAndUpdate(id, updateData, {
-      new: true,
-    });
-
-    if (!volunteer) {
-      return res.status(404).json({ message: "Volunteer not found" });
-    }
+    const volunteer = await Volunteer.findByIdAndUpdate(id, updateData, { new: true });
 
     // Fire-and-forget: notify volunteer on approval (active or temporary)
     if ((status === "active" || status === "temporary") && volunteer.email) {
@@ -207,6 +209,38 @@ export const updateVolunteerStatus = async (req, res) => {
         }).catch((err) =>
           console.error("Volunteer approval email failed:", err.message)
         );
+      }
+    }
+
+    // Status transition mails (as requested)
+    if (volunteer.email && process.env.BREVO_API_KEY) {
+      const senderEmail = process.env.BREVO_SENDER_EMAIL;
+      const senderName = process.env.BREVO_SENDER_NAME || "Humanity Calls";
+      const supportEmail = process.env.EMAIL_TO || senderEmail || "support@humanitycalls.org";
+
+      const from = previous.status;
+      const to = status;
+      let subject = null;
+      let htmlContent = null;
+
+      if (from === "active" && to === "temporary") {
+        subject = "Profile Status Update – Moved to Temporary";
+        htmlContent = activeToTemporaryTemplate(supportEmail);
+      } else if (from === "temporary" && to === "inactive") {
+        subject = "Profile Status Update – Moved to Inactive";
+        htmlContent = temporaryToInactiveTemplate(supportEmail);
+      } else if (from === "temporary" && to === "active") {
+        subject = "Congratulations! You’re Now an Active Member";
+        htmlContent = temporaryToActiveTemplate();
+      }
+
+      if (subject && htmlContent && senderEmail) {
+        triggerEmail({
+          sender: { name: senderName, email: senderEmail },
+          to: [{ email: volunteer.email, name: volunteer.fullName }],
+          subject,
+          htmlContent,
+        }).catch((err) => console.error("Status transition email failed:", err.message));
       }
     }
 

@@ -112,6 +112,7 @@ const Navbar = () => {
       accent: "#6366f1", // Indigo
       links: [
         { label: "About Us", href: "/about" },
+        { label: "Our Team", href: "/our-team" },
         { label: "Gallery", href: "/gallery" },
         { label: "Wall of Fame", href: "/wall-of-fame" },
         { label: "Support FAQ", href: "/faq" },

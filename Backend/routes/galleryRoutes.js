@@ -34,18 +34,18 @@ const storage = new CloudinaryStorage({
       // Note: for non-standard formats like avif or webp, Cloudinary requires the extension in the overlay ID
       // using syntax: folder:filename.ext or just filename.ext
       { 
-        overlay: "humanity_calls_assets:watermark_logo_new.png", 
+        overlay: "favicon-32x32_kca2tb", 
         gravity: "north_east", 
         x: 20, 
         y: 20, 
-        width: 100, 
+        width: 90, 
         opacity: 100 
       },
       // Text watermark (center)
       { 
-        overlay: { font_family: "Arial", font_size: 40, font_weight: "bold", text: "Humanity Calls Trust®" }, 
+        overlay: { font_family: "Arial", font_size: 54, font_weight: "bold", text: "HC" }, 
         color: "#ffffff", 
-        opacity: 60, 
+        opacity: 55, 
         gravity: "center" 
       }
     ],

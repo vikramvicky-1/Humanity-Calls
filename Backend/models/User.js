@@ -38,6 +38,16 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  teamRole: {
+    type: String,
+    default: "",
+    trim: true,
+  },
+  reportsTo: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    default: null,
+  },
   resetPasswordToken: String,
   resetPasswordExpire: Date,
   createdAt: {

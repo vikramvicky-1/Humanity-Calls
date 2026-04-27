@@ -93,7 +93,7 @@ const volunteerSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ["pending", "active", "temporary", "rejected", "banned"],
+    enum: ["pending", "active", "temporary", "inactive", "rejected", "banned"],
     default: "pending",
   },
   termsAccepted: {

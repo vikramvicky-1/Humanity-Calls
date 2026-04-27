@@ -7,6 +7,8 @@ import Button from "../components/Button";
 import { IMAGE_ALTS } from "../constants";
 import { sendEmail } from "../utils/email";
 import withFormAuth from "../components/withFormAuth";
+import axios from "axios";
+import { toast } from "react-toastify";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -20,6 +22,7 @@ const AnimalRescue = ({
   const { t, i18n } = useTranslation();
   const containerRef = useRef(null);
   const [loading, setLoading] = useState(false);
+  const [activeForm, setActiveForm] = useState("rescue"); // rescue | adopt
 
   useLayoutEffect(() => {
     const isMobile = window.innerWidth < 768;
@@ -108,7 +111,7 @@ const AnimalRescue = ({
     return () => ctx.revert();
   }, [i18n.language]);
 
-  const [formData, setFormData] = useState(() => {
+  const [rescueData, setRescueData] = useState(() => {
     const saved = loadPendingFormData();
     return (
       saved || {
@@ -121,38 +124,105 @@ const AnimalRescue = ({
     );
   });
 
+  const [adoptData, setAdoptData] = useState(() => ({
+    fullName: user?.name || "",
+    phone: "",
+    email: user?.email || "",
+    city: "",
+    homeType: "",
+    experience: "",
+    animalPreference: "",
+    message: "",
+  }));
+
   useEffect(() => {
     if (user) {
-      setFormData(prev => ({ ...prev, firstName: user.name, email: user.email }));
+      setRescueData((prev) => ({ ...prev, firstName: user.name, email: user.email }));
+      setAdoptData((prev) => ({ ...prev, fullName: user.name, email: user.email }));
     }
   }, [user]);
 
-  const handleSubmit = async (e) => {
+  const handleSubmitRescue = async (e) => {
     e.preventDefault();
     if (!user) return;
     setLoading(true);
-    
-    const success = await sendEmail(
-      "Animal Rescue Inquiry",
-      formData,
-      `New Animal Rescue Inquiry from ${formData.firstName}`
-    );
 
-    if (success) {
+    try {
+      const token = sessionStorage.getItem("token");
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+      await axios.post(
+        `${import.meta.env.VITE_API_URL}/form-submissions/animal_rescue_request`,
+        rescueData,
+        { headers, withCredentials: true },
+      );
+
+      await sendEmail(
+        "Animal Rescue Request",
+        rescueData,
+        `New Animal Rescue Request from ${rescueData.firstName}`,
+      );
+
       clearPendingFormData();
-      setFormData({
+      setRescueData({
         firstName: user?.name || "",
         phone: "",
         email: user?.email || "",
         address: "",
         message: "",
       });
+      toast.success("Rescue request submitted");
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Failed to submit rescue request");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleRescueChange = (e) => {
+    setRescueData({ ...rescueData, [e.target.name]: e.target.value });
+  };
+
+  const handleAdoptChange = (e) => {
+    setAdoptData({ ...adoptData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmitAdopt = async (e) => {
+    e.preventDefault();
+    if (!user) return;
+    setLoading(true);
+    try {
+      const token = sessionStorage.getItem("token");
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+      await axios.post(
+        `${import.meta.env.VITE_API_URL}/form-submissions/animal_adopt_now`,
+        adoptData,
+        { headers, withCredentials: true },
+      );
+
+      await sendEmail(
+        "Adopt Now Request",
+        adoptData,
+        `New Adoption Request from ${adoptData.fullName}`,
+      );
+
+      setAdoptData({
+        fullName: user?.name || "",
+        phone: "",
+        email: user?.email || "",
+        city: "",
+        homeType: "",
+        experience: "",
+        animalPreference: "",
+        message: "",
+      });
+      toast.success("Adoption request submitted");
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Failed to submit adoption request");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const inputClasses = "w-full px-4 py-3 border border-border bg-white rounded-lg focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all shadow-sm disabled:opacity-70 disabled:cursor-not-allowed";
@@ -189,85 +259,238 @@ const AnimalRescue = ({
 
       <div className="max-w-none mx-auto px-[5%] mt-12">
         <div className="bg-white p-8 md:p-12 rounded-3xl border border-border shadow-xl" data-animation="ar-form">
-          <h3 className="text-2xl font-bold mb-8 text-center text-primary">
-            {t("animal_rescue.form_title")}
-          </h3>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+            <h3 className="text-2xl font-bold text-primary">
+              Animal Rescue Forms
+            </h3>
+            <div className="flex items-center gap-2 bg-bg p-1.5 rounded-2xl w-fit">
+              <button
+                type="button"
+                onClick={() => setActiveForm("rescue")}
+                className={`px-4 py-2 rounded-xl font-bold transition-all text-sm ${
+                  activeForm === "rescue"
+                    ? "bg-primary text-white shadow-md"
+                    : "text-text-body/60 hover:text-primary hover:bg-white"
+                }`}
+              >
+                Ask for Rescue
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveForm("adopt")}
+                className={`px-4 py-2 rounded-xl font-bold transition-all text-sm ${
+                  activeForm === "adopt"
+                    ? "bg-primary text-white shadow-md"
+                    : "text-text-body/60 hover:text-primary hover:bg-white"
+                }`}
+              >
+                Adopt Now
+              </button>
+            </div>
+          </div>
+
+          {activeForm === "rescue" ? (
+            <form onSubmit={handleSubmitRescue} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-text-body uppercase">
+                    Your Name *
+                  </label>
+                  <input
+                    required
+                    name="firstName"
+                    value={rescueData.firstName}
+                    onChange={handleRescueChange}
+                    className={inputClasses}
+                    disabled={isFieldDisabled("firstName")}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-text-body uppercase">
+                    {t("form.phone")} *
+                  </label>
+                  <input
+                    required
+                    name="phone"
+                    value={rescueData.phone}
+                    onChange={handleRescueChange}
+                    minLength={10}
+                    maxLength={10}
+                    className={inputClasses}
+                  />
+                </div>
+              </div>
               <div className="space-y-2">
                 <label className="text-xs font-bold text-text-body uppercase">
-                  {t("poor_needy.first_name")}
+                  {t("form.email")} *
                 </label>
                 <input
                   required
-                  name="firstName"
-                  value={formData.firstName}
-                  onChange={handleChange}
+                  type="email"
+                  name="email"
+                  value={rescueData.email}
+                  onChange={handleRescueChange}
                   className={inputClasses}
-                  disabled={isFieldDisabled("firstName")}
+                  disabled={isFieldDisabled("email")}
                 />
               </div>
               <div className="space-y-2">
                 <label className="text-xs font-bold text-text-body uppercase">
-                  {t("form.phone")}
+                  Location / Address *
                 </label>
                 <input
                   required
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  minLength={10}
-                  maxLength={10}
+                  name="address"
+                  value={rescueData.address}
+                  onChange={handleRescueChange}
                   className={inputClasses}
                 />
               </div>
-            </div>
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-text-body uppercase">
-                {t("form.email")}
-              </label>
-              <input
-                required
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                className={inputClasses}
-                disabled={isFieldDisabled("email")}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-text-body uppercase">
-                {t("animal_rescue.address_label")}
-              </label>
-              <input
-                required
-                name="address"
-                value={formData.address}
-                onChange={handleChange}
-                className={inputClasses}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-text-body uppercase">
-                {t("animal_rescue.situation_details")}
-              </label>
-              <textarea
-                required
-                name="message"
-                value={formData.message}
-                onChange={handleChange}
-                rows={4}
-                className={inputClasses}
-              ></textarea>
-            </div>
-            {renderSubmitButton(
-              <Button type="submit" variant="primary" isLoading={loading} className="w-full py-4">
-                {t("poor_needy.submit")}
-              </Button>,
-              formData,
-            )}
-          </form>
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-text-body uppercase">
+                  Situation Details *
+                </label>
+                <textarea
+                  required
+                  name="message"
+                  value={rescueData.message}
+                  onChange={handleRescueChange}
+                  rows={4}
+                  className={inputClasses}
+                ></textarea>
+              </div>
+              {renderSubmitButton(
+                <Button type="submit" variant="primary" isLoading={loading} className="w-full py-4">
+                  Submit Rescue Request
+                </Button>,
+                rescueData,
+              )}
+            </form>
+          ) : (
+            <form onSubmit={handleSubmitAdopt} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-text-body uppercase">
+                    Full Name *
+                  </label>
+                  <input
+                    required
+                    name="fullName"
+                    value={adoptData.fullName}
+                    onChange={handleAdoptChange}
+                    className={inputClasses}
+                    disabled={isFieldDisabled("fullName")}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-text-body uppercase">
+                    {t("form.phone")} *
+                  </label>
+                  <input
+                    required
+                    name="phone"
+                    value={adoptData.phone}
+                    onChange={handleAdoptChange}
+                    minLength={10}
+                    maxLength={10}
+                    className={inputClasses}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-text-body uppercase">
+                  {t("form.email")} *
+                </label>
+                <input
+                  required
+                  type="email"
+                  name="email"
+                  value={adoptData.email}
+                  onChange={handleAdoptChange}
+                  className={inputClasses}
+                  disabled={isFieldDisabled("email")}
+                />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-text-body uppercase">City *</label>
+                  <input
+                    required
+                    name="city"
+                    value={adoptData.city}
+                    onChange={handleAdoptChange}
+                    placeholder="Your city"
+                    className={inputClasses}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-text-body uppercase">Home Type *</label>
+                  <select
+                    required
+                    name="homeType"
+                    value={adoptData.homeType}
+                    onChange={handleAdoptChange}
+                    className={inputClasses}
+                  >
+                    <option value="">Select</option>
+                    <option value="Apartment">Apartment</option>
+                    <option value="Independent House">Independent House</option>
+                    <option value="Farm / Outdoor Space">Farm / Outdoor Space</option>
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-text-body uppercase">Experience *</label>
+                  <select
+                    required
+                    name="experience"
+                    value={adoptData.experience}
+                    onChange={handleAdoptChange}
+                    className={inputClasses}
+                  >
+                    <option value="">Select</option>
+                    <option value="First time">First time</option>
+                    <option value="Have adopted before">Have adopted before</option>
+                    <option value="Currently have pets">Currently have pets</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-text-body uppercase">Animal Preference *</label>
+                  <select
+                    required
+                    name="animalPreference"
+                    value={adoptData.animalPreference}
+                    onChange={handleAdoptChange}
+                    className={inputClasses}
+                  >
+                    <option value="">Select</option>
+                    <option value="Dog">Dog</option>
+                    <option value="Cat">Cat</option>
+                    <option value="Any">Any</option>
+                  </select>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-text-body uppercase">Message *</label>
+                <textarea
+                  required
+                  name="message"
+                  value={adoptData.message}
+                  onChange={handleAdoptChange}
+                  rows={4}
+                  placeholder="Why do you want to adopt? Any details we should know?"
+                  className={inputClasses}
+                />
+              </div>
+              {renderSubmitButton(
+                <Button type="submit" variant="primary" isLoading={loading} className="w-full py-4">
+                  Submit Adoption Request
+                </Button>,
+                adoptData,
+              )}
+            </form>
+          )}
         </div>
       </div>
     </div>

@@ -311,3 +311,89 @@ export const genericMassEmailTemplate = (name, heading, body, bannerImage) => {
 
   return wrap(inner, heading);
 };
+
+const statusUpdateInner = ({ subject, lines }) => {
+  const body = (lines || [])
+    .map((l) => `<p style="margin:0 0 14px;color:#333;font-size:16px;line-height:1.7;">${l}</p>`)
+    .join("");
+
+  const inner = `
+    <tr>
+      <td style="padding:40px 32px 40px;">
+        <div style="display:inline-block;background:#EEF2FF;color:#3730A3;padding:6px 14px;border-radius:999px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:18px;">
+          Profile Status Update
+        </div>
+        <h2 style="margin:0;color:#1A1A2E;font-size:24px;font-weight:900;line-height:1.25;letter-spacing:-0.02em;">
+          ${subject}
+        </h2>
+        <div style="margin-top:18px;">
+          ${body}
+        </div>
+        <div style="margin-top:26px;padding-top:20px;border-top:1px solid #EEF0F6;">
+          <p style="margin:0;color:#333;font-size:16px;line-height:1.7;">Warm regards,</p>
+          <p style="margin:6px 0 0;font-weight:900;color:#C62828;font-size:16px;">HCT Team</p>
+        </div>
+      </td>
+    </tr>
+  `;
+
+  return wrap(inner, subject);
+};
+
+export const activeToTemporaryTemplate = (supportEmail) =>
+  statusUpdateInner({
+    subject: "Profile Status Update – Moved to Temporary",
+    lines: [
+      "Dear Member,",
+      "We noticed that you have not been active for the past 60 days. As a result, your profile has been automatically moved from Active to Temporary status.",
+      "Your presence and contribution are valuable to us, and we encourage you to reconnect and continue making a positive impact in the community.",
+      `For any clarification or to reactivate your status, please write to the HCT Team at ${supportEmail}.`,
+    ],
+  });
+
+export const temporaryToInactiveTemplate = (supportEmail) =>
+  statusUpdateInner({
+    subject: "Profile Status Update – Moved to Inactive",
+    lines: [
+      "Dear Member,",
+      "Since there has been no participation or contribution to our initiatives for the past 90 days, your profile has now been moved from Temporary to Inactive status.",
+      "Every effort matters in building a better society, and we truly value your involvement. We would be happy to welcome you back whenever you are ready to contribute again.",
+      `For further information or assistance, please contact the HCT Team at ${supportEmail}.`,
+    ],
+  });
+
+export const temporaryToActiveTemplate = () =>
+  statusUpdateInner({
+    subject: "Congratulations! You’re Now an Active Member",
+    lines: [
+      "Dear Member,",
+      "Congratulations!",
+      "Your recent contributions and active participation are creating a meaningful impact in the community. Because of your efforts, your profile has been successfully moved from Temporary to Active status.",
+      "Your dedication proves that even a single step forward can bring significant change to society. We are proud to have you as a full-time Active Member.",
+      "Keep inspiring and making a difference!",
+    ],
+  });
+
+export const reimbursementApprovedTemplate = (memberName, amount) => {
+  const inner = `
+    <tr>
+      <td style="padding:40px 32px 40px;">
+        <div style="display:inline-block;background:#ECFDF5;color:#047857;padding:6px 14px;border-radius:999px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:18px;">
+          Reimbursement Approved
+        </div>
+        <h2 style="margin:0;color:#1A1A2E;font-size:24px;font-weight:900;line-height:1.25;letter-spacing:-0.02em;">
+          Thanks for spending out of pocket
+        </h2>
+        <div style="margin-top:18px;color:#333;font-size:16px;line-height:1.7;">
+          <p style="margin:0 0 14px;">Dear ${memberName || "Member"},</p>
+          <p style="margin:0 0 14px;">
+            Thank you for spending while volunteering. Your reimbursement request is approved and your amount of
+            <strong> ₹${amount} </strong> will be reimbursed within <strong>7 - 14 working days</strong>.
+          </p>
+          <p style="margin:0 0 14px;">Warm regards,<br><strong>HCT Team</strong></p>
+        </div>
+      </td>
+    </tr>
+  `;
+  return wrap(inner, "Reimbursement Approved");
+};

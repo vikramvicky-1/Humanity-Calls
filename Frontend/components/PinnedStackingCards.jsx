@@ -115,7 +115,7 @@ const PinnedStackingCards = () => {
       description: t("home.blood_donation_paragraph"),
       color: "linear-gradient(135deg, #E74C3C 0%, #B22222 100%)",
       image: "https://res.cloudinary.com/daokrum7i/image/upload/f_auto,q_auto,w_800/v1767814232/hc_blood_donation_mfwveo.png",
-      to: "/donate",
+      to: "/blood",
       btnText: t("nav.donate_now")
     }
   ];

@@ -89,6 +89,17 @@ const Profile = () => {
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const photoInputRef = useRef(null);
 
+  // Reimbursement
+  const [reimbLoading, setReimbLoading] = useState(false);
+  const [myReimb, setMyReimb] = useState([]);
+  const [reimbForm, setReimbForm] = useState({
+    amount: "",
+    purpose: "",
+    spentOnDate: "",
+    receiptImageUrl: "",
+  });
+  const [reimbUploading, setReimbUploading] = useState(false);
+
   useEffect(() => {
     if (!user) {
       navigate("/become-a-member");
@@ -98,6 +109,11 @@ const Profile = () => {
       fetchVolunteerStatus();
     }
   }, [user, navigate]);
+
+  useEffect(() => {
+    if (user) fetchMyReimbursements();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   const fetchVolunteerStatus = async () => {
     const token = sessionStorage.getItem("token");
@@ -119,6 +135,20 @@ const Profile = () => {
       console.error("Failed to fetch volunteer status", err);
     } finally {
       setIsLoadingStatus(false);
+    }
+  };
+
+  const fetchMyReimbursements = async () => {
+    try {
+      const token = sessionStorage.getItem("token");
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/reimbursements/my`, {
+        headers,
+        withCredentials: true,
+      });
+      setMyReimb(res.data || []);
+    } catch (_err) {
+      setMyReimb([]);
     }
   };
 
@@ -302,6 +332,64 @@ const Profile = () => {
       toast.error(err.response?.data?.message || "Failed to update profile picture");
     } finally {
       setIsUploadingPhoto(false);
+    }
+  };
+
+  const handleReimbReceiptUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("File size should be less than 5MB");
+      return;
+    }
+    setReimbUploading(true);
+    try {
+      const token = sessionStorage.getItem("token");
+      const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
+      const uploadData = new FormData();
+      uploadData.append("image", file);
+      const uploadRes = await axios.post(
+        `${import.meta.env.VITE_API_URL}/volunteers/upload`,
+        uploadData,
+        { headers: { "Content-Type": "multipart/form-data", ...authHeaders }, withCredentials: true },
+      );
+      setReimbForm((p) => ({ ...p, receiptImageUrl: uploadRes.data.imageUrl }));
+      toast.success("Receipt uploaded");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Receipt upload failed");
+    } finally {
+      setReimbUploading(false);
+      e.target.value = "";
+    }
+  };
+
+  const submitReimbursement = async (e) => {
+    e.preventDefault();
+    if (!volunteerStatus) {
+      toast.error("Only volunteers can request reimbursement.");
+      return;
+    }
+    setReimbLoading(true);
+    try {
+      const token = sessionStorage.getItem("token");
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      await axios.post(
+        `${import.meta.env.VITE_API_URL}/reimbursements`,
+        {
+          amount: reimbForm.amount,
+          purpose: reimbForm.purpose,
+          spentOnDate: reimbForm.spentOnDate,
+          receiptImageUrl: reimbForm.receiptImageUrl,
+        },
+        { headers, withCredentials: true },
+      );
+      toast.success("Reimbursement request submitted");
+      setReimbForm({ amount: "", purpose: "", spentOnDate: "", receiptImageUrl: "" });
+      fetchMyReimbursements();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to submit request");
+    } finally {
+      setReimbLoading(false);
     }
   };
 
@@ -767,6 +855,99 @@ const Profile = () => {
               <FaGlobe className="text-sm" /> {t("profile.preferred_language")}
             </h2>
             <LanguageSelectorProfile />
+          </div>
+
+          {/* Reimbursement Section */}
+          <div className="bg-white rounded-3xl shadow-xl border border-border p-8 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-150">
+            <h2 className="text-xl font-bold text-primary mb-6 flex items-center gap-3">
+              Out-of-Pocket Reimbursement
+            </h2>
+            <p className="text-sm text-text-body/60 font-medium mb-6">
+              If you spent money while volunteering, submit a reimbursement request here. Admin will review and approve.
+            </p>
+
+            <form onSubmit={submitReimbursement} className="space-y-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-text-body/40 uppercase tracking-widest">Amount (₹) *</label>
+                  <input
+                    required
+                    type="number"
+                    min={1}
+                    value={reimbForm.amount}
+                    onChange={(e) => setReimbForm((p) => ({ ...p, amount: e.target.value }))}
+                    className="w-full px-6 py-4 border border-border rounded-2xl outline-none focus:border-primary"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-text-body/40 uppercase tracking-widest">Spent On *</label>
+                  <input
+                    required
+                    type="date"
+                    value={reimbForm.spentOnDate}
+                    onChange={(e) => setReimbForm((p) => ({ ...p, spentOnDate: e.target.value }))}
+                    className="w-full px-6 py-4 border border-border rounded-2xl outline-none focus:border-primary"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-text-body/40 uppercase tracking-widest">Purpose *</label>
+                <input
+                  required
+                  value={reimbForm.purpose}
+                  onChange={(e) => setReimbForm((p) => ({ ...p, purpose: e.target.value }))}
+                  placeholder="e.g., Fuel for volunteering trip / Supplies / Printouts"
+                  className="w-full px-6 py-4 border border-border rounded-2xl outline-none focus:border-primary"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-text-body/40 uppercase tracking-widest">Receipt (optional)</label>
+                <input type="file" accept="image/*" onChange={handleReimbReceiptUpload} className="w-full text-sm" />
+                {reimbUploading && <p className="text-xs text-text-body/60">Uploading receipt...</p>}
+                {reimbForm.receiptImageUrl && (
+                  <a href={reimbForm.receiptImageUrl} target="_blank" rel="noreferrer" className="text-xs font-bold text-primary hover:underline">
+                    View uploaded receipt
+                  </a>
+                )}
+              </div>
+
+              <button
+                type="submit"
+                disabled={reimbLoading}
+                className="w-full px-10 py-4 rounded-2xl bg-primary text-white font-bold hover:bg-primary/90 transition-all shadow-xl shadow-primary/20 active:scale-[0.98] uppercase tracking-widest disabled:opacity-50"
+              >
+                {reimbLoading ? "Submitting..." : "Submit Reimbursement Request"}
+              </button>
+            </form>
+
+            <div className="mt-8">
+              <div className="text-[10px] font-black uppercase tracking-[0.25em] text-text-body/40 mb-3">
+                My Requests
+              </div>
+              {myReimb.length === 0 ? (
+                <div className="text-sm text-text-body/50 font-bold">No reimbursement requests yet.</div>
+              ) : (
+                <div className="space-y-3">
+                  {myReimb.map((r) => (
+                    <div key={r._id} className="p-4 rounded-2xl border border-border bg-bg/40">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="font-black text-text-body">₹{r.amount}</div>
+                        <div className="text-[10px] font-black uppercase tracking-widest text-primary">{r.status}</div>
+                      </div>
+                      <div className="text-sm text-text-body/70 mt-1 font-bold">{r.purpose}</div>
+                      {r.adminComment ? (
+                        <div className="mt-2 text-xs text-text-body/60">
+                          <span className="font-black uppercase tracking-widest text-[10px]">Admin:</span>{" "}
+                          {r.adminComment}
+                        </div>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Logout Section */}

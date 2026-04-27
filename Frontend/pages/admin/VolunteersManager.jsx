@@ -36,7 +36,7 @@ const VolunteersManager = () => {
   const [volunteerToDelete, setVolunteerToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const volunteerTabs = ["active", "temporary", "banned", "rejected"];
+  const volunteerTabs = ["pending", "active", "temporary", "inactive", "banned", "rejected"];
 
   useEffect(() => {
     fetchVolunteers();

@@ -19,10 +19,12 @@ import Home from "./pages/Home";
 const Footer = lazy(() => import("./components/Footer"));
 const About = lazy(() => import("./pages/About"));
 const RequestDonors = lazy(() => import("./pages/RequestDonors"));
+const BloodForms = lazy(() => import("./pages/BloodForms"));
 const PoorNeedy = lazy(() => import("./pages/PoorNeedy"));
 const AnimalRescue = lazy(() => import("./pages/AnimalRescue"));
 const Collaborate = lazy(() => import("./pages/Collaborate"));
 const Volunteer = lazy(() => import("./pages/Volunteer"));
+const OurTeam = lazy(() => import("./pages/OurTeam"));
 const Donate = lazy(() => import("./pages/Donate"));
 const BloodDonation = lazy(() => import("./pages/BloodDonation"));
 const WallOfFame = lazy(() => import("./pages/WallOfFame"));
@@ -38,9 +40,12 @@ const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const VolunteersManager = lazy(() => import("./pages/admin/VolunteersManager"));
 const GalleryManager = lazy(() => import("./pages/admin/GalleryManager"));
 const RequestsManager = lazy(() => import("./pages/admin/RequestsManager"));
+const FormsManager = lazy(() => import("./pages/admin/FormsManager"));
 const EmailManager = lazy(() => import("./pages/admin/EmailManager"));
 const AddGalleryManager = lazy(() => import("./pages/admin/AddGalleryManager"));
 const FormImagesManager = lazy(() => import("./pages/admin/FormImagesManager"));
+const BloodRequestsManager = lazy(() => import("./pages/admin/BloodRequestsManager"));
+const ReimbursementsManager = lazy(() => import("./pages/admin/ReimbursementsManager"));
 const Verify = lazy(() => import("./pages/Verify"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
@@ -100,6 +105,8 @@ const AppContent = () => {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/about" element={<About />} />
+            <Route path="/our-team" element={<OurTeam />} />
+            <Route path="/blood" element={<BloodForms />} />
             <Route path="/request-donors" element={<RequestDonors />} />
             <Route path="/poor-needy" element={<PoorNeedy />} />
             <Route path="/animal-rescue" element={<AnimalRescue />} />
@@ -121,6 +128,9 @@ const AppContent = () => {
               <Route path="volunteers" element={<VolunteersManager />} />
               <Route path="gallery" element={<GalleryManager />} />
               <Route path="requests" element={<RequestsManager />} />
+              <Route path="forms" element={<FormsManager />} />
+              <Route path="blood-requests" element={<BloodRequestsManager />} />
+              <Route path="reimbursements" element={<ReimbursementsManager />} />
               <Route path="send-mails" element={<EmailManager />} />
               <Route path="add-gallery" element={<AddGalleryManager />} />
               <Route path="form-images" element={<FormImagesManager />} />
