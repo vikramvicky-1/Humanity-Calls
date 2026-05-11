@@ -262,24 +262,10 @@ const HeroSection = () => {
               }}
             >
               <span>{t("home.hero_title_help")}</span>
-              <motion.img
-                src={hclogo}
-                alt="Logo"
-                className="h-[2.2em] w-auto object-contain drop-shadow-[0_5px_15px_rgba(231,76,60,0.3)]"
-                animate={{
-                  y: [0, 10, 0],
-                  scale: [1, 1.03, 1],
-                }}
-                transition={{
-                  duration: 4,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-              />
             </div>
 
             {/* Line 2: "Humanity" — Syne Bold with animated flowing gradient */}
-            <span className="relative inline-block">
+            <span className="relative inline-block w-fit">
               <span
                 className="hero-gradient-text text-[clamp(2.25rem,8.5vw,7rem)] relative z-10"
                 style={{
@@ -291,6 +277,37 @@ const HeroSection = () => {
               >
                 {t("home.hero_title_humanity")}
               </span>
+
+              {/* Logo icon placed specifically over the 'Y' */}
+              <div className="absolute -top-[140%] md:-top-[52%] -right-[7%] md:right-3.5 z-[100] flex items-center justify-center pointer-events-none">
+                <motion.img
+                  src={hclogo}
+                  alt="Logo"
+                  className="h-[1.8em] md:h-[6em] w-auto object-contain drop-shadow-[0_15px_35px_rgba(0,0,0,0.4)]"
+                  initial={{ opacity: 0, scale: 0.5, rotate: -20 }}
+                  animate={{
+                    opacity: 1,
+                    scale: 1,
+                    rotate: 0,
+                    y: [0, -20, 0],
+                  }}
+                  transition={{
+                    opacity: { duration: 0.8, delay: 0.8 },
+                    scale: {
+                      duration: 0.8,
+                      delay: 0.8,
+                      type: "spring",
+                      stiffness: 200,
+                    },
+                    rotate: { duration: 0.8, delay: 0.8 },
+                    y: {
+                      duration: 3,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    },
+                  }}
+                />
+              </div>
 
               {/* Decorative underline stroke */}
               <motion.div

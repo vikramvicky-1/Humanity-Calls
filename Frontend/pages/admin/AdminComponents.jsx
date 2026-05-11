@@ -1,39 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { FaUserFriends, FaCheck, FaTimes, FaBan, FaEnvelope, FaCamera, FaPen, FaSync } from "react-icons/fa";
+import { FaTimes, FaCamera, FaIdCard, FaUserFriends, FaCheck } from "react-icons/fa";
 import axios from "axios";
 import { toast } from "react-toastify";
-import UniversalImageCropper from "../../components/UniversalImageCropper";
 import { getAuthToken } from "../../utils/authToken.js";
+import hclogo from "../../assets/humanitycallslogo.avif";
 
-export const LOGO_URL = "https://res.cloudinary.com/daokrum7i/image/upload/v1768550123/favicon-32x32_kca2tb.png";
-
-export const DetailItem = ({ label, value }) => (
-  <div>
-    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-text-body/40 mb-1">{label}</p>
-    <p className="font-bold text-text-body break-words">{value || 'N/A'}</p>
-  </div>
-);
-
-export const DetailList = ({ label, items }) => {
-  const displayItems = Array.isArray(items) ? items : (items ? [items] : []);
-  return (
-    <div>
-      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-text-body/40 mb-3">{label}</p>
-      <div className="flex flex-wrap gap-2">
-        {displayItems.length > 0 ? (
-          displayItems.map((item, i) => (
-            <span key={i} className="px-3 py-1 bg-primary/5 text-primary text-[10px] font-bold rounded-lg border border-primary/10 capitalize">
-              {item}
-            </span>
-          ))
-        ) : (
-          <span className="text-xs text-text-body/40 italic">None selected</span>
-        )}
-      </div>
-    </div>
-  );
-};
+export const LOGO_URL = hclogo;
 
 export const calculateAge = (dob) => {
   if (!dob) return "N/A";
@@ -47,49 +20,60 @@ export const calculateAge = (dob) => {
   return age;
 };
 
-export const IdModal = ({ isOpen, onClose, idImage }) => {
+const DetailItem = ({ label, value }) => (
+  <div className="space-y-1">
+    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/40">{label}</p>
+    <p className="font-bold text-text-body text-sm">{value || "N/A"}</p>
+  </div>
+);
+
+const DetailList = ({ label, items }) => {
+  const displayItems = Array.isArray(items) ? items : (items ? [items] : []);
+  
+  return (
+    <div className="space-y-2">
+      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/40">{label}</p>
+      <div className="flex flex-wrap gap-2">
+        {displayItems.length > 0 ? (
+          displayItems.map((item, i) => (
+            <span key={i} className="px-3 py-1 bg-primary/5 text-primary text-[10px] font-black rounded-full border border-primary/10">
+              {item}
+            </span>
+          ))
+        ) : (
+          <span className="text-text-body/30 text-[10px] font-bold">N/A</span>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export const IdModal = ({ isOpen, onClose, imageUrl }) => {
   useEffect(() => {
     if (isOpen) {
       const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
       document.body.style.overflow = "hidden";
       document.body.style.paddingRight = `${scrollBarWidth}px`;
-      if (window.__lenis) window.__lenis.stop();
     } else {
       document.body.style.overflow = "unset";
       document.body.style.paddingRight = "0px";
-      if (window.__lenis) window.__lenis.start();
     }
     return () => {
       document.body.style.overflow = "unset";
       document.body.style.paddingRight = "0px";
-      if (window.__lenis) window.__lenis.start();
     };
   }, [isOpen]);
 
   if (!isOpen) return null;
   return createPortal(
-    <div 
-      className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
-      onClick={(e) => e.target === e.currentTarget && onClose()}
-      onWheel={(e) => e.stopPropagation()}
-    >
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden animate-in zoom-in-95 duration-300">
-        <div className="flex items-center justify-between px-8 py-4 border-b border-border">
-          <h3 className="text-xl font-bold text-primary">Government ID Verification</h3>
-          <button onClick={onClose} className="p-2 hover:bg-bg rounded-xl transition-colors">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+      <div className="relative max-w-4xl w-full bg-white rounded-3xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
+        <div className="absolute top-4 right-4 z-10">
+          <button onClick={onClose} className="p-2 bg-black/20 hover:bg-black/40 text-white rounded-full transition-all">
             <FaTimes size={20} />
           </button>
         </div>
-        <div 
-          className="p-4 bg-[#111] overflow-auto flex justify-center items-center" 
-          style={{ maxHeight: '80vh', overscrollBehavior: 'contain' }}
-        >
-          {idImage ? (
-            <img src={idImage} alt="Gov ID" className="max-w-full h-auto shadow-2xl rounded-lg" />
-          ) : (
-            <div className="py-32 text-white/20 font-bold uppercase tracking-widest">No ID image found</div>
-          )}
-        </div>
+        <img src={imageUrl} alt="ID" className="w-full h-auto max-h-[85vh] object-contain mx-auto" />
       </div>
     </div>,
     document.body
@@ -116,47 +100,70 @@ export const ViewMoreModal = ({ isOpen, onClose, vol }) => {
   }, [isOpen]);
 
   if (!isOpen || !vol) return null;
+
   return createPortal(
-    <div 
-      className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-      onClick={(e) => e.target === e.currentTarget && onClose()}
-      onWheel={(e) => e.stopPropagation()}
-    >
-      <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-3xl overflow-hidden animate-in zoom-in-95 duration-300 flex flex-col max-h-[90vh]">
-        <div className="bg-primary px-10 py-8 text-white flex justify-between items-center bg-gradient-to-r from-primary to-blood shrink-0">
-          <div className="flex items-center gap-6">
-            <div className="w-20 h-20 rounded-2xl overflow-hidden border-4 border-white/20 shadow-2xl bg-white">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-md p-4">
+      <div className="bg-white rounded-[3rem] shadow-2xl w-full max-w-5xl overflow-hidden animate-in zoom-in-95 duration-500 h-full max-h-[90vh] flex flex-col">
+        {/* Fixed Header */}
+        <div className="bg-primary p-8 text-white flex items-center justify-between relative overflow-hidden shrink-0">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
+          <div className="flex items-center gap-6 relative z-10">
+            <div className="w-24 h-24 rounded-3xl overflow-hidden border-4 border-white/20 shadow-2xl">
               {vol.profilePicture ? (
                 <img src={vol.profilePicture} alt={vol.fullName} className="w-full h-full object-cover" />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-primary/20 bg-bg">
-                  <FaUserFriends size={32} />
+                <div className="w-full h-full flex items-center justify-center bg-white/10">
+                  <FaUserFriends size={40} />
                 </div>
               )}
             </div>
             <div>
               <h3 className="text-3xl font-black tracking-tight">{vol.fullName}</h3>
-              <p className="text-white/60 font-bold uppercase tracking-[0.2em] text-[10px] mt-1">
+              <p className="text-white/70 font-bold uppercase tracking-widest text-xs mt-1">
                 Volunteer Profile Details
               </p>
             </div>
           </div>
-          <button onClick={onClose} className="p-3 bg-white/10 hover:bg-white/20 rounded-2xl transition-all">
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              onClose();
+            }} 
+            className="relative z-20 p-3 bg-white/10 hover:bg-white/20 rounded-2xl transition-all active:scale-95"
+          >
             <FaTimes size={20} />
           </button>
         </div>
+
+        {/* Scrollable Content */}
         <div 
-          className="p-10 overflow-y-auto"
+          className="p-10 overflow-y-auto flex-grow min-h-0 custom-scrollbar bg-white"
           style={{ overscrollBehavior: 'contain' }}
+          data-lenis-prevent
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
             <div className="space-y-8">
               <div className="p-6 bg-bg/50 rounded-3xl space-y-4">
-                <h4 className="text-xs font-black text-primary uppercase tracking-widest border-b border-primary/10 pb-2">Experience & Skills</h4>
-                <DetailItem label="Current Occupation" value={vol.occupation === 'Other' ? vol.occupationDetail : vol.occupation} />
-                <DetailItem label="Professional Skills" value={vol.skills} />
+                <h4 className="text-xs font-black text-primary uppercase tracking-widest border-b border-primary/10 pb-2">Contact Information</h4>
+                <DetailItem label="Email Address" value={vol.email} />
+                <DetailItem label="Phone Number" value={vol.phone} />
+                <DetailItem label="Emergency Contact" value={vol.emergencyContact} />
                 <DetailItem label="Location" value={vol.locationAddress} />
               </div>
+
+              <div className="p-6 bg-bg/50 rounded-3xl space-y-4">
+                <h4 className="text-xs font-black text-primary uppercase tracking-widest border-b border-primary/10 pb-2">Personal Details</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <DetailItem label="Date of Birth" value={vol.dob ? new Date(vol.dob).toLocaleDateString("en-GB") : "N/A"} />
+                  <DetailItem label="Age" value={calculateAge(vol.dob)} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <DetailItem label="Gender" value={vol.gender} />
+                  <DetailItem label="Blood Group" value={vol.bloodGroup} />
+                </div>
+                <DetailItem label="Joining Date" value={vol.joiningDate ? new Date(vol.joiningDate).toLocaleDateString("en-GB") : "N/A"} />
+              </div>
+
               <div className="p-6 bg-bg/50 rounded-3xl space-y-4">
                 <h4 className="text-xs font-black text-primary uppercase tracking-widest border-b border-primary/10 pb-2">Verification Information</h4>
                 <DetailItem label="Government ID" value={vol.govIdType} />
@@ -170,22 +177,31 @@ export const ViewMoreModal = ({ isOpen, onClose, vol }) => {
                       : "No"
                   }
                 />
-                <DetailItem label="Blood Group" value={vol.bloodGroup} />
+                {vol.referrer && (
+                  <div className="mt-4 p-4 bg-green-50 rounded-2xl border border-green-100">
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-green-600/60 mb-1">Referred By</p>
+                    <p className="font-bold text-green-700">{vol.referrer.fullName} ({vol.referrer.volunteerId})</p>
+                  </div>
+                )}
               </div>
             </div>
             <div className="space-y-8">
+              <div className="p-6 bg-bg/50 rounded-3xl space-y-4">
+                <h4 className="text-xs font-black text-primary uppercase tracking-widest border-b border-primary/10 pb-2">Experience & Skills</h4>
+                <DetailItem label="Current Occupation" value={vol.occupation === 'Other' ? vol.occupationDetail : vol.occupation} />
+                <DetailItem label="Professional Skills" value={vol.skills} />
+                <div className="mt-4">
+                  <h4 className="text-[10px] font-black text-primary uppercase tracking-widest mb-3">Motivation / Interest</h4>
+                  <p className="text-sm font-bold text-text-body italic">"{vol.interest}"</p>
+                </div>
+              </div>
+              
               <div className="p-6 bg-bg/50 rounded-3xl space-y-4">
                 <h4 className="text-xs font-black text-primary uppercase tracking-widest border-b border-primary/10 pb-2">Engagement Preferences</h4>
                 <DetailList label="Time Commitment" items={vol.timeCommitment} />
                 <DetailList label="Preferred Working Mode" items={vol.workingMode} />
                 <DetailList label="Role Preferences" items={vol.rolePreference} />
-              </div>
-              <div className="p-6 bg-primary/5 rounded-3xl border border-primary/10">
-                <h4 className="text-xs font-black text-primary uppercase tracking-widest mb-3">Motivation / Interest</h4>
-                <p className="text-sm font-bold text-text-body italic">"{vol.interest}"</p>
-                <div className="mt-4">
-                  <DetailList label="Donation Support" items={vol.deviceDonationChoices} />
-                </div>
+                <DetailList label="Donation Support" items={vol.deviceDonationChoices} />
               </div>
             </div>
           </div>
@@ -195,8 +211,6 @@ export const ViewMoreModal = ({ isOpen, onClose, vol }) => {
     document.body
   );
 };
-
-
 
 export const VolunteerEditModal = ({ isOpen, onClose, volunteer, onUpdate }) => {
   const [formData, setFormData] = useState(null);
@@ -229,214 +243,98 @@ export const VolunteerEditModal = ({ isOpen, onClose, volunteer, onUpdate }) => 
     if (volunteer) {
       setFormData({ ...volunteer });
     }
-  }, [volunteer, isOpen]);
+  }, [volunteer]);
 
   if (!isOpen || !formData) return null;
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    
-    if (type === "checkbox" && Array.isArray(formData[name])) {
-      const currentArray = [...formData[name]];
-      if (checked) {
-        currentArray.push(value);
-      } else {
-        const index = currentArray.indexOf(value);
-        if (index > -1) currentArray.splice(index, 1);
-      }
-      setFormData((prev) => ({ ...prev, [name]: currentArray }));
-      return;
-    }
-
-    if (type === "radio") {
-      setFormData((prev) => ({ ...prev, [name]: value }));
-      return;
-    }
-
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleFileChange = (e, type) => {
+  const handleFileChange = async (e, type) => {
     const file = e.target.files[0];
     if (!file) return;
 
     if (file.size > 5 * 1024 * 1024) {
-      toast.error("File size should be less than 5MB");
+      toast.error("File size must be under 5MB");
       return;
     }
 
     const reader = new FileReader();
-    reader.onloadend = () => {
-      setCropImage(reader.result);
-      setCropType(type);
+    reader.onload = () => {
+      if (type === 'dl') {
+        setFormData(prev => ({ ...prev, drivingLicenseImageUrl: reader.result }));
+      } else {
+        setCropImage(reader.result);
+        setCropType(type);
+      }
     };
     reader.readAsDataURL(file);
-    e.target.value = "";
   };
 
-  const handleCropDone = async (croppedFile) => {
-    setIsUploading(true);
-    try {
-      const token = sessionStorage.getItem("adminToken") || getAuthToken();
-      const uploadData = new FormData();
-      uploadData.append("image", croppedFile);
-      
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/volunteers/upload`,
-        uploadData,
-        {
-          headers: { 
-            "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${token}`
-          },
-        }
-      );
-
-      const imageUrl = response.data.imageUrl;
-      setFormData(prev => ({
-        ...prev,
-        [cropType === 'profile' ? 'profilePicture' : 'govIdImage']: imageUrl
-      }));
-      toast.success(`${cropType === 'profile' ? 'Profile' : 'ID'} image uploaded`);
-    } catch (err) {
-      toast.error("Image upload failed");
-      console.error(err);
-    } finally {
-      setIsUploading(false);
-      setCropImage(null);
-      setCropType(null);
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    if (e) e.preventDefault();
+  const handleUpdate = async () => {
     setIsUpdating(true);
     try {
       const token = sessionStorage.getItem("adminToken") || getAuthToken();
-      await axios.put(
+      const res = await axios.patch(
         `${import.meta.env.VITE_API_URL}/volunteers/${formData._id}`,
         formData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      toast.success("Volunteer details updated");
-      onUpdate();
+      onUpdate(res.data.volunteer);
+      toast.success("Volunteer updated successfully");
       onClose();
     } catch (err) {
-      toast.error("Update failed");
+      toast.error(err.response?.data?.message || "Update failed");
     } finally {
       setIsUpdating(false);
     }
   };
 
-  const inputClasses = "w-full px-5 py-3 border border-border rounded-xl focus:border-primary outline-none transition-all shadow-sm";
-  const labelClasses = "text-[10px] font-black uppercase tracking-widest text-text-body/40 mb-1 block";
-
   const bloodGroups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
+  const occupations = ["Student", "Professional", "Business", "Home Maker", "Retired", "Other"];
+  const interests = ["Education", "Healthcare", "Environment", "Animal Welfare", "Social Service", "Disaster Relief"];
   const govIdOptions = ["Aadhar Card", "Voter ID", "PAN Card", "Passport", "Other"];
-  const interests = [
-    "Community & Field Engagement", "Education & Skill Development", "Health & Well-being",
-    "Environment & Sustainability", "Creative & Media Support", "Administration & Management",
-    "Fundraising & Partnerships", "Blood Donation", "Poor/Needy Support", "Animal Rescue", "Event Organizing"
-  ];
-  const occupations = [
-    "Student (School / College)", "Working Professional", "Business Owner / Entrepreneur",
-    "Homemaker", "Retired Professional", "Freelancer", "Government Employee",
-    "NGO / Social Sector Professional", "Medical Professional", "Legal Professional",
-    "Educator / Teacher", "IT Professional", "Other"
-  ];
-  const timeCommitments = ["One-time Event", "Weekend Volunteer", "Monthly Commitment", "Project-Based", "Long-Term Association"];
-  const workingModes = ["On-ground (Field Work)", "Remote / Online", "Hybrid"];
-  const rolePreferences = ["Team Member", "Team Leader", "Coordinator", "Consultant / Advisor", "Intern"];
 
-  return (
-    <>
-      {createPortal(
-        <div 
-          className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-          onClick={(e) => e.target === e.currentTarget && onClose()}
-          onWheel={(e) => e.stopPropagation()}
-        >
-        <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-4xl overflow-hidden animate-in zoom-in-95 duration-300 flex flex-col h-full max-h-[90vh]">
-          {/* Header */}
-          <div className="bg-primary px-8 py-6 text-white flex justify-between items-center shrink-0">
-            <h3 className="text-xl font-black uppercase tracking-widest">Edit Volunteer Profile</h3>
-            <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-xl transition-all"><FaTimes size={20} /></button>
+  const labelClasses = "text-[10px] font-black uppercase tracking-[0.2em] text-primary/40 ml-1";
+  const inputClasses = "w-full px-4 py-3 bg-bg/50 border border-primary/10 rounded-2xl focus:ring-2 focus:ring-primary outline-none transition-all font-bold text-sm text-text-body";
+
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-md p-4">
+      <div className="bg-white rounded-[3rem] shadow-2xl w-full max-w-4xl overflow-hidden animate-in zoom-in-95 duration-500 h-full max-h-[90vh] flex flex-col">
+        <div className="p-8 border-b border-primary/5 flex items-center justify-between bg-primary/5 shrink-0">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center text-white shadow-lg">
+              <FaIdCard size={24} />
+            </div>
+            <div>
+              <h3 className="text-xl font-black text-primary">Edit Volunteer Profile</h3>
+              <p className="text-[10px] font-bold text-primary/40 uppercase tracking-widest">Update detailed information</p>
+            </div>
           </div>
-          
-          {/* Form Content */}
-          <div 
-            className="flex-1 overflow-y-auto p-8"
-            style={{ overscrollBehavior: 'contain' }}
-          >
-            <form id="edit-volunteer-form" onSubmit={handleSubmit} className="space-y-8">
-              {/* Image Section */}
-              <div className="flex flex-col md:flex-row gap-12 items-center md:items-start border-b border-border pb-8">
-                <div className="space-y-3 text-center">
-                  <label className={labelClasses}>Profile Picture</label>
-                  <div className="relative group">
-                    <div className="w-32 h-32 rounded-3xl overflow-hidden border-4 border-primary/10 shadow-xl bg-bg">
-                      {isUploading && cropType === 'profile' ? (
-                        <div className="w-full h-full flex items-center justify-center bg-bg"><FaSync className="animate-spin text-primary" size={24} /></div>
-                      ) : formData.profilePicture ? (
-                        <img src={formData.profilePicture} alt="Profile" className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-primary/20"><FaUserFriends size={48} /></div>
-                      )}
-                    </div>
-                    <input type="file" id="edit-profile-pic" accept="image/*" className="hidden" onChange={(e) => handleFileChange(e, 'profile')} />
-                    <label htmlFor="edit-profile-pic" className="absolute -bottom-2 -right-2 bg-primary text-white p-3 rounded-2xl shadow-xl cursor-pointer hover:scale-110 transition-all">
-                      <FaCamera size={16} />
-                    </label>
-                  </div>
-                </div>
+          <button onClick={onClose} className="p-3 bg-white hover:bg-bg rounded-2xl shadow-sm transition-all text-primary/40 hover:text-primary">
+            <FaTimes size={20} />
+          </button>
+        </div>
 
-                <div className="flex-1 space-y-3 w-full">
-                  <label className={labelClasses}>Government ID Image</label>
-                  <div className="relative group w-full">
-                    <div className="w-full h-40 rounded-3xl overflow-hidden border-2 border-dashed border-primary/20 bg-bg flex items-center justify-center">
-                      {isUploading && cropType === 'govId' ? (
-                        <FaSync className="animate-spin text-primary" size={32} />
-                      ) : formData.govIdImage ? (
-                        <img src={formData.govIdImage} alt="Gov ID" className="w-full h-full object-contain p-2" />
-                      ) : (
-                        <span className="text-text-body/20 font-bold uppercase tracking-widest text-xs">No ID Image</span>
-                      )}
-                    </div>
-                    <input type="file" id="edit-gov-id" accept="image/*" className="hidden" onChange={(e) => handleFileChange(e, 'govId')} />
-                    <label htmlFor="edit-gov-id" className="absolute bottom-4 right-4 bg-primary text-white px-4 py-2 rounded-xl shadow-xl cursor-pointer hover:scale-105 transition-all flex items-center gap-2 text-xs font-bold">
-                      <FaPen size={12} /> Replace ID Image
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+        {/* Scrollable Content Area */}
+        <div 
+          className="p-10 overflow-y-auto flex-grow min-h-0 custom-scrollbar bg-white"
+          style={{ overscrollBehavior: 'contain' }}
+          data-lenis-prevent
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+            <div className="space-y-6">
+              <div className="space-y-4">
+                <h4 className="text-xs font-black text-primary uppercase tracking-[0.2em] mb-4">Core Information</h4>
                 <div className="space-y-1">
                   <label className={labelClasses}>Full Name</label>
-                  <input required name="fullName" type="text" value={formData.fullName} onChange={handleChange} className={inputClasses} />
-                </div>
-                <div className="space-y-1">
-                  <label className={labelClasses}>Email (Read Only)</label>
-                  <input readOnly type="email" value={formData.email} className={`${inputClasses} bg-gray-50 text-gray-500 cursor-not-allowed`} />
+                  <input name="fullName" type="text" value={formData.fullName} onChange={handleChange} className={inputClasses} />
                 </div>
                 <div className="space-y-1">
                   <label className={labelClasses}>Phone Number</label>
-                  <input required name="phone" type="text" value={formData.phone} onChange={handleChange} className={inputClasses} />
-                </div>
-                <div className="space-y-1">
-                  <label className={labelClasses}>Emergency Contact</label>
-                  <input required name="emergencyContact" type="text" value={formData.emergencyContact} onChange={handleChange} className={inputClasses} />
-                </div>
-                <div className="space-y-1">
-                  <label className={labelClasses}>Date of Birth</label>
-                  <input required name="dob" type="date" value={formData.dob ? new Date(formData.dob).toISOString().split('T')[0] : ''} onChange={handleChange} className={inputClasses} />
-                </div>
-                <div className="space-y-1">
-                  <label className={labelClasses}>Joining Date</label>
-                  <input required name="joiningDate" type="date" value={formData.joiningDate ? new Date(formData.joiningDate).toISOString().split('T')[0] : ''} onChange={handleChange} className={inputClasses} />
+                  <input name="phone" type="text" value={formData.phone} onChange={handleChange} className={inputClasses} />
                 </div>
                 <div className="space-y-1">
                   <label className={labelClasses}>Gender</label>
@@ -480,6 +378,38 @@ export const VolunteerEditModal = ({ isOpen, onClose, volunteer, onUpdate }) => 
                     {govIdOptions.map(o => <option key={o} value={o}>{o}</option>)}
                   </select>
                 </div>
+
+                <div className="space-y-4 pt-4 border-t border-primary/5">
+                  <h4 className="text-xs font-black text-primary uppercase tracking-[0.2em]">Engagement Preferences</h4>
+                  <div className="space-y-1">
+                    <label className={labelClasses}>Time Commitment</label>
+                    <select name="timeCommitment" value={formData.timeCommitment} onChange={handleChange} className={inputClasses}>
+                      <option value="">Select Commitment</option>
+                      {["One-time Event", "Weekend Volunteer", "Monthly Commitment", "Project-Based", "Long-Term Association"].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className={labelClasses}>Working Mode</label>
+                    <select name="workingMode" value={formData.workingMode} onChange={handleChange} className={inputClasses}>
+                      <option value="">Select Mode</option>
+                      {["On-ground (Field Work)", "Remote / Online", "Hybrid"].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className={labelClasses}>Role Preference</label>
+                    <select name="rolePreference" value={formData.rolePreference} onChange={handleChange} className={inputClasses}>
+                      <option value="">Select Role</option>
+                      {["Team Member", "Team Leader", "Coordinator", "Consultant / Advisor", "Intern"].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                    </select>
+                  </div>
+                </div>
+
+                {formData.referrer && (
+                  <div className="space-y-1 pt-4">
+                    <label className={labelClasses}>Referred By (Read Only)</label>
+                    <input readOnly type="text" value={`${formData.referrer.fullName} (${formData.referrer.volunteerId})`} className={`${inputClasses} bg-green-50 text-green-700 font-bold cursor-not-allowed border-green-200`} />
+                  </div>
+                )}
               </div>
 
               <div className="space-y-6">
@@ -488,91 +418,93 @@ export const VolunteerEditModal = ({ isOpen, onClose, volunteer, onUpdate }) => 
                   <textarea name="skills" rows="3" value={formData.skills} onChange={handleChange} className={`${inputClasses} resize-none`} />
                 </div>
                 
-                <div className="space-y-3">
-                  <label className={labelClasses}>Time Commitment</label>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {timeCommitments.map(opt => (
-                      <label key={opt} className="flex items-center gap-2 p-3 rounded-xl border border-border hover:bg-bg cursor-pointer transition-all">
-                        <input type="radio" name="timeCommitment" value={opt} checked={formData.timeCommitment === opt} onChange={handleChange} className="w-4 h-4 text-primary" />
-                        <span className="text-xs font-bold text-text-body/70">{opt}</span>
-                      </label>
-                    ))}
+                <div className="space-y-1">
+                  <label className={labelClasses}>Location Address</label>
+                  <textarea name="locationAddress" rows="2" value={formData.locationAddress} onChange={handleChange} className={`${inputClasses} resize-none`} />
+                </div>
+
+                <div className="p-6 bg-bg/50 rounded-3xl border border-primary/5 space-y-4">
+                  <h4 className="text-xs font-black text-primary uppercase tracking-[0.2em]">Driving Status</h4>
+                  <div className="flex items-center gap-4">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="radio" name="hasDrivingLicense" checked={formData.hasDrivingLicense === true} onChange={() => setFormData(p => ({ ...p, hasDrivingLicense: true }))} className="accent-primary" />
+                      <span className="text-xs font-bold">Has License</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="radio" name="hasDrivingLicense" checked={formData.hasDrivingLicense === false} onChange={() => setFormData(p => ({ ...p, hasDrivingLicense: false }))} className="accent-primary" />
+                      <span className="text-xs font-bold">No License</span>
+                    </label>
+                  </div>
+                  {formData.hasDrivingLicense && (
+                    <div className="space-y-2">
+                      <label className={labelClasses}>License Image</label>
+                      <div className="flex items-center gap-4">
+                        <div className="w-16 h-16 rounded-xl border border-primary/10 overflow-hidden bg-white">
+                          {formData.drivingLicenseImageUrl ? <img src={formData.drivingLicenseImageUrl} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-primary/10"><FaCamera /></div>}
+                        </div>
+                        <label className="px-4 py-2 bg-white border border-primary/10 rounded-lg text-[10px] font-black cursor-pointer hover:bg-primary hover:text-white transition-all">
+                          Update DL
+                          <input type="file" className="hidden" onChange={(e) => handleFileChange(e, 'dl')} accept="image/*" />
+                        </label>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-8">
+              <div className="p-8 bg-bg/50 rounded-[2.5rem] space-y-6 border border-primary/5">
+                <h4 className="text-xs font-black text-primary uppercase tracking-[0.2em]">Profile Images</h4>
+                
+                <div className="space-y-4">
+                  <label className={labelClasses}>Profile Picture</label>
+                  <div className="flex items-center gap-6">
+                    <div className="w-24 h-24 rounded-3xl overflow-hidden border-2 border-primary/10 shadow-inner">
+                      {formData.profilePicture ? (
+                        <img src={formData.profilePicture} alt="Profile" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-white"><FaCamera className="text-primary/10" size={32} /></div>
+                      )}
+                    </div>
+                    <label className="px-6 py-3 bg-white border border-primary/10 text-primary text-xs font-black rounded-xl hover:bg-primary hover:text-white transition-all cursor-pointer shadow-sm">
+                      Change Photo
+                      <input type="file" className="hidden" onChange={(e) => handleFileChange(e, 'profile')} accept="image/*" />
+                    </label>
                   </div>
                 </div>
 
-                <div className="space-y-3">
-                  <label className={labelClasses}>Preferred Working Mode</label>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {workingModes.map(opt => (
-                      <label key={opt} className="flex items-center gap-2 p-3 rounded-xl border border-border hover:bg-bg cursor-pointer transition-all">
-                        <input type="radio" name="workingMode" value={opt} checked={formData.workingMode === opt} onChange={handleChange} className="w-4 h-4 text-primary" />
-                        <span className="text-xs font-bold text-text-body/70">{opt}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <label className={labelClasses}>Role Preference</label>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {rolePreferences.map(opt => (
-                      <label key={opt} className="flex items-center gap-2 p-3 rounded-xl border border-border hover:bg-bg cursor-pointer transition-all">
-                        <input type="radio" name="rolePreference" value={opt} checked={formData.rolePreference === opt} onChange={handleChange} className="w-4 h-4 text-primary" />
-                        <span className="text-xs font-bold text-text-body/70">{opt}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <label className={labelClasses}>Optional Donation Support</label>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {["T-Shirts", "Gadgets", "Laptops", "Phones"].map(opt => (
-                      <label key={opt} className="flex items-center gap-2 p-3 rounded-xl border border-border hover:bg-bg cursor-pointer transition-all">
-                        <input type="checkbox" name="deviceDonationChoices" value={opt} checked={formData.deviceDonationChoices?.includes(opt)} onChange={handleChange} className="w-4 h-4 text-primary" />
-                        <span className="text-xs font-bold text-text-body/70">{opt}</span>
-                      </label>
-                    ))}
+                <div className="space-y-4">
+                  <label className={labelClasses}>Government ID Photo</label>
+                  <div className="flex items-center gap-6">
+                    <div className="w-24 h-24 rounded-3xl overflow-hidden border-2 border-primary/10 shadow-inner">
+                      {formData.govIdImage ? (
+                        <img src={formData.govIdImage} alt="ID" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-white"><FaIdCard className="text-primary/10" size={32} /></div>
+                      )}
+                    </div>
+                    <label className="px-6 py-3 bg-white border border-primary/10 text-primary text-xs font-black rounded-xl hover:bg-primary hover:text-white transition-all cursor-pointer shadow-sm">
+                      Replace ID
+                      <input type="file" className="hidden" onChange={(e) => handleFileChange(e, 'govId')} accept="image/*" />
+                    </label>
                   </div>
                 </div>
               </div>
-            </form>
-          </div>
-
-          {/* Footer Actions */}
-          <div className="p-8 border-t border-border bg-gray-50/50 shrink-0 flex gap-4">
-            <button 
-              type="button" 
-              onClick={onClose} 
-              className="flex-1 py-4 border border-border rounded-2xl font-bold bg-white hover:bg-bg transition-all text-sm"
-            >
-              Cancel Changes
-            </button>
-            <button 
-              type="submit" 
-              form="edit-volunteer-form"
-              disabled={isUpdating || isUploading} 
-              className="flex-[2] py-4 bg-primary text-white rounded-2xl font-black shadow-xl shadow-primary/20 hover:bg-primary/90 transition-all text-sm flex items-center justify-center gap-2"
-            >
-              {isUpdating ? <><FaSync className="animate-spin" /> Updating...</> : "Save Profile Details"}
-            </button>
+            </div>
           </div>
         </div>
-      </div>,
-        document.body
-      )}
 
-      {cropImage && (
-        <UniversalImageCropper
-          imageSrc={cropImage}
-          onCropDone={handleCropDone}
-          onCancel={() => { setCropImage(null); setCropType(null); }}
-          aspect={cropType === 'profile' ? 1 : undefined}
-          cropShape={cropType === 'profile' ? 'round' : 'rect'}
-          title={`Crop ${cropType === 'profile' ? 'Profile' : 'Gov ID'} Photo`}
-        />
-      )}
-    </>
+        <div className="p-8 bg-primary/5 border-t border-primary/5 flex items-center justify-end gap-4 shrink-0">
+          <button onClick={onClose} className="px-8 py-4 text-primary/40 hover:text-primary font-black text-xs uppercase tracking-widest transition-all">
+            Cancel
+          </button>
+          <button onClick={handleUpdate} disabled={isUpdating} className="px-10 py-4 bg-primary text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50">
+            {isUpdating ? "Saving Changes..." : "Save All Changes"}
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body
   );
 };
-

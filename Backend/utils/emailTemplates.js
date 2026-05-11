@@ -107,7 +107,7 @@ export const volunteerApplicationReceivedTemplate = (vol) => {
     <tr>
       <td style="padding:12px 16px;border-bottom:1px solid #EEF0F6;font-weight:600;color:#555;font-size:13px;width:42%;vertical-align:top;">${label}</td>
       <td style="padding:12px 16px;border-bottom:1px solid #EEF0F6;color:#1A1A2E;font-size:13px;word-break:break-word;vertical-align:top;">${value}</td>
-    </tr>`
+    </tr>`,
     )
     .join("");
 
@@ -196,20 +196,15 @@ export const volunteerApprovalTemplate = (vol, frontendUrl, password) => {
     <!-- Basic Details -->
     <tr>
       <td style="padding:0 32px 24px;">
-        <p style="margin:0 0 14px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#C62828;">Your Login Credentials</p>
+        <p style="margin:0 0 14px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#C62828;">Volunteer Details</p>
         <table width="100%" border="0" cellspacing="0" cellpadding="0" style="border:1px solid #EEF0F6;border-radius:12px;overflow:hidden;">
           <tr>
             <td style="padding:12px 16px;border-bottom:1px solid #EEF0F6;font-weight:600;color:#555;font-size:13px;width:40%;">Email</td>
             <td style="padding:12px 16px;border-bottom:1px solid #EEF0F6;color:#1A1A2E;font-size:13px;font-weight:700;">${vol.email}</td>
           </tr>
-          ${password ? `
-          <tr>
-            <td style="padding:12px 16px;border-bottom:1px solid #EEF0F6;font-weight:600;color:#555;font-size:13px;">Password</td>
-            <td style="padding:12px 16px;border-bottom:1px solid #EEF0F6;color:#C62828;font-size:13px;font-weight:700;">${password}</td>
-          </tr>` : ""}
           <tr>
             <td style="padding:12px 16px;font-weight:600;color:#555;font-size:13px;">Volunteer ID</td>
-            <td style="padding:12px 16px;color:#1A1A2E;font-size:13px;">${vol.volunteerId}</td>
+            <td style="padding:12px 16px;color:#1A1A2E;font-size:13px;font-weight:700;">${vol.volunteerId}</td>
           </tr>
         </table>
       </td>
@@ -243,7 +238,7 @@ export const volunteerApprovalTemplate = (vol, frontendUrl, password) => {
 
   return wrap(
     inner,
-    `Congratulations! You are approved as a Humanity Calls Volunteer`
+    `Congratulations! You are approved as a Humanity Calls Volunteer`,
   );
 };
 
@@ -290,14 +285,18 @@ export const birthdayWishTemplate = (volunteerName) => {
  */
 export const genericMassEmailTemplate = (name, heading, body, bannerImage) => {
   const inner = `
-    ${bannerImage ? `
+    ${
+      bannerImage
+        ? `
     <!-- Banner Image -->
     <tr>
       <td style="padding:0;">
         <img src="${bannerImage}" alt="Banner" style="width:100%;max-width:620px;display:block;height:auto;" />
       </td>
     </tr>
-    ` : ""}
+    `
+        : ""
+    }
     
     <!-- Content Section -->
     <tr>
@@ -325,7 +324,10 @@ export const genericMassEmailTemplate = (name, heading, body, bannerImage) => {
 
 const statusUpdateInner = ({ subject, lines }) => {
   const body = (lines || [])
-    .map((l) => `<p style="margin:0 0 14px;color:#333;font-size:16px;line-height:1.7;">${l}</p>`)
+    .map(
+      (l) =>
+        `<p style="margin:0 0 14px;color:#333;font-size:16px;line-height:1.7;">${l}</p>`,
+    )
     .join("");
 
   const inner = `

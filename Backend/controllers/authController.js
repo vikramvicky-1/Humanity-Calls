@@ -160,17 +160,7 @@ export const login = async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    // Restrict login to approved volunteers or admins
-    if (user.role !== "admin") {
-      const Volunteer = await import("../models/Volunteer.js").then(m => m.default);
-      const volunteer = await Volunteer.findOne({ user: user._id });
-      
-      if (!volunteer || !["active", "temporary", "inactive"].includes(volunteer.status)) {
-        return res.status(403).json({ 
-          message: "Invalid credentials" 
-        });
-      }
-    }
+    // Password check already done above (bcrypt.compare)
 
     const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET || "fallback_secret", {
       expiresIn: "30d",

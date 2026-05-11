@@ -1,4 +1,5 @@
 import Volunteer from "../models/Volunteer.js";
+import User from "../models/User.js";
 import { triggerEmail } from "../controllers/emailController.js";
 import {
   volunteerApplicationReceivedTemplate,
@@ -39,19 +40,19 @@ export const applyVolunteer = async (req, res) => {
       profilePicture,
       hasDrivingLicense,
       drivingLicenseImageUrl,
+      referredBy,
     } = req.body;
 
-    // Public submission: No user check required here anymore.
-    // If a user is logged in, we link it, otherwise it stays null until approval.
     const userId = req.user ? req.user.id : null;
-
     const normalizedEmail = email.toLowerCase().trim();
     const existingVolunteer = await Volunteer.findOne({ email: normalizedEmail });
+
     if (phone === emergencyContact) {
       return res.status(400).json({
         message: "Phone number and emergency contact cannot be the same.",
       });
     }
+
     if (existingVolunteer) {
       if (existingVolunteer.status === "rejected") {
         await Volunteer.deleteOne({ _id: existingVolunteer._id });
@@ -62,10 +63,7 @@ export const applyVolunteer = async (req, res) => {
       }
     }
 
-    const hasDl =
-      hasDrivingLicense === true ||
-      hasDrivingLicense === "true" ||
-      hasDrivingLicense === "yes";
+    const hasDl = hasDrivingLicense === true || hasDrivingLicense === "true" || hasDrivingLicense === "yes";
     if (hasDl && !drivingLicenseImageUrl) {
       return res.status(400).json({
         message: "Please upload a valid driving license image when you select Yes.",
@@ -97,11 +95,30 @@ export const applyVolunteer = async (req, res) => {
       dob,
       joiningDate,
       termsAccepted,
+      referredBy,
     });
+
+    // Handle Referral logic
+    if (referredBy) {
+      // Case-insensitive lookup for volunteerId
+      const referrerVol = await Volunteer.findOne({ 
+        volunteerId: { $regex: new RegExp(`^${referredBy.trim()}$`, "i") } 
+      });
+      if (referrerVol) {
+        newVolunteer.referrer = referrerVol._id;
+        if (userId) {
+          const referrerWithUser = await Volunteer.findById(referrerVol._id).populate("user");
+          if (referrerWithUser && referrerWithUser.user) {
+            await User.findByIdAndUpdate(userId, { referredBy: referrerWithUser.user._id });
+            await User.findByIdAndUpdate(referrerWithUser.user._id, { $addToSet: { referrals: userId } });
+          }
+        }
+      }
+    }
 
     await newVolunteer.save();
 
-    // Fire-and-forget: notify admin about new application
+    // Notify admin
     const adminEmail = process.env.EMAIL_TO;
     const senderEmail = process.env.BREVO_SENDER_EMAIL;
     const senderName = process.env.BREVO_SENDER_NAME || "Humanity Calls";
@@ -112,40 +129,28 @@ export const applyVolunteer = async (req, res) => {
         to: [{ email: adminEmail, name: "Humanity Calls Admin" }],
         subject: `📋 New Volunteer Application — ${fullName}`,
         htmlContent: volunteerApplicationReceivedTemplate(newVolunteer),
-      }).catch((err) =>
-        console.error("Admin notification email failed:", err.message)
-      );
+      }).catch((err) => console.error("Admin notification email failed:", err.message));
     }
 
-    res.status(201).json({
-      message: "Application submitted successfully",
-      volunteer: newVolunteer,
-    });
+    res.status(201).json({ message: "Application submitted successfully", volunteer: newVolunteer });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error submitting application", error: error.message });
+    res.status(500).json({ message: "Error submitting application", error: error.message });
   }
 };
 
 export const getMyVolunteerStatus = async (req, res) => {
   try {
-    const volunteer = await Volunteer.findOne({ user: req.user.id });
-    if (!volunteer) {
-      return res.status(200).json({ status: "none" });
-    }
+    const volunteer = await Volunteer.findOne({ user: req.user.id }).populate("referrer", "fullName");
+    if (!volunteer) return res.status(200).json({ status: "none" });
     res.status(200).json({ status: volunteer.status, volunteer });
   } catch (error) {
-    res.status(500).json({
-      message: "Error fetching volunteer status",
-      error: error.message,
-    });
+    res.status(500).json({ message: "Error fetching volunteer status", error: error.message });
   }
 };
 
 export const getActiveVolunteerCount = async (req, res) => {
   try {
-    const count = await Volunteer.countDocuments({ status: { $in: ["active", "temporary"] } });
+    const count = await Volunteer.countDocuments({ status: { $in: ["active", "temporary", "inactive"] } });
     res.status(200).json({ count });
   } catch (error) {
     res.status(500).json({ message: "Error fetching volunteer count", error: error.message });
@@ -158,12 +163,11 @@ export const getVolunteers = async (req, res) => {
     const filter = status ? { status } : {};
     const volunteers = await Volunteer.find(filter)
       .populate("user", "name email")
+      .populate("referrer", "fullName volunteerId")
       .sort({ joiningDate: 1, createdAt: 1 });
     res.status(200).json(volunteers);
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error fetching volunteers", error: error.message });
+    res.status(500).json({ message: "Error fetching volunteers", error: error.message });
   }
 };
 
@@ -177,19 +181,15 @@ export const updateVolunteerStatus = async (req, res) => {
     }
 
     const previous = await Volunteer.findById(id);
-    if (!previous) {
-      return res.status(404).json({ message: "Volunteer not found" });
-    }
+    if (!previous) return res.status(404).json({ message: "Volunteer not found" });
 
     const updateData = { status };
     if (status === "rejected") updateData.rejectionReason = reason;
     if (status === "banned") updateData.banReason = reason;
 
-    // Generate volunteerId when moving to active or temporary
     if (status === "active" || status === "temporary") {
       const existing = await Volunteer.findById(id);
       if (existing && !existing.volunteerId) {
-        // Generate Unique ID: HC + DDMMYY + 4 Random Numbers
         const date = new Date(existing.joiningDate);
         const day = String(date.getDate()).padStart(2, "0");
         const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -199,7 +199,7 @@ export const updateVolunteerStatus = async (req, res) => {
         let isUnique = false;
         let finalId = "";
         while (!isUnique) {
-          const random = Math.floor(1000 + Math.random() * 9000); // 4 digits
+          const random = Math.floor(1000 + Math.random() * 9000);
           finalId = `HCT${dateStr}${random}`;
           const check = await Volunteer.findOne({ volunteerId: finalId });
           if (!check) isUnique = true;
@@ -208,225 +208,149 @@ export const updateVolunteerStatus = async (req, res) => {
       }
     }
 
-    const volunteer = await Volunteer.findByIdAndUpdate(id, updateData, { new: true });
+    const volunteer = await Volunteer.findByIdAndUpdate(id, updateData, { new: true })
+      .populate("user", "name email")
+      .populate("referrer", "fullName volunteerId");
 
-    // Fire-and-forget: notify volunteer on first-time approval (pending -> active/temporary)
-    if (
-      (previous.status === "pending" || previous.status === "banned") &&
-      ["active", "temporary", "inactive"].includes(status) &&
-      volunteer.email
-    ) {
-      // ── Create or Update User Account on Approval ──
-      const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
-      let generatedPassword = "";
-      for (let i = 0; i < 16; i++) {
-        generatedPassword += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
-
-      const User = await import("../models/User.js").then((m) => m.default);
-      const bcrypt = await import("bcryptjs").then((m) => m.default);
-      const hashedPassword = await bcrypt.hash(generatedPassword, 12);
-
-      let user = await User.findOne({ email: volunteer.email });
-
-      if (!user) {
-        user = new User({
-          name: volunteer.fullName,
-          email: volunteer.email,
-          password: hashedPassword,
-          role: "user",
-          isVerified: true,
-        });
-      } else {
-        // If user already exists, update their password so they can login with the new one sent in the mail
-        user.password = hashedPassword;
-        user.isVerified = true; // Ensure they are verified
-      }
-      await user.save();
-
-      // Link the user to the volunteer record
-      volunteer.user = user._id;
-      await volunteer.save();
-
-      const senderEmail = process.env.BREVO_SENDER_EMAIL;
-      const senderName = process.env.BREVO_SENDER_NAME || "Humanity Calls";
-      const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
-
-      if (senderEmail && process.env.BREVO_API_KEY) {
-        triggerEmail({
-          sender: { name: senderName, email: senderEmail },
-          to: [{ email: volunteer.email, name: volunteer.fullName }],
-          subject: `🎉 Congratulations! You're Approved as a Humanity Calls Volunteer`,
-          htmlContent: volunteerApprovalTemplate(volunteer, frontendUrl, generatedPassword),
-        }).catch((err) =>
-          console.error("Volunteer approval email failed:", err.message)
-        );
-      }
-    }
-
-    // Handle Rejection Email
-    if (previous.status === "pending" && status === "rejected" && volunteer.email) {
-      const senderEmail = process.env.BREVO_SENDER_EMAIL;
-      const senderName = process.env.BREVO_SENDER_NAME || "Humanity Calls";
-
-      if (senderEmail && process.env.BREVO_API_KEY) {
-        triggerEmail({
-          sender: { name: senderName, email: senderEmail },
-          to: [{ email: volunteer.email, name: volunteer.fullName }],
-          subject: `Volunteer Application Update — Humanity Calls`,
-          htmlContent: volunteerRejectionTemplate(volunteer.fullName, reason),
-        }).catch((err) =>
-          console.error("Volunteer rejection email failed:", err.message)
-        );
-      }
-    }
-
-    // Handle Ban/Inactive Emails (when moving from Active/Temp)
-    if (
-      (previous.status === "active" || previous.status === "temporary") &&
-      (status === "banned" || status === "inactive") &&
-      volunteer.email
-    ) {
-      const senderEmail = process.env.BREVO_SENDER_EMAIL;
-      const senderName = process.env.BREVO_SENDER_NAME || "Humanity Calls";
-
-      if (senderEmail && process.env.BREVO_API_KEY) {
-        const emailSubject = status === "banned" ? "Account Restricted — Humanity Calls" : "Profile Inactive — Humanity Calls";
-        const emailHtml = status === "banned" 
-          ? volunteerBannedTemplate(volunteer.fullName, reason) 
-          : volunteerInactiveTemplate(volunteer.fullName);
-
-        triggerEmail({
-          sender: { name: senderName, email: senderEmail },
-          to: [{ email: volunteer.email, name: volunteer.fullName }],
-          subject: emailSubject,
-          htmlContent: emailHtml,
-        }).catch((err) =>
-          console.error(`${status} notification email failed:`, err.message)
-        );
-      }
-    }
-
-    // Status transition mails (as requested)
+    // Handle Comprehensive Status Transition Emails
     if (volunteer.email && process.env.BREVO_API_KEY) {
       const senderEmail = process.env.BREVO_SENDER_EMAIL;
       const senderName = process.env.BREVO_SENDER_NAME || "Humanity Calls";
+      const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
       const supportEmail = process.env.EMAIL_TO || senderEmail || "support@humanitycalls.org";
 
-      const from = previous.status;
-      const to = status;
-      let subject = null;
-      let htmlContent = null;
+      if (senderEmail) {
+        const from = previous.status;
+        const to = status;
+        let subject = null;
+        let htmlContent = null;
 
-      if (from === "active" && to === "temporary") {
-        subject = "Profile Status Update – Moved to Temporary";
-        htmlContent = activeToTemporaryTemplate(supportEmail);
-      } else if (from === "temporary" && to === "inactive") {
-        subject = "Profile Status Update – Moved to Inactive";
-        htmlContent = temporaryToInactiveTemplate(supportEmail);
-      } else if (from === "temporary" && to === "active") {
-        subject = "Congratulations! You’re Now an Active Member";
-        htmlContent = temporaryToActiveTemplate();
-      }
+        // 1. APPROVAL / REINSTATEMENT (From Pending, Rejected, or Banned TO Active or Temporary)
+        if ((from === "pending" || from === "rejected" || from === "banned") && (to === "active" || to === "temporary")) {
+          subject = `🎉 Congratulations! You're Approved as a Humanity Calls Volunteer`;
+          htmlContent = volunteerApprovalTemplate(volunteer, frontendUrl);
+        }
+        
+        // 2. REJECTION (From Pending TO Rejected)
+        else if (from === "pending" && to === "rejected") {
+          subject = `Volunteer Application Update — Humanity Calls`;
+          htmlContent = volunteerRejectionTemplate(volunteer.fullName, reason);
+        }
 
-      if (subject && htmlContent && senderEmail) {
-        triggerEmail({
-          sender: { name: senderName, email: senderEmail },
-          to: [{ email: volunteer.email, name: volunteer.fullName }],
-          subject,
-          htmlContent,
-        }).catch((err) => console.error("Status transition email failed:", err.message));
+        // 3. MOVING TO ACTIVE (From Inactive or Temporary TO Active)
+        else if ((from === "inactive" || from === "temporary") && to === "active") {
+          subject = "Congratulations! You’re Now an Active Member";
+          htmlContent = temporaryToActiveTemplate();
+        }
+
+        // 4. MOVING TO TEMPORARY (From Active or Inactive TO Temporary)
+        else if ((from === "active" || from === "inactive") && to === "temporary") {
+          subject = "Profile Status Update – Moved to Temporary";
+          htmlContent = activeToTemporaryTemplate(supportEmail);
+        }
+
+        // 5. MOVING TO INACTIVE (From Active or Temporary TO Inactive)
+        else if ((from === "active" || from === "temporary") && to === "inactive") {
+          subject = "Profile Status Update – Moved to Inactive";
+          htmlContent = temporaryToInactiveTemplate(supportEmail);
+        }
+
+        // 6. MOVING TO BANNED (From Any TO Banned)
+        else if (to === "banned") {
+          subject = "Account Restricted — Humanity Calls";
+          htmlContent = volunteerBannedTemplate(volunteer.fullName, reason);
+        }
+        
+        // 7. MOVING TO INACTIVE (General fallback for other states to Inactive)
+        else if (to === "inactive" && from !== "inactive") {
+          subject = "Profile Inactive — Humanity Calls";
+          htmlContent = volunteerInactiveTemplate(volunteer.fullName);
+        }
+
+        if (subject && htmlContent) {
+          triggerEmail({
+            sender: { name: senderName, email: senderEmail },
+            to: [{ email: volunteer.email, name: volunteer.fullName }],
+            subject,
+            htmlContent,
+          }).catch((err) => console.error(`Email notification failed for ${from}->${to}:`, err.message));
+        }
       }
     }
 
-    res
-      .status(200)
-      .json({ message: `Volunteer marked as ${status}`, volunteer });
+    res.status(200).json({ message: `Volunteer marked as ${status}`, volunteer });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error updating status", error: error.message });
+    res.status(500).json({ message: "Error updating status", error: error.message });
   }
 };
 
 export const updateMyProfilePicture = async (req, res) => {
   try {
     const { profilePicture } = req.body;
-    if (!profilePicture) {
-      return res
-        .status(400)
-        .json({ message: "Profile picture URL is required" });
-    }
-
-    const volunteer = await Volunteer.findOneAndUpdate(
-      { user: req.user.id },
-      { profilePicture },
-      { new: true }
-    );
-
-    if (!volunteer) {
-      return res.status(404).json({ message: "Volunteer record not found" });
-    }
-
+    if (!profilePicture) return res.status(400).json({ message: "Profile picture URL is required" });
+    const volunteer = await Volunteer.findOneAndUpdate({ user: req.user.id }, { profilePicture }, { new: true });
+    if (!volunteer) return res.status(404).json({ message: "Volunteer record not found" });
     res.status(200).json({ message: "Profile picture updated", volunteer });
   } catch (error) {
-    res.status(500).json({
-      message: "Error updating profile picture",
-      error: error.message,
-    });
+    res.status(500).json({ message: "Error updating profile picture", error: error.message });
   }
 };
 
 export const updateVolunteer = async (req, res) => {
   try {
     const { id } = req.params;
-    const updateData = req.body;
-
-    const volunteer = await Volunteer.findByIdAndUpdate(id, updateData, {
-      new: true,
-    });
-
-    if (!volunteer) {
-      return res.status(404).json({ message: "Volunteer not found" });
-    }
-
-    res
-      .status(200)
-      .json({ message: "Volunteer updated successfully", volunteer });
+    const volunteer = await Volunteer.findByIdAndUpdate(id, req.body, { new: true })
+      .populate("user", "name email")
+      .populate("referrer", "fullName volunteerId");
+    if (!volunteer) return res.status(404).json({ message: "Volunteer not found" });
+    res.status(200).json({ message: "Volunteer updated successfully", volunteer });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error updating volunteer", error: error.message });
+    res.status(500).json({ message: "Error updating volunteer", error: error.message });
   }
 };
 
 export const deleteVolunteer = async (req, res) => {
   try {
     const { id } = req.params;
-    const volunteer = await Volunteer.findByIdAndDelete(id);
+    const volunteer = await Volunteer.findById(id);
+    if (!volunteer) return res.status(404).json({ message: "Volunteer not found" });
 
-    if (!volunteer) {
-      return res.status(404).json({ message: "Volunteer not found" });
+    const userId = volunteer.user;
+
+    // 1. If this person was a referrer for others, clear their links
+    await Volunteer.updateMany(
+      { referrer: id },
+      { $set: { referrer: null, referredBy: "" } }
+    );
+    
+    if (userId) {
+      await User.updateMany(
+        { referredBy: userId },
+        { $set: { referredBy: null } }
+      );
     }
 
-    res.status(200).json({ message: "Volunteer deleted completely" });
+    // 2. If this person was referred by someone else, remove them from that person's referral list
+    if (userId) {
+      await User.updateMany(
+        { referrals: userId },
+        { $pull: { referrals: userId } }
+      );
+    }
+
+    await Volunteer.findByIdAndDelete(id);
+    res.status(200).json({ message: "Volunteer and associated referral links deleted completely" });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error deleting volunteer", error: error.message });
+    res.status(500).json({ message: "Error deleting volunteer", error: error.message });
   }
 };
 
 export const adminRemoveVolunteerProfilePicture = async (req, res) => {
   try {
     const volunteer = await Volunteer.findById(req.params.id);
-    if (!volunteer) {
-      return res.status(404).json({ message: "Volunteer not found" });
-    }
-
+    if (!volunteer) return res.status(404).json({ message: "Volunteer not found" });
     volunteer.profilePicture = "";
     await volunteer.save();
-
     const senderEmail = process.env.BREVO_SENDER_EMAIL;
     const senderName = process.env.BREVO_SENDER_NAME || "Humanity Calls";
     if (volunteer.email && senderEmail && process.env.BREVO_API_KEY) {
@@ -437,7 +361,6 @@ export const adminRemoveVolunteerProfilePicture = async (req, res) => {
         htmlContent: profilePictureRemovedByAdminTemplate(volunteer.fullName),
       }).catch((err) => console.error("Profile removal email failed:", err.message));
     }
-
     res.status(200).json({ message: "Profile picture removed", volunteer });
   } catch (error) {
     res.status(500).json({ message: "Error updating volunteer", error: error.message });
@@ -446,18 +369,11 @@ export const adminRemoveVolunteerProfilePicture = async (req, res) => {
 
 export const adminReplaceVolunteerProfilePicture = async (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ message: "No image uploaded" });
-    }
-
+    if (!req.file) return res.status(400).json({ message: "No image uploaded" });
     const volunteer = await Volunteer.findById(req.params.id);
-    if (!volunteer) {
-      return res.status(404).json({ message: "Volunteer not found" });
-    }
-
+    if (!volunteer) return res.status(404).json({ message: "Volunteer not found" });
     volunteer.profilePicture = req.file.path;
     await volunteer.save();
-
     const senderEmail = process.env.BREVO_SENDER_EMAIL;
     const senderName = process.env.BREVO_SENDER_NAME || "Humanity Calls";
     if (volunteer.email && senderEmail && process.env.BREVO_API_KEY) {
@@ -468,9 +384,83 @@ export const adminReplaceVolunteerProfilePicture = async (req, res) => {
         htmlContent: profilePictureReplacedByAdminTemplate(volunteer.fullName),
       }).catch((err) => console.error("Profile replace email failed:", err.message));
     }
-
     res.status(200).json({ message: "Profile picture updated", volunteer });
   } catch (error) {
     res.status(500).json({ message: "Error updating profile picture", error: error.message });
+  }
+};
+
+export const verifyVolunteerId = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const volunteer = await Volunteer.findOne({ 
+      volunteerId: { $regex: new RegExp(`^${id.trim()}$`, "i") }, 
+      status: { $in: ["active", "temporary"] } 
+    });
+    if (!volunteer) return res.status(404).json({ message: "Invalid or inactive Volunteer ID" });
+    res.status(200).json({ name: volunteer.fullName });
+  } catch (error) {
+    res.status(500).json({ message: "Error verifying Volunteer ID", error: error.message });
+  }
+};
+
+export const getReferralStats = async (req, res) => {
+  try {
+    const referrers = await User.find({ "referrals.0": { $exists: true } })
+      .select("name email referrals")
+      .populate("referrals", "name email createdAt")
+      .lean();
+    res.status(200).json(referrers);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch referral stats", error: error.message });
+  }
+};
+
+export const setManualReferral = async (req, res) => {
+  try {
+    const { referralId } = req.body;
+    const userId = req.user.id;
+
+    if (!referralId) return res.status(400).json({ message: "Referral ID is required" });
+
+    const volunteer = await Volunteer.findOne({ user: userId });
+    if (!volunteer) return res.status(404).json({ message: "Volunteer profile not found" });
+
+    if (volunteer.referrer) {
+      return res.status(400).json({ message: "Referral already assigned" });
+    }
+
+    // Lookup referrer
+    const referrerVol = await Volunteer.findOne({
+      volunteerId: { $regex: new RegExp(`^${referralId.trim()}$`, "i") },
+      status: { $in: ["active", "temporary"] }
+    }).populate("user");
+
+    if (!referrerVol) {
+      return res.status(404).json({ message: "Invalid or inactive Referral ID" });
+    }
+
+    if (referrerVol.user && referrerVol.user._id.toString() === userId.toString()) {
+      return res.status(400).json({ message: "You cannot refer yourself" });
+    }
+
+    // Update volunteer record
+    volunteer.referrer = referrerVol._id;
+    volunteer.referredBy = referralId.toUpperCase().trim();
+    await volunteer.save();
+
+    // Update User records for relationship tracking
+    if (referrerVol.user) {
+      await User.findByIdAndUpdate(userId, { referredBy: referrerVol.user._id });
+      await User.findByIdAndUpdate(referrerVol.user._id, { $addToSet: { referrals: userId } });
+    }
+
+    res.status(200).json({ 
+      message: "Referral assigned successfully", 
+      referrerName: referrerVol.fullName,
+      volunteer 
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error setting referral", error: error.message });
   }
 };

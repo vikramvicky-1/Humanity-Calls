@@ -49,6 +49,7 @@ const BloodRequestsManager = lazy(() => import("./pages/admin/BloodRequestsManag
 const ReimbursementsManager = lazy(() => import("./pages/admin/ReimbursementsManager"));
 const DonationsManager = lazy(() => import("./pages/admin/DonationsManager"));
 const FeedbackManager = lazy(() => import("./pages/admin/FeedbackManager"));
+const AnalyticsDashboard = lazy(() => import("./pages/admin/AnalyticsDashboard"));
 const Verify = lazy(() => import("./pages/Verify"));
 const MemberPublicCard = lazy(() => import("./pages/MemberPublicCard"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
@@ -133,7 +134,8 @@ const AppContent = () => {
             <Route path="/profile" element={<Profile />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin" element={<AdminDashboard />}>
-              <Route index element={<Navigate to="volunteers" replace />} />
+              <Route index element={<Navigate to="dashboard" replace />} />
+              <Route path="dashboard" element={<AnalyticsDashboard />} />
               <Route path="volunteers" element={<VolunteersManager />} />
               <Route path="gallery" element={<GalleryManager />} />
               <Route path="requests" element={<RequestsManager />} />

@@ -62,6 +62,7 @@ const MenuButton = ({ isOpen, toggle }) => {
 const Navbar = () => {
   const { t, i18n } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
+  const [openMobileGroup, setOpenMobileGroup] = useState(null);
   const { pathname } = useLocation();
   const { user, logout } = useUser();
   const navigate = useNavigate();
@@ -104,6 +105,7 @@ const Navbar = () => {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "";
+      setOpenMobileGroup(null);
     }
   }, [isOpen]);
 
@@ -114,6 +116,7 @@ const Navbar = () => {
       links: [
         { label: "About Us", href: "/about" },
         { label: "Our Team", href: "/our-team" },
+        { label: "Donations", href: "/donations-made" },
         { label: "Gallery", href: "/gallery" },
         { label: "Wall of Fame", href: "/wall-of-fame" },
         { label: "Support FAQ", href: "/faq" },
@@ -169,10 +172,11 @@ const Navbar = () => {
   const isActive = (path) => pathname === path;
 
   return (
-    <nav
-      className="relative z-50 bg-white/90 backdrop-blur-md border-b border-black/5 shadow-[0_8px_30px_rgb(0,0,0,0.08)]"
-      ref={navRef}
-    >
+    <>
+      <nav
+        className="relative z-50 bg-white/90 backdrop-blur-md border-b border-black/5 shadow-[0_8px_30px_rgb(0,0,0,0.08)]"
+        ref={navRef}
+      >
       <div className="max-w-none mx-auto px-[5%]">
         <div className="flex justify-between items-center h-20">
           {/* Logo */}
@@ -228,40 +232,49 @@ const Navbar = () => {
               ))}
             </div>
 
-            <div className="flex items-center space-x-4 ml-6 pl-6 border-l border-black/5">
+            <div className="flex items-center space-x-3 ml-6 pl-6 border-l border-black/5">
               {!user ? (
-                <Link to="/become-a-member">
-                  <motion.button
-                    initial="initial"
-                    whileHover="hover"
-                    whileTap={{ scale: 0.98 }}
-                    className="relative bg-[#1a1a1a] text-white text-[11px] font-black uppercase tracking-[0.1em] px-7 py-3 rounded-full shadow-lg border border-white/10 flex items-center gap-3 overflow-hidden transition-all group/login"
-                    style={{ fontFamily: '"Syne", sans-serif' }}
-                  >
-                    {/* Center-to-Edge Fill Layer */}
-                    <motion.div
-                      variants={{
-                        initial: { scaleX: 0, opacity: 0 },
-                        hover: { scaleX: 1, opacity: 1 },
-                      }}
-                      transition={{ duration: 0.5, ease: [0.76, 0, 0.24, 1] }}
-                      className="absolute inset-0 bg-purple-600 z-0 origin-center"
-                    />
-
-                    <span className="relative z-10">Volunteer Login</span>
-
-                    <motion.div
-                      variants={{
-                        initial: { x: 0 },
-                        hover: { x: -8 },
-                      }}
-                      transition={{ duration: 0.4, ease: [0.76, 0, 0.24, 1] }}
-                      className="relative z-10 text-[10px]"
+                <>
+                  <Link to="/become-a-member?mode=login">
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="px-5 py-2.5 rounded-full text-[11px] font-black uppercase tracking-widest text-black/60 border border-black/10 hover:bg-black/[0.02] transition-all"
+                      style={{ fontFamily: '"Syne", sans-serif' }}
                     >
-                      <FaUserAlt />
-                    </motion.div>
-                  </motion.button>
-                </Link>
+                      Login
+                    </motion.button>
+                  </Link>
+                  <Link to="/become-a-member?mode=signup">
+                    <motion.button
+                      initial="initial"
+                      whileHover="hover"
+                      whileTap={{ scale: 0.98 }}
+                      className="relative bg-[#1a1a1a] text-white text-[11px] font-black uppercase tracking-[0.1em] px-6 py-2.5 rounded-full shadow-lg border border-white/10 flex items-center gap-2 overflow-hidden transition-all group/signup"
+                      style={{ fontFamily: '"Syne", sans-serif' }}
+                    >
+                      <motion.div
+                        variants={{
+                          initial: { scaleX: 0, opacity: 0 },
+                          hover: { scaleX: 1, opacity: 1 },
+                        }}
+                        transition={{ duration: 0.5, ease: [0.76, 0, 0.24, 1] }}
+                        className="absolute inset-0 bg-purple-600 z-0 origin-center"
+                      />
+                      <span className="relative z-10">Sign Up</span>
+                      <motion.div
+                        variants={{
+                          initial: { x: 0 },
+                          hover: { x: 3 },
+                        }}
+                        transition={{ duration: 0.4, ease: [0.76, 0, 0.24, 1] }}
+                        className="relative z-10 text-[10px]"
+                      >
+                        <FaArrowRight />
+                      </motion.div>
+                    </motion.button>
+                  </Link>
+                </>
               ) : (
                 <Link to="/profile" className="group/profile relative">
                   <div
@@ -293,18 +306,23 @@ const Navbar = () => {
           </div>
         </div>
       </div>
-
+      </nav>
       {/* Mobile Menu */}
       <AnimatePresence>
         {isOpen && (
-          <div className="fixed inset-0 z-[90] bg-white overflow-hidden lg:hidden">
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="h-dvh w-full flex flex-col overflow-y-auto"
-            >
-              <div className="flex flex-col min-h-full p-8 pb-32">
+          <motion.div
+            key="mobile-menu"
+            initial={{ clipPath: "circle(0% at 92% 40px)", opacity: 0 }}
+            animate={{ clipPath: "circle(150% at 92% 40px)", opacity: 1 }}
+            exit={{ clipPath: "circle(0% at 92% 40px)", opacity: 0 }}
+            transition={{ duration: 0.6, ease: [0.76, 0, 0.24, 1] }}
+            className="fixed inset-0 z-[1001] bg-white lg:hidden overflow-hidden"
+            style={{ height: '100dvh' }}
+          >
+            {/* Scrollable Container */}
+            <div className="h-full w-full flex flex-col overflow-y-auto overscroll-contain touch-pan-y scroll-smooth">
+              <div className="flex flex-col min-h-full p-6 sm:p-10 pb-32">
+                {/* Header */}
                 <div className="flex justify-between items-center mb-10 shrink-0">
                   <Link
                     to="/"
@@ -323,12 +341,14 @@ const Navbar = () => {
                       Humanity Calls
                     </span>
                   </Link>
+                  <MenuButton isOpen={isOpen} toggle={() => setIsOpen(false)} />
                 </div>
 
-                <div className="flex flex-col">
+                {/* Navigation Links */}
+                <div className="flex flex-col mb-12">
                   <Link
                     to="/"
-                    className={`text-2xl font-black uppercase tracking-tighter py-4 border-b border-black/5 ${isActive("/") ? "text-blood" : "text-black/10"}`}
+                    className={`text-2xl font-black uppercase tracking-tighter py-5 border-b border-black/5 ${isActive("/") ? "text-blood" : "text-black/10"}`}
                     onClick={() => setIsOpen(false)}
                     style={{ fontFamily: '"Syne", sans-serif' }}
                   >
@@ -339,71 +359,76 @@ const Navbar = () => {
                     <MobileNavItem
                       key={group.title}
                       group={group}
+                      isOpen={openMobileGroup === group.title}
+                      toggle={() => setOpenMobileGroup(openMobileGroup === group.title ? null : group.title)}
                       closeMenu={() => setIsOpen(false)}
                       pathname={pathname}
                     />
                   ))}
                 </div>
 
-                <div className="mt-auto pt-10 grid grid-cols-2 gap-3 shrink-0">
+                {/* Footer Buttons - Login / Register */}
+                <div className="mt-auto pt-8 pb-10">
                   {!user ? (
-                    <>
+                    <div className="grid grid-cols-2 gap-4">
                       <Link
                         to="/become-a-member?mode=login"
                         onClick={() => setIsOpen(false)}
-                        className="block"
+                        className="block w-full"
                       >
                         <button 
-                          className="w-full py-4 text-[10px] font-black tracking-widest uppercase rounded-2xl border border-black/10 bg-white text-black hover:bg-black/5 transition-all"
+                          className="w-full py-4 text-[11px] font-black tracking-widest uppercase rounded-2xl border border-black/10 bg-white text-black active:bg-black/5 transition-all shadow-sm"
                           style={{ fontFamily: '"Syne", sans-serif' }}
                         >
-                          Volunteer Login
+                          Login
                         </button>
                       </Link>
                       <Link
-                        to="/volunteer"
+                        to="/become-a-member?mode=signup"
                         onClick={() => setIsOpen(false)}
-                        className="block"
+                        className="block w-full"
                       >
                         <button 
-                          className="w-full py-4 text-[10px] font-black tracking-widest uppercase rounded-2xl bg-black text-white shadow-lg shadow-black/10 hover:bg-black/90 transition-all"
+                          className="w-full py-4 text-[11px] font-black tracking-widest uppercase rounded-2xl bg-black text-white shadow-xl shadow-black/10 active:scale-95 transition-all"
                           style={{ fontFamily: '"Syne", sans-serif' }}
                         >
-                          Apply as Volunteer
+                          Sign Up
                         </button>
                       </Link>
-                    </>
+                    </div>
                   ) : (
                     <Link
                       to="/profile"
                       onClick={() => setIsOpen(false)}
-                      className="flex items-center gap-4 p-4 bg-black/[0.03] rounded-2xl"
+                      className="flex items-center gap-4 p-5 bg-black/[0.03] rounded-3xl border border-black/5"
                     >
-                      <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center font-bold text-white shadow-md overflow-hidden shrink-0">
+                      <div className="w-14 h-14 rounded-full bg-primary flex items-center justify-center font-bold text-white shadow-lg overflow-hidden shrink-0 border-2 border-white">
                         {volunteerData?.profilePicture ? (
                           <img
                             src={volunteerData.profilePicture}
                             className="w-full h-full object-cover"
+                            alt={user.name}
                           />
                         ) : (
                           user.name.charAt(0).toUpperCase()
                         )}
                       </div>
                       <div>
-                        <p className="font-black tracking-tight">{user.name}</p>
-                        <p className="text-[10px] font-bold text-black/30 uppercase">
+                        <p className="font-black text-lg tracking-tight leading-none mb-1">{user.name}</p>
+                        <p className="text-[10px] font-bold text-black/30 uppercase tracking-widest">
                           Verified Volunteer
                         </p>
                       </div>
+                      <FaArrowRight className="ml-auto text-black/20" />
                     </Link>
                   )}
                 </div>
               </div>
-            </motion.div>
-          </div>
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
-    </nav>
+    </>
   );
 };
 
@@ -504,14 +529,13 @@ const DropdownNavItem = ({ title, links, isActive, isMega, accent }) => {
   );
 };
 
-const MobileNavItem = ({ group, closeMenu, pathname }) => {
-  const [isOpen, setIsOpen] = useState(false);
+const MobileNavItem = ({ group, isOpen, toggle, closeMenu, pathname }) => {
   const isGroupActive = group.links.some((l) => l.href === pathname);
 
   return (
     <div className="flex flex-col">
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={toggle}
         className={`flex items-center justify-between py-4 text-2xl font-black uppercase tracking-tighter border-b border-black/5 text-left transition-colors ${
           isOpen || isGroupActive ? "" : "text-black/10"
         }`}

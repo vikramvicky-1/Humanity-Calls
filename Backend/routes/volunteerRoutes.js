@@ -11,8 +11,11 @@ import {
   updateMyProfilePicture,
   deleteVolunteer,
   getActiveVolunteerCount,
+  verifyVolunteerId,
+  getReferralStats,
   adminRemoveVolunteerProfilePicture,
   adminReplaceVolunteerProfilePicture,
+  setManualReferral,
 } from "../controllers/volunteerController.js";
 import { uploadFileOnly } from "../controllers/galleryController.js";
 import { protect, adminOnly, optionalProtect } from "../middleware/auth.js";
@@ -21,6 +24,9 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const router = express.Router();
+
+// Referral stats for admin
+router.get("/referrals", protect, adminOnly, getReferralStats);
 
 // Cloudinary configuration
 cloudinary.config({
@@ -59,7 +65,9 @@ const upload = multer({
 router.post("/apply", optionalProtect, applyVolunteer);
 router.get("/my-status", protect, getMyVolunteerStatus);
 router.patch("/my-profile-picture", protect, updateMyProfilePicture);
-router.get("/count", getActiveVolunteerCount);
+router.get("/count/active", getActiveVolunteerCount);
+router.get("/verify-id/:id", verifyVolunteerId);
+router.post("/set-manual-referral", protect, setManualReferral);
 router.post("/upload", optionalProtect, (req, res, next) => {
   upload.single("image")(req, res, (err) => {
     if (err) {

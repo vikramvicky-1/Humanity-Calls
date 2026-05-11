@@ -1,7 +1,7 @@
 import React, { useLayoutEffect, useRef, useState, useEffect } from "react";
 import { useParams, Navigate, Link } from "react-router-dom";
 import { useTranslation, Trans } from "react-i18next";
-import { FaChevronLeft, FaSortAmountDown } from "react-icons/fa";
+import { FaChevronLeft, FaChevronRight, FaSortAmountDown } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import gsap from "gsap";
 import SEO from "../components/SEO";
@@ -14,7 +14,7 @@ const ProgramDetail = () => {
   const containerRef = useRef(null);
   const [images, setImages] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedImage, setSelectedImage] = useState(null);
+  const [selectedIndex, setSelectedIndex] = useState(null);
   const [sortBy, setSortBy] = useState("newest");
 
   const program = PROGRAMS.find((p) => p.id === id);
@@ -67,6 +67,17 @@ const ProgramDetail = () => {
     const dateB = new Date(b.eventDate || b.createdAt);
     return sortBy === "newest" ? dateB - dateA : dateA - dateB;
   });
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (selectedIndex === null) return;
+      if (e.key === "ArrowLeft" && selectedIndex > 0) setSelectedIndex(selectedIndex - 1);
+      if (e.key === "ArrowRight" && selectedIndex < sortedImages.length - 1) setSelectedIndex(selectedIndex + 1);
+      if (e.key === "Escape") setSelectedIndex(null);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedIndex, sortedImages.length]);
 
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
@@ -180,7 +191,7 @@ const ProgramDetail = () => {
                   <div
                     key={img._id}
                     className="group relative aspect-video rounded-[2.5rem] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-700 cursor-zoom-in border border-black/5"
-                    onClick={() => setSelectedImage(img.imageUrl)}
+                    onClick={() => setSelectedIndex(sortedImages.findIndex(i => i._id === img._id))}
                   >
                     <img
                       src={img.imageUrl}
@@ -224,25 +235,112 @@ const ProgramDetail = () => {
 
       {/* Fullscreen Modal */}
       <AnimatePresence>
-        {selectedImage && (
+        {selectedIndex !== null && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-xl"
-            onClick={() => setSelectedImage(null)}
+            className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/95 backdrop-blur-2xl"
+            onClick={() => setSelectedIndex(null)}
           >
-            <button className="absolute top-10 right-10 w-14 h-14 rounded-full bg-white/10 flex items-center justify-center text-white/50 hover:text-white transition-all hover:rotate-90">
-              <span className="text-2xl tracking-tighter">×</span>
+            {/* Close Button */}
+            <button 
+              className="absolute top-6 right-6 md:top-10 md:right-10 w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all hover:rotate-90 z-50 border border-white/10 shadow-2xl backdrop-blur-md"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedIndex(null);
+              }}
+              title="Close (Esc)"
+            >
+              <span className="text-3xl font-light leading-none">×</span>
             </button>
-            <motion.img
-              initial={{ scale: 0.9, opacity: 0 }}
+
+            {/* Navigation Arrows */}
+            <AnimatePresence mode="wait">
+              {selectedIndex > 0 && (
+                <motion.button
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  className="absolute left-4 md:left-10 top-1/2 -translate-y-1/2 w-12 h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center text-white transition-all z-50 border border-white/20 backdrop-blur-md group shadow-2xl overflow-hidden"
+                  style={{ backgroundColor: accent }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedIndex(selectedIndex - 1);
+                  }}
+                  title="Previous Image (Left Arrow)"
+                >
+                  <motion.div
+                    className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors"
+                  />
+                  <FaChevronLeft className="relative z-10 group-hover:-translate-x-1 transition-transform" />
+                </motion.button>
+              )}
+            </AnimatePresence>
+
+            <AnimatePresence mode="wait">
+              {selectedIndex < sortedImages.length - 1 && (
+                <motion.button
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  className="absolute right-4 md:right-10 top-1/2 -translate-y-1/2 w-12 h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center text-white transition-all z-50 border border-white/20 backdrop-blur-md group shadow-2xl overflow-hidden"
+                  style={{ backgroundColor: accent }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedIndex(selectedIndex + 1);
+                  }}
+                  title="Next Image (Right Arrow)"
+                >
+                  <motion.div
+                    className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors"
+                  />
+                  <FaChevronRight className="relative z-10 group-hover:translate-x-1 transition-transform" />
+                </motion.button>
+              )}
+            </AnimatePresence>
+
+            {/* Main Image Container */}
+            <motion.div
+              key={sortedImages[selectedIndex]._id}
+              initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              src={selectedImage}
-              alt="Fullscreen"
-              className="max-w-[90vw] max-h-[85vh] object-contain rounded-3xl shadow-[0_0_100px_rgba(0,0,0,0.5)] border border-white/10"
-            />
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="relative max-w-[95vw] md:max-w-[85vw] max-h-[80vh] md:max-h-[85vh] select-none"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <img
+                src={sortedImages[selectedIndex].imageUrl}
+                alt="Fullscreen"
+                className="w-full h-full object-contain rounded-2xl md:rounded-3xl shadow-[0_0_100px_rgba(0,0,0,0.5)] border border-white/5"
+              />
+              
+              {/* Image Info Overlay */}
+              <div className="absolute -bottom-16 left-0 right-0 flex justify-between items-center px-4 md:px-0">
+                <div className="flex flex-col gap-1">
+                  {sortedImages[selectedIndex].eventDate && (
+                    <span className="text-white/90 text-[10px] md:text-xs font-black uppercase tracking-[0.2em]">
+                      {new Date(sortedImages[selectedIndex].eventDate).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })}
+                    </span>
+                  )}
+                  <span className="text-white/40 text-[9px] font-bold uppercase tracking-widest">
+                    Captured during {title}
+                  </span>
+                </div>
+                <div className="bg-white/5 border border-white/10 px-4 py-2 rounded-full backdrop-blur-sm shadow-xl">
+                  <span className="text-white/60 text-[10px] md:text-xs font-black tabular-nums">
+                    <span className="text-white">{selectedIndex + 1}</span>
+                    <span className="mx-2 opacity-30">/</span>
+                    {sortedImages.length}
+                  </span>
+                </div>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

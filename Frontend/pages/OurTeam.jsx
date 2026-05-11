@@ -67,7 +67,13 @@ const OurTeam = () => {
   }, []);
 
   const allMembers = flattenTree([...(data.roots || []), ...(data.orphans || [])]);
-  const uniqueMembers = Array.from(new Map(allMembers.map((member) => [member.id, member])).values());
+  const uniqueMembers = Array.from(new Map(allMembers.map((member) => [member.id, member])).values())
+    .sort((a, b) => {
+      const dateA = a.joiningDate ? new Date(a.joiningDate) : new Date(a.createdAt || 0);
+      const dateB = b.joiningDate ? new Date(b.joiningDate) : new Date(b.createdAt || 0);
+      if (dateA - dateB !== 0) return dateA - dateB;
+      return new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
+    });
 
   const leaderTier = uniqueMembers.filter((member) => getRoleTier(member.teamRole) === "leader");
   const coordinatorTier = uniqueMembers.filter((member) => getRoleTier(member.teamRole) === "coordinator");

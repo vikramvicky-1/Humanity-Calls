@@ -117,6 +117,15 @@ const volunteerSchema = new mongoose.Schema({
   banReason: {
     type: String,
   },
+  referredBy: {
+    type: String,
+    default: "",
+  },
+  referrer: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Volunteer",
+    default: null,
+  },
   createdAt: {
     type: Date,
     default: Date.now,

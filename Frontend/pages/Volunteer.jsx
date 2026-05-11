@@ -11,8 +11,8 @@ import { toast } from "react-toastify";
 import { getCurrentLocationLabel } from "../utils/location";
 import { getAuthToken } from "../utils/authToken.js";
 import { useUser } from "../context/UserContext";
-import { Navigate } from "react-router-dom";
-import { FaCheckCircle, FaTimes, FaCamera, FaInfoCircle, FaPen, FaShareAlt, FaCloudUploadAlt, FaTrashAlt } from "react-icons/fa";
+import { Navigate, Link } from "react-router-dom";
+import { FaCheckCircle, FaTimes, FaCamera, FaInfoCircle, FaPen, FaShareAlt, FaCloudUploadAlt, FaTrashAlt, FaUser } from "react-icons/fa";
 import hclogo from "../assets/humanitycallslogo.avif";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -45,6 +45,9 @@ const Volunteer = ({
   const { loading: authLoading } = useUser();
   const [selectedDlFile, setSelectedDlFile] = useState(null);
   const [dlPreview, setDlPreview] = useState(null);
+  const [referredByName, setReferredByName] = useState("");
+  const [isReferredByVerified, setIsReferredByVerified] = useState(false);
+  const [isVerifyingReferral, setIsVerifyingReferral] = useState(false);
 
   // Helper to convert base64 to File object
   const base64ToFile = (base64String, fileName) => {
@@ -86,6 +89,7 @@ const Volunteer = ({
       termsAccepted: false,
       locationAddress: "",
       deviceDonationChoices: [],
+      referredBy: "",
     };
     return saved ? { ...defaults, ...saved } : defaults;
   });
@@ -409,9 +413,9 @@ const Volunteer = ({
         occupation: "",
         occupationDetail: "",
         skills: "",
-        timeCommitment: [],
-        workingMode: [],
-        rolePreference: [],
+        timeCommitment: "",
+        workingMode: "",
+        rolePreference: "",
         govIdType: "",
         govIdImage: "",
         hasDrivingLicense: "",
@@ -456,6 +460,11 @@ const Volunteer = ({
       setFormData((prev) => ({ ...prev, [name]: val }));
       return;
     }
+
+    if (name === "referredBy") {
+      setFormData((prev) => ({ ...prev, [name]: value.toUpperCase() }));
+      return;
+    }
     
     if (type === "checkbox" && Array.isArray(formData[name])) {
       const currentArray = [...formData[name]];
@@ -496,6 +505,32 @@ const Volunteer = ({
     } finally {
       setLocating(false);
     }
+  };
+
+  const handleVerifyReferral = async () => {
+    if (!formData.referredBy) {
+      toast.error("Please enter a Volunteer ID to verify");
+      return;
+    }
+    setIsVerifyingReferral(true);
+    try {
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/volunteers/verify-id/${formData.referredBy}`);
+      setReferredByName(res.data.name);
+      setIsReferredByVerified(true);
+      toast.success("Referral ID verified!");
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Invalid Volunteer ID");
+      setIsReferredByVerified(false);
+      setReferredByName("");
+    } finally {
+      setIsVerifyingReferral(false);
+    }
+  };
+
+  const handleRemoveReferral = () => {
+    setFormData((prev) => ({ ...prev, referredBy: "" }));
+    setReferredByName("");
+    setIsReferredByVerified(false);
   };
 
   const inputClasses =
@@ -589,7 +624,7 @@ const Volunteer = ({
               <div className="w-10 h-10 border-4 border-primary/30 border-t-primary rounded-full animate-spin"></div>
               <p className="text-gray-500 font-medium">Checking application status...</p>
             </div>
-          ) : volunteerStatus && volunteerStatus !== "rejected" ? (
+          ) : volunteerStatus && !["rejected", "inactive"].includes(volunteerStatus) ? (
             <div className="text-center py-8 space-y-6">
               <div className="w-20 h-20 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto mb-4">
                 <FaInfoCircle size={40} />
@@ -608,7 +643,15 @@ const Volunteer = ({
                 {volunteerStatus === "temporary" && "Congratulations! You've been accepted as a temporary volunteer. Your verification QR code is available in your profile."}
                 {volunteerStatus === "banned" && "Your volunteer account has been suspended. Please contact the administrator for clarification."}
               </p>
-              {volunteerStatus === "active" && (
+              {(volunteerStatus === "active" || volunteerStatus === "temporary") && (
+                <Link
+                  to="/profile"
+                  className="w-full flex items-center justify-center gap-2 px-8 py-4 bg-primary text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all mt-4"
+                >
+                  Go to My Profile <FaUser className="text-sm" />
+                </Link>
+              )}
+              {volunteerStatus === "pending" && (
                 <Button onClick={() => window.location.href = '/'} className="w-full mt-4">Back to Home</Button>
               )}
             </div>
@@ -803,6 +846,51 @@ const Volunteer = ({
                       <option value="Prefer not to say">Prefer not to say</option>
                     </select>
                   </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs text-gray-500 ml-1">
+                    Referred By (Optional)
+                  </label>
+                  <div className="flex gap-2">
+                    <div className="relative grow">
+                      <input
+                        name="referredBy"
+                        value={formData.referredBy}
+                        onChange={handleChange}
+                        placeholder="Enter Volunteer ID (e.g. HCT...)"
+                        disabled={isReferredByVerified}
+                        className={`${inputClasses} ${isReferredByVerified ? "bg-green-50 border-green-200" : ""}`}
+                      />
+                      {isReferredByVerified && (
+                        <button
+                          type="button"
+                          onClick={handleRemoveReferral}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 bg-gray-100 hover:bg-gray-200 rounded-full text-gray-500 transition-colors"
+                        >
+                          <FaTimes size={10} />
+                        </button>
+                      )}
+                    </div>
+                    {!isReferredByVerified && (
+                      <button
+                        type="button"
+                        onClick={handleVerifyReferral}
+                        disabled={isVerifyingReferral || !formData.referredBy}
+                        className="px-6 py-3 bg-primary/10 text-primary rounded-xl font-bold hover:bg-primary/20 transition-all text-xs disabled:opacity-50"
+                      >
+                        {isVerifyingReferral ? "..." : "Verify"}
+                      </button>
+                    )}
+                  </div>
+                  {isReferredByVerified && referredByName && (
+                    <div className="text-[10px] text-green-600 font-bold ml-1 animate-in fade-in slide-in-from-top-1 duration-300">
+                      ✓ Referred by: {referredByName}
+                    </div>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <label className="text-xs text-gray-500 ml-1">
                       {t("volunteer.dob")} (18+ only) *

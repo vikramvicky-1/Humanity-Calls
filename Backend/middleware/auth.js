@@ -20,15 +20,6 @@ export const protect = async (req, res, next) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    if (user.role !== "admin") {
-      const Volunteer = await import("../models/Volunteer.js").then(m => m.default);
-      const volunteer = await Volunteer.findOne({ user: user._id });
-      
-      if (!volunteer || !["active", "temporary", "inactive"].includes(volunteer.status)) {
-        return res.status(403).json({ message: "Invalid credentials" });
-      }
-    }
-
     req.user = user;
     next();
   } catch (error) {
@@ -59,14 +50,6 @@ export const optionalProtect = async (req, _res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET || "fallback_secret");
     const user = await User.findById(decoded.id).select("-password");
-    if (user && user.role !== "admin") {
-      const Volunteer = await import("../models/Volunteer.js").then(m => m.default);
-      const volunteer = await Volunteer.findOne({ user: user._id });
-      if (!volunteer || !["active", "temporary", "inactive"].includes(volunteer.status)) {
-        req.user = null;
-        return next();
-      }
-    }
 
     req.user = user || null;
     next();

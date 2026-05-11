@@ -29,43 +29,7 @@ import QRCode from "react-qr-code";
 import { getAuthToken } from "../utils/authToken.js";
 import { downloadSvgAsPng } from "../utils/qrDownload.js";
 
-const LanguageSelectorProfile = () => {
-  const { i18n } = useTranslation();
-
-  const languages = [
-    { code: "en", label: "English" },
-    { code: "kn", label: "ಕನ್ನಡ" },
-    { code: "te", label: "తెలుగు" },
-    { code: "ta", label: "தமிழ்" },
-    { code: "ml", label: "മലയാളം" },
-    { code: "hi", label: "हिन्दी" },
-  ];
-
-  const changeLanguage = (lng) => {
-    i18n.changeLanguage(lng);
-    toast.success(
-      `Language changed to ${languages.find((l) => l.code === lng)?.label}`,
-    );
-  };
-
-  return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-      {languages.map((lang) => (
-        <button
-          key={lang.code}
-          onClick={() => changeLanguage(lang.code)}
-          className={`flex items-center justify-center px-4 py-3 rounded-xl text-sm font-bold transition-all border ${
-            i18n.language === lang.code
-              ? "bg-primary text-white border-primary shadow-lg shadow-primary/20 scale-[1.02]"
-              : "bg-white text-text-body border-border hover:border-primary hover:text-primary"
-          }`}
-        >
-          {lang.label}
-        </button>
-      ))}
-    </div>
-  );
-};
+// Language selection is handled in the Navbar
 
 const Profile = () => {
   const { t } = useTranslation();
@@ -104,6 +68,12 @@ const Profile = () => {
   });
   const [reimbUploading, setReimbUploading] = useState(false);
 
+  // Manual Referral State
+  const [manualReferralId, setManualReferralId] = useState("");
+  const [isVerifyingReferral, setIsVerifyingReferral] = useState(false);
+  const [verifiedReferrerName, setVerifiedReferrerName] = useState("");
+  const [showReferralConfirm, setShowReferralConfirm] = useState(false);
+
   useEffect(() => {
     if (!user) {
       navigate("/become-a-member");
@@ -134,11 +104,48 @@ const Profile = () => {
         if (response.data.volunteer.phone) {
           setPhone(response.data.volunteer.phone);
         }
+      } else {
+        setVolunteerStatus(null);
+        setVolunteerData(null);
       }
-    } catch (err) {
-      console.error("Failed to fetch volunteer status", err);
+    } catch (error) {
+      console.error("Error fetching volunteer status:", error);
     } finally {
       setIsLoadingStatus(false);
+    }
+  };
+
+  const handleVerifyReferral = async () => {
+    if (!manualReferralId.trim()) return toast.error("Enter a Referral ID");
+    setIsVerifyingReferral(true);
+    try {
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/volunteers/verify-id/${manualReferralId.trim().toUpperCase()}`);
+      setVerifiedReferrerName(response.data.name);
+      setShowReferralConfirm(true);
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Invalid or inactive Referral ID");
+    } finally {
+      setIsVerifyingReferral(false);
+    }
+  };
+
+  const handleConfirmReferral = async () => {
+    setIsVerifyingReferral(true);
+    try {
+      const token = getAuthToken();
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL}/volunteers/set-manual-referral`,
+        { referralId: manualReferralId.trim().toUpperCase() },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success(response.data.message);
+      setVolunteerData(response.data.volunteer);
+      setShowReferralConfirm(false);
+      setManualReferralId("");
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to assign referral");
+    } finally {
+      setIsVerifyingReferral(false);
     }
   };
 
@@ -505,15 +512,76 @@ const Profile = () => {
               <p className="text-text-body/60 font-medium">{user.email}</p>
             )}
 
-            {volunteerStatus === "active" && (
-              <p className="text-text-body/40 text-[10px] font-bold uppercase tracking-widest mt-2 flex items-center gap-2 justify-center">
-                <FaCalendarAlt className="text-primary/60" />
-                Member since{" "}
-                {new Date(volunteerData?.joiningDate)
-                  .toLocaleString("en-US", { month: "short", year: "numeric" })
-                  .toUpperCase()}
-              </p>
-            )}
+              {volunteerData && (
+                <div className="mt-2 space-y-1">
+                  {volunteerData.joiningDate && (
+                    <p className="text-text-body/40 text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 justify-center">
+                      <FaCalendarAlt className="text-primary/60" />
+                      Member since{" "}
+                      {new Date(volunteerData.joiningDate)
+                        .toLocaleString("en-US", { month: "short", year: "numeric" })
+                        .toUpperCase()}
+                    </p>
+                  )}
+                  {volunteerData.referrer?.fullName ? (
+                    <p className="text-text-body/40 text-[9px] font-bold uppercase tracking-widest flex items-center gap-1.5 justify-center">
+                      <span className="opacity-60">Referred by</span>
+                      <span className="text-primary/70">{volunteerData.referrer.fullName}</span>
+                    </p>
+                  ) : (
+                    <div className="mt-4 pt-4 border-t border-primary/5 space-y-3">
+                      <p className="text-text-body/40 text-[9px] font-black uppercase tracking-[0.2em] text-center">Referred by anyone?</p>
+                      <div className="flex gap-2 max-w-[240px] mx-auto">
+                        <input 
+                          type="text" 
+                          placeholder="REFERRAL ID"
+                          value={manualReferralId}
+                          onChange={(e) => setManualReferralId(e.target.value.toUpperCase())}
+                          className="flex-grow px-3 py-2 bg-primary/5 border border-primary/10 rounded-xl text-[10px] font-bold uppercase tracking-widest outline-none focus:ring-1 focus:ring-primary/20 transition-all placeholder:text-primary/20"
+                        />
+                        <button 
+                          disabled={isVerifyingReferral || !manualReferralId.trim()}
+                          onClick={handleVerifyReferral}
+                          className="px-4 py-2 bg-primary text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-primary/20 active:scale-95 transition-all disabled:opacity-50"
+                        >
+                          {isVerifyingReferral ? "..." : "Verify"}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Referral Confirmation Modal */}
+              {showReferralConfirm && (
+                <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+                  <div className="bg-white rounded-[2.5rem] p-8 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-300">
+                    <div className="w-16 h-16 bg-primary/10 rounded-3xl flex items-center justify-center text-primary mx-auto mb-6">
+                      <FaUser size={32} />
+                    </div>
+                    <h3 className="text-xl font-black text-primary text-center mb-2">Confirm Referrer</h3>
+                    <p className="text-sm text-text-body/60 text-center mb-6 font-medium">
+                      Are you referred by <span className="text-primary font-bold">{verifiedReferrerName}</span>?
+                      <br />
+                      <span className="text-[10px] text-red-500 font-bold uppercase tracking-widest mt-4 block">This action cannot be undone.</span>
+                    </p>
+                    <div className="grid grid-cols-2 gap-4">
+                      <button 
+                        onClick={() => setShowReferralConfirm(false)}
+                        className="py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest text-text-body/40 hover:bg-bg transition-all"
+                      >
+                        Cancel
+                      </button>
+                      <button 
+                        onClick={handleConfirmReferral}
+                        className="py-4 bg-primary text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
+                      >
+                        Confirm
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
 
             <div className={`mt-4 w-full flex items-center justify-center p-3 rounded-2xl border ${user.isVerified ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
               {user.isVerified ? (
@@ -639,6 +707,7 @@ const Profile = () => {
                     {volunteerStatus === "pending" && <FaClock />}
                     {volunteerStatus === "temporary" && <FaCheckCircle />}
                     {volunteerStatus === "rejected" && <FaTimesCircle />}
+                    {volunteerStatus === "inactive" && <FaTimesCircle />}
                     {volunteerStatus === "banned" && <FaBan />}
                   </div>
                   <div>
@@ -655,6 +724,8 @@ const Profile = () => {
                         "You are an official volunteer! Thank you."}
                       {volunteerStatus === "temporary" &&
                         "You are an active temporary volunteer!"}
+                      {volunteerStatus === "inactive" &&
+                        "Your profile is currently inactive. You may need to re-apply or contact admin."}
                       {volunteerStatus === "rejected" &&
                         "Your application was not approved."}
                       {volunteerStatus === "banned" &&
@@ -891,115 +962,109 @@ const Profile = () => {
             </form>
           </div>
 
-          {/* Language Selection */}
-          <div className="bg-white rounded-3xl shadow-xl border border-border p-8 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
-            <h2 className="text-xl font-bold text-primary mb-6 flex items-center gap-3">
-              <FaGlobe className="text-sm" /> {t("profile.preferred_language")}
-            </h2>
-            <LanguageSelectorProfile />
-          </div>
+          {/* Reimbursement Section - Only for Volunteers */}
+          {(volunteerStatus === "active" || volunteerStatus === "temporary") && (
+            <div className="bg-white rounded-3xl shadow-xl border border-border p-8 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-150">
+              <h2 className="text-xl font-bold text-primary mb-6 flex items-center gap-3">
+                Out-of-Pocket Reimbursement
+              </h2>
+              <p className="text-sm text-text-body/60 font-medium mb-6">
+                If you spent money while volunteering, submit a reimbursement request here. Admin will review and approve.
+              </p>
 
-          {/* Reimbursement Section */}
-          <div className="bg-white rounded-3xl shadow-xl border border-border p-8 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-150">
-            <h2 className="text-xl font-bold text-primary mb-6 flex items-center gap-3">
-              Out-of-Pocket Reimbursement
-            </h2>
-            <p className="text-sm text-text-body/60 font-medium mb-6">
-              If you spent money while volunteering, submit a reimbursement request here. Admin will review and approve.
-            </p>
+              <form onSubmit={submitReimbursement} className="space-y-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-text-body/40 uppercase tracking-widest">Amount (₹) *</label>
+                    <input
+                      required
+                      type="number"
+                      min={1}
+                      value={reimbForm.amount}
+                      onChange={(e) => setReimbForm((p) => ({ ...p, amount: e.target.value }))}
+                      className="w-full px-6 py-4 border border-border rounded-2xl outline-none focus:border-primary"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-text-body/40 uppercase tracking-widest">Spent On *</label>
+                    <input
+                      required
+                      type="date"
+                      value={reimbForm.spentOnDate}
+                      onChange={(e) => setReimbForm((p) => ({ ...p, spentOnDate: e.target.value }))}
+                      className="w-full px-6 py-4 border border-border rounded-2xl outline-none focus:border-primary"
+                    />
+                  </div>
+                </div>
 
-            <form onSubmit={submitReimbursement} className="space-y-5">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-text-body/40 uppercase tracking-widest">Amount (₹) *</label>
+                  <label className="text-xs font-bold text-text-body/40 uppercase tracking-widest">Purpose *</label>
                   <input
                     required
-                    type="number"
-                    min={1}
-                    value={reimbForm.amount}
-                    onChange={(e) => setReimbForm((p) => ({ ...p, amount: e.target.value }))}
+                    value={reimbForm.purpose}
+                    onChange={(e) => setReimbForm((p) => ({ ...p, purpose: e.target.value }))}
+                    placeholder="e.g., Fuel for volunteering trip / Supplies / Printouts"
                     className="w-full px-6 py-4 border border-border rounded-2xl outline-none focus:border-primary"
                   />
                 </div>
+
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-text-body/40 uppercase tracking-widest">Spent On *</label>
-                  <input
-                    required
-                    type="date"
-                    value={reimbForm.spentOnDate}
-                    onChange={(e) => setReimbForm((p) => ({ ...p, spentOnDate: e.target.value }))}
-                    className="w-full px-6 py-4 border border-border rounded-2xl outline-none focus:border-primary"
-                  />
+                  <label className="text-xs font-bold text-text-body/40 uppercase tracking-widest">Receipt (optional)</label>
+                  <label className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl border-2 border-dashed border-border hover:border-primary transition-colors cursor-pointer bg-bg/30">
+                    <span className="inline-flex items-center gap-2 text-sm font-bold text-text-body/70">
+                      <FaPaperclip className="text-primary" />
+                      {reimbForm.receiptImageUrl ? "Change uploaded receipt" : "Upload receipt image"}
+                    </span>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-primary">
+                      Browse
+                    </span>
+                    <input type="file" accept="image/*" onChange={handleReimbReceiptUpload} className="hidden" />
+                  </label>
+                  {reimbUploading && <p className="text-xs text-text-body/60">Uploading receipt...</p>}
+                  {reimbForm.receiptImageUrl && (
+                    <a href={reimbForm.receiptImageUrl} target="_blank" rel="noreferrer" className="text-xs font-bold text-primary hover:underline">
+                      View uploaded receipt
+                    </a>
+                  )}
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-text-body/40 uppercase tracking-widest">Purpose *</label>
-                <input
-                  required
-                  value={reimbForm.purpose}
-                  onChange={(e) => setReimbForm((p) => ({ ...p, purpose: e.target.value }))}
-                  placeholder="e.g., Fuel for volunteering trip / Supplies / Printouts"
-                  className="w-full px-6 py-4 border border-border rounded-2xl outline-none focus:border-primary"
-                />
-              </div>
+                <button
+                  type="submit"
+                  disabled={reimbLoading}
+                  className="w-full px-10 py-4 rounded-2xl bg-primary text-white font-bold hover:bg-primary/90 transition-all shadow-xl shadow-primary/20 active:scale-[0.98] uppercase tracking-widest disabled:opacity-50"
+                >
+                  {reimbLoading ? "Submitting..." : "Submit Reimbursement Request"}
+                </button>
+              </form>
 
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-text-body/40 uppercase tracking-widest">Receipt (optional)</label>
-                <label className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl border-2 border-dashed border-border hover:border-primary transition-colors cursor-pointer bg-bg/30">
-                  <span className="inline-flex items-center gap-2 text-sm font-bold text-text-body/70">
-                    <FaPaperclip className="text-primary" />
-                    {reimbForm.receiptImageUrl ? "Change uploaded receipt" : "Upload receipt image"}
-                  </span>
-                  <span className="text-[10px] font-black uppercase tracking-widest text-primary">
-                    Browse
-                  </span>
-                  <input type="file" accept="image/*" onChange={handleReimbReceiptUpload} className="hidden" />
-                </label>
-                {reimbUploading && <p className="text-xs text-text-body/60">Uploading receipt...</p>}
-                {reimbForm.receiptImageUrl && (
-                  <a href={reimbForm.receiptImageUrl} target="_blank" rel="noreferrer" className="text-xs font-bold text-primary hover:underline">
-                    View uploaded receipt
-                  </a>
+              <div className="mt-8">
+                <div className="text-[10px] font-black uppercase tracking-[0.25em] text-text-body/40 mb-3">
+                  My Requests
+                </div>
+                {myReimb.length === 0 ? (
+                  <div className="text-sm text-text-body/50 font-bold">No reimbursement requests yet.</div>
+                ) : (
+                  <div className="space-y-3">
+                    {myReimb.map((r) => (
+                      <div key={r._id} className="p-4 rounded-2xl border border-border bg-bg/40">
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="font-black text-text-body">₹{r.amount}</div>
+                          <div className="text-[10px] font-black uppercase tracking-widest text-primary">{r.status}</div>
+                        </div>
+                        <div className="text-sm text-text-body/70 mt-1 font-bold">{r.purpose}</div>
+                        {r.adminComment ? (
+                          <div className="mt-2 text-xs text-text-body/60">
+                            <span className="font-black uppercase tracking-widest text-[10px]">Admin:</span>{" "}
+                            {r.adminComment}
+                          </div>
+                        ) : null}
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
-
-              <button
-                type="submit"
-                disabled={reimbLoading}
-                className="w-full px-10 py-4 rounded-2xl bg-primary text-white font-bold hover:bg-primary/90 transition-all shadow-xl shadow-primary/20 active:scale-[0.98] uppercase tracking-widest disabled:opacity-50"
-              >
-                {reimbLoading ? "Submitting..." : "Submit Reimbursement Request"}
-              </button>
-            </form>
-
-            <div className="mt-8">
-              <div className="text-[10px] font-black uppercase tracking-[0.25em] text-text-body/40 mb-3">
-                My Requests
-              </div>
-              {myReimb.length === 0 ? (
-                <div className="text-sm text-text-body/50 font-bold">No reimbursement requests yet.</div>
-              ) : (
-                <div className="space-y-3">
-                  {myReimb.map((r) => (
-                    <div key={r._id} className="p-4 rounded-2xl border border-border bg-bg/40">
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="font-black text-text-body">₹{r.amount}</div>
-                        <div className="text-[10px] font-black uppercase tracking-widest text-primary">{r.status}</div>
-                      </div>
-                      <div className="text-sm text-text-body/70 mt-1 font-bold">{r.purpose}</div>
-                      {r.adminComment ? (
-                        <div className="mt-2 text-xs text-text-body/60">
-                          <span className="font-black uppercase tracking-widest text-[10px]">Admin:</span>{" "}
-                          {r.adminComment}
-                        </div>
-                      ) : null}
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
-          </div>
+          )}
 
           {/* Logout Section */}
           <div className="bg-white rounded-3xl shadow-xl border border-border p-8 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-200">

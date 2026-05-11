@@ -123,6 +123,12 @@ const MemberPublicCard = () => {
                     <dd className="font-bold text-right">{v.emergencyContact}</dd>
                   </div>
                 ) : null}
+                {v?.referredByName ? (
+                  <div className="flex justify-between gap-4">
+                    <dt className="text-text-body/50 font-bold">Referred by</dt>
+                    <dd className="font-bold text-primary/80 text-right">{v.referredByName}</dd>
+                  </div>
+                ) : null}
               </dl>
             </section>
 

@@ -15,7 +15,7 @@ export const getPublicMemberCard = async (req, res) => {
       return res.status(404).json({ message: "Profile not found" });
     }
 
-    const volunteer = await Volunteer.findOne({ user: userId }).lean();
+    const volunteer = await Volunteer.findOne({ user: userId }).populate("referrer", "fullName").lean();
 
     const coordinator = user.reportsTo
       ? {
@@ -48,6 +48,7 @@ export const getPublicMemberCard = async (req, res) => {
             emergencyContact: visibleVolunteer.emergencyContact,
             status: visibleVolunteer.status,
             joiningDate: visibleVolunteer.joiningDate,
+            referredByName: visibleVolunteer.referrer?.fullName || "",
           }
         : null,
     });

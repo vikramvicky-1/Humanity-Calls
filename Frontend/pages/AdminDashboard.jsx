@@ -15,6 +15,7 @@ import {
   FaImage,
   FaCommentDots,
   FaHeart,
+  FaChartLine,
 } from "react-icons/fa";
 import hclogo from "../assets/humanitycallslogo.avif";
 import axios from "axios";
@@ -22,9 +23,9 @@ import { toast } from "react-toastify";
 
 /* ── Per-nav-item color config ─────────────────────────────── */
 const NAV_COLORS = {
+  dashboard:   { bg: "bg-indigo-600",   text: "text-indigo-600",   light: "bg-indigo-50",   ring: "ring-indigo-200"  },
   volunteers:  { bg: "bg-indigo-500",   text: "text-indigo-500",   light: "bg-indigo-50",   ring: "ring-indigo-200"  },
   "send-mails":{ bg: "bg-violet-500",   text: "text-violet-500",   light: "bg-violet-50",   ring: "ring-violet-200"  },
-  requests:    { bg: "bg-amber-500",    text: "text-amber-500",    light: "bg-amber-50",    ring: "ring-amber-200"   },
   "blood-requests": { bg: "bg-rose-500", text: "text-rose-500", light: "bg-rose-50", ring: "ring-rose-200" },
   reimbursements: { bg: "bg-emerald-600", text: "text-emerald-600", light: "bg-emerald-50", ring: "ring-emerald-200" },
   forms: { bg: "bg-slate-700", text: "text-slate-700", light: "bg-slate-50", ring: "ring-slate-200" },
@@ -89,9 +90,9 @@ const AdminDashboard = () => {
   };
 
   const menuItems = [
-    { id: "volunteers",   label: "Volunteers",       icon: <FaUserFriends />  },
+    { id: "dashboard",    label: "Dashboard",        icon: <FaChartLine /> },
+    { id: "volunteers",   label: "Volunteers",       icon: <FaUserFriends />, badge: pendingRequestsCount },
     { id: "send-mails",   label: "Send Mails",        icon: <FaEnvelope />     },
-    { id: "requests",     label: "Requests",          icon: <FaClipboardList />, badge: pendingRequestsCount },
     { id: "forms",        label: "Forms",             icon: <FaClipboardList /> },
     { id: "blood-requests", label: "Blood Requests",  icon: <FaTint />, badge: openBloodRequestsCount },
     { id: "reimbursements", label: "Reimbursements",  icon: <FaMoneyCheckAlt />, badge: pendingReimbursementsCount },
@@ -245,7 +246,10 @@ const AdminDashboard = () => {
         <main className="flex-1 min-w-0 overflow-y-auto">
           <div className="p-4 md:p-6 lg:p-8 min-h-full">
             <div className="max-w-7xl mx-auto w-full">
-              <Outlet context={{ onStatusUpdate: fetchPendingCount }} />
+              <Outlet context={{ 
+                onStatusUpdate: fetchPendingCount,
+                pendingRequestsCount: pendingRequestsCount 
+              }} />
             </div>
           </div>
         </main>

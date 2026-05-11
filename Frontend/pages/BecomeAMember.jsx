@@ -163,15 +163,37 @@ const BecomeAMember = () => {
             </Link>
             
             <h2 className="text-4xl font-black text-black tracking-tighter text-center leading-tight mb-3" style={{ fontFamily: '"Syne", sans-serif' }}>
-              Volunteer Access.
+              {isLogin ? "Welcome Back." : "Join the Mission."}
             </h2>
             <p className="text-black/30 font-bold text-sm text-center max-w-[280px]" style={{ fontFamily: '"Poppins", sans-serif' }}>
-              Impact starts with action.
+              {isLogin ? "Continue your journey with us." : "Create your account to get started."}
             </p>
           </div>
 
           <form className="space-y-5" onSubmit={handleSubmit}>
             <div className="space-y-4">
+              {!isLogin && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  className="overflow-hidden"
+                >
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-black/30 mb-1.5 ml-3">Full Name</label>
+                  <div className="relative">
+                    <FaUserAlt className="absolute left-5 top-1/2 -translate-y-1/2 text-black/10 text-xs" />
+                    <input
+                      name="name"
+                      type="text"
+                      required={!isLogin}
+                      className="w-full bg-black/2 border border-black/5 rounded-2xl px-12 py-3.5 text-xs font-bold placeholder:text-black/20 focus:ring-2 focus:ring-purple-500/10 transition-all outline-none"
+                      placeholder="John Doe"
+                      value={formData.name}
+                      onChange={handleChange}
+                    />
+                  </div>
+                </motion.div>
+              )}
+
               <div>
                 <label className="block text-[10px] font-black uppercase tracking-widest text-black/30 mb-1.5 ml-3">Email</label>
                 <div className="relative grow">
@@ -184,9 +206,61 @@ const BecomeAMember = () => {
                     placeholder="email@example.com"
                     value={formData.email}
                     onChange={handleChange}
+                    disabled={!isLogin && otpSent}
                   />
                 </div>
               </div>
+
+              {!isLogin && !otpVerified && (
+                <div className="space-y-4">
+                  {!otpSent ? (
+                    <button
+                      type="button"
+                      onClick={handleSendOtp}
+                      disabled={otpLoading || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)}
+                      className={`w-full py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-sm ${
+                        otpLoading || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)
+                          ? "bg-black/5 text-black/20 cursor-not-allowed"
+                          : "bg-purple-600/10 text-purple-600 hover:bg-purple-600 hover:text-white shadow-purple-600/10"
+                      }`}
+                    >
+                      {otpLoading ? (
+                        "Sending Code..."
+                      ) : (
+                        <>
+                          Send Verification Code
+                          <FaArrowRight className="text-[10px]" />
+                        </>
+                      )}
+                    </button>
+                  ) : (
+                    <div className="space-y-4 pt-2">
+                      <div className="flex justify-between gap-2">
+                        {otpValues.map((digit, idx) => (
+                          <input
+                            key={idx}
+                            id={`otp-${idx}`}
+                            type="text"
+                            maxLength={1}
+                            value={digit}
+                            onChange={(e) => handleOtpChange(idx, e.target.value)}
+                            onKeyDown={(e) => handleOtpKeyDown(idx, e)}
+                            className="w-full h-12 text-center bg-black/2 border border-black/5 rounded-xl text-lg font-black focus:ring-2 focus:ring-purple-500/10 transition-all outline-none"
+                          />
+                        ))}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleVerifyOtp}
+                        disabled={otpLoading}
+                        className="w-full py-3.5 rounded-2xl bg-purple-600 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-purple-600/20 active:scale-95 transition-all"
+                      >
+                        {otpLoading ? "Verifying..." : "Verify OTP"}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="relative">
                 <label className="block text-[10px] font-black uppercase tracking-widest text-black/30 mb-1.5 ml-3">Password</label>
@@ -211,17 +285,35 @@ const BecomeAMember = () => {
                   </button>
                 </div>
               </div>
+
+              {!isLogin && (
+                <div className="flex items-start gap-3 px-2 py-2">
+                  <input
+                    id="acceptTerms"
+                    name="acceptTerms"
+                    type="checkbox"
+                    checked={formData.acceptTerms}
+                    onChange={handleChange}
+                    className="mt-1 w-4 h-4 rounded border-black/10 text-purple-600 focus:ring-purple-500/20"
+                  />
+                  <label htmlFor="acceptTerms" className="text-[10px] font-bold text-black/40 leading-relaxed">
+                    I agree to the <Link to="/terms" className="text-blood hover:underline">Terms & Conditions</Link> and <Link to="/privacy" className="text-blood hover:underline">Privacy Policy</Link>.
+                  </label>
+                </div>
+              )}
             </div>
 
-            <div className="flex justify-end pr-2">
-              <Link
-                to="/forgot-password"
-                className="relative text-[9px] font-black uppercase tracking-widest text-black/50 hover:text-purple-600 transition-colors group/forgot"
-              >
-                Forgot password?
-                <span className="absolute -bottom-1 left-0 w-full h-[1.5px] bg-purple-600/40 rounded-full scale-x-0 group-hover/forgot:scale-x-100 transition-transform origin-left" />
-              </Link>
-            </div>
+            {isLogin && (
+              <div className="flex justify-end pr-2">
+                <Link
+                  to="/forgot-password"
+                  className="relative text-[9px] font-black uppercase tracking-widest text-black/50 hover:text-purple-600 transition-colors group/forgot"
+                >
+                  Forgot password?
+                  <span className="absolute -bottom-1 left-0 w-full h-[1.5px] bg-purple-600/40 rounded-full scale-x-0 group-hover/forgot:scale-x-100 transition-transform origin-left" />
+                </Link>
+              </div>
+            )}
 
             <div className="pt-2">
               <motion.button
@@ -229,21 +321,23 @@ const BecomeAMember = () => {
                 initial="initial"
                 whileHover="hover"
                 whileTap={{ scale: 0.98 }}
-                disabled={loading}
-                className="relative w-full bg-[#1a1a1a] text-white py-5 rounded-3xl shadow-xl shadow-black/5 overflow-hidden group/main"
+                disabled={loading || (!isLogin && !otpVerified)}
+                className={`relative w-full ${(!isLogin && !otpVerified) ? 'bg-black/10 cursor-not-allowed' : 'bg-[#1a1a1a]'} text-white py-5 rounded-3xl shadow-xl shadow-black/5 overflow-hidden group/main transition-colors`}
               >
-                <motion.div 
-                  variants={{
-                    initial: { scaleX: 0, opacity: 0 },
-                    hover: { scaleX: 1, opacity: 1 },
-                  }}
-                  transition={{ duration: 0.5, ease: [0.76, 0, 0.24, 1] }}
-                  className="absolute inset-0 bg-purple-600 z-0 origin-center"
-                />
+                {!(!isLogin && !otpVerified) && (
+                  <motion.div 
+                    variants={{
+                      initial: { scaleX: 0, opacity: 0 },
+                      hover: { scaleX: 1, opacity: 1 },
+                    }}
+                    transition={{ duration: 0.5, ease: [0.76, 0, 0.24, 1] }}
+                    className="absolute inset-0 bg-purple-600 z-0 origin-center"
+                  />
+                )}
                 
                 <div className="relative z-10 flex items-center justify-center gap-2.5">
                   <span className="text-[11px] font-black uppercase tracking-widest" style={{ fontFamily: '"Syne", sans-serif' }}>
-                    {loading ? "Please Wait..." : "Login Now"}
+                    {loading ? "Please Wait..." : isLogin ? "Login Now" : "Create Account"}
                   </span>
                   <motion.div
                     variants={{
@@ -259,18 +353,25 @@ const BecomeAMember = () => {
             </div>
           </form>
 
-          <div className="mt-10 text-center">
-            <Link
-              to="/volunteer"
+          <div className="mt-10 flex flex-col gap-6">
+            <button
+              type="button"
+              onClick={() => {
+                const newMode = !isLogin ? "login" : "signup";
+                const searchParams = new URLSearchParams(location.search);
+                searchParams.set("mode", newMode);
+                setIsLogin(!isLogin);
+                navigate(`/become-a-member?${searchParams.toString()}`);
+              }}
               className="group flex flex-col items-center gap-1.5 w-full"
             >
               <span className="text-[9px] font-black uppercase tracking-[0.2em] text-black/20 group-hover:text-black/40 transition-colors">
-                Not a volunteer?
+                {isLogin ? "Need an account?" : "Already have an account?"}
               </span>
-              <span className="text-[11px] font-black uppercase tracking-widest text-blood group-hover:text-[#c00] transition-colors" style={{ fontFamily: '"Syne", sans-serif' }}>
-                Apply as Volunteer →
+              <span className="text-[11px] font-black uppercase tracking-widest text-purple-600 group-hover:text-purple-700 transition-colors" style={{ fontFamily: '"Syne", sans-serif' }}>
+                {isLogin ? "Create Your Account →" : "Sign In to Your Account →"}
               </span>
-            </Link>
+            </button>
           </div>
         </div>
       </motion.div>

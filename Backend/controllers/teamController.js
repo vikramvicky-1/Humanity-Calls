@@ -22,6 +22,8 @@ const toNode = (user, volunteer) => ({
   reportsTo: user.reportsTo ? String(user.reportsTo) : null,
   profilePicture: volunteer?.profilePicture || "",
   volunteerStatus: volunteer?.status || null,
+  joiningDate: volunteer?.joiningDate || null,
+  createdAt: volunteer?.createdAt || user.createdAt || null,
   children: [],
 });
 
@@ -95,11 +97,21 @@ export const getTeamTree = async (_req, res) => {
     }
 
     const sortTree = (n) => {
-      n.children.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+      n.children.sort((a, b) => {
+        const dateA = a.joiningDate ? new Date(a.joiningDate) : new Date(a.createdAt || 0);
+        const dateB = b.joiningDate ? new Date(b.joiningDate) : new Date(b.createdAt || 0);
+        if (dateA - dateB !== 0) return dateA - dateB;
+        return new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
+      });
       n.children.forEach(sortTree);
     };
 
-    roots.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+    roots.sort((a, b) => {
+      const dateA = a.joiningDate ? new Date(a.joiningDate) : new Date(a.createdAt || 0);
+      const dateB = b.joiningDate ? new Date(b.joiningDate) : new Date(b.createdAt || 0);
+      if (dateA - dateB !== 0) return dateA - dateB;
+      return new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
+    });
     roots.forEach(sortTree);
 
     res.status(200).json({

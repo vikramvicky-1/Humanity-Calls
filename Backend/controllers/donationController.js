@@ -50,6 +50,17 @@ export const getDonations = async (req, res) => {
   }
 };
 
+export const getPublicDonations = async (req, res) => {
+  try {
+    const donations = await Donation.find({ status: "approved" })
+      .select("name amount locationAddress createdAt donationImageUrl")
+      .sort({ createdAt: -1 });
+    res.status(200).json(donations);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 export const updateDonationStatus = async (req, res) => {
   try {
     const { id } = req.params;

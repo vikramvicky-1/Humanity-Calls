@@ -28,7 +28,7 @@ import {
 import { useOutletContext } from "react-router-dom";
 
 const VolunteersManager = () => {
-  const { onStatusUpdate } = useOutletContext();
+  const { onStatusUpdate, pendingRequestsCount } = useOutletContext();
   const [volunteers, setVolunteers] = useState([]);
   const [isLoadingVolunteers, setIsLoadingVolunteers] = useState(false);
   const [volunteerStatusTab, setVolunteerStatusTab] = useState("active");
@@ -57,11 +57,40 @@ const VolunteersManager = () => {
   const replacePhotoInputRef = useRef(null);
   const [replacePhotoTarget, setReplacePhotoTarget] = useState(null);
 
-  const volunteerTabs = ["pending", "active", "temporary", "inactive", "banned", "rejected"];
+  const volunteerTabs = ["pending", "active", "temporary", "inactive", "banned", "rejected", "referrals"];
+  const [referralStats, setReferralStats] = useState([]);
+  const [expandedReferrerId, setExpandedReferrerId] = useState(null);
 
   useEffect(() => {
-    fetchVolunteers();
+    fetchTotalVolunteers();
+    if (volunteerStatusTab === "referrals") {
+      fetchReferralStats();
+    } else {
+      fetchVolunteers();
+    }
   }, [volunteerStatusTab]);
+
+  useEffect(() => {
+    const isModalOpen = showExportModal || showIdModal || showViewMoreModal || 
+                        showVolunteerEditModal || showUpdateStatusPopup || 
+                        showDeleteModal || showDocsModal || showQrModal;
+                        
+    if (isModalOpen) {
+      const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
+      document.body.style.overflow = "hidden";
+      document.body.style.paddingRight = `${scrollBarWidth}px`;
+    } else {
+      document.body.style.overflow = "unset";
+      document.body.style.paddingRight = "0px";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+      document.body.style.paddingRight = "0px";
+    };
+  }, [showExportModal, showIdModal, showViewMoreModal, showVolunteerEditModal, 
+      showUpdateStatusPopup, showDeleteModal, showDocsModal, showQrModal]);
+
+  const [totalVolunteersCount, setTotalVolunteersCount] = useState(0);
 
   const fetchVolunteers = async () => {
     setIsLoadingVolunteers(true);
@@ -72,8 +101,36 @@ const VolunteersManager = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       setVolunteers(response.data);
+      fetchTotalVolunteers();
     } catch (err) {
       toast.error("Failed to fetch volunteers");
+    } finally {
+      setIsLoadingVolunteers(false);
+    }
+  };
+
+  const fetchTotalVolunteers = async () => {
+    try {
+      const token = sessionStorage.getItem("adminToken");
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/volunteers/count/active`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setTotalVolunteersCount(response.data.count);
+    } catch (err) {
+      console.error("Failed to fetch total count");
+    }
+  };
+
+  const fetchReferralStats = async () => {
+    setIsLoadingVolunteers(true);
+    try {
+      const token = sessionStorage.getItem("adminToken");
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/volunteers/referrals`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setReferralStats(response.data);
+    } catch (err) {
+      toast.error("Failed to fetch referral stats");
     } finally {
       setIsLoadingVolunteers(false);
     }
@@ -248,7 +305,12 @@ const VolunteersManager = () => {
       <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 md:p-8">
       <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
         <h2 className="text-3xl font-bold text-primary flex items-center gap-3">
-          <FaUserFriends /> Volunteers
+          <FaUserFriends /> Volunteers ({totalVolunteersCount})
+          {pendingRequestsCount > 0 && (
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-[10px] font-black text-white animate-pulse">
+              {pendingRequestsCount}
+            </span>
+          )}
         </h2>
         <div className="flex items-center gap-4 w-full md:w-auto">
           <div className="relative flex-grow md:flex-grow-0">
@@ -287,15 +349,85 @@ const VolunteersManager = () => {
             {tab === "banned" && <FaBan size={12} />}
             {tab === "rejected" && <FaTimes size={12} />}
             {tab}
+            {tab === "pending" && pendingRequestsCount > 0 && (
+              <span className="bg-red-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full min-w-[18px] text-center shadow-sm">
+                {pendingRequestsCount}
+              </span>
+            )}
           </button>
         ))}
       </div>
 
-      <div className="w-full overflow-hidden">
-        {isLoadingVolunteers ? (
+      <div className="w-full overflow-hidden">        {isLoadingVolunteers ? (
           <div className="py-24 flex flex-col items-center gap-4">
             <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin"></div>
-            <p className="text-text-body/60 font-medium italic">Loading volunteers...</p>
+            <p className="text-text-body/60 font-medium italic">Loading...</p>
+          </div>
+        ) : volunteerStatusTab === "referrals" ? (
+          <div className="space-y-4">
+            {referralStats.length > 0 ? (
+              referralStats.map((referrer) => (
+                <div key={referrer._id} className="border border-border rounded-2xl overflow-hidden bg-white shadow-sm">
+                  <div 
+                    onClick={() => setExpandedReferrerId(expandedReferrerId === referrer._id ? null : referrer._id)}
+                    className="flex items-center justify-between p-6 cursor-pointer hover:bg-bg/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-black">
+                        {referrer.name?.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-text-body">{referrer.name}</h4>
+                        <p className="text-xs text-text-body/50">{referrer.email}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-6">
+                      <div className="text-center">
+                        <div className="text-xl font-black text-primary">{referrer.referrals?.length || 0}</div>
+                        <div className="text-[10px] font-black uppercase tracking-widest text-text-body/30">Referrals</div>
+                      </div>
+                      <div className={`text-text-body/20 transition-transform duration-300 ${expandedReferrerId === referrer._id ? "rotate-180" : ""}`}>
+                        ▼
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {expandedReferrerId === referrer._id && (
+                    <div className="border-t border-border bg-bg/30 p-6 animate-in slide-in-from-top-2 duration-300">
+                      <div className="space-y-3">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-text-body/40 mb-4">Referred Users List</p>
+                        {referrer.referrals && referrer.referrals.length > 0 ? (
+                          referrer.referrals.map((referred) => (
+                            <div key={referred._id} className="flex items-center justify-between p-4 bg-white rounded-xl border border-border/50 shadow-sm">
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 text-xs font-bold">
+                                  {referred.name?.charAt(0).toUpperCase()}
+                                </div>
+                                <div>
+                                  <div className="text-sm font-bold text-text-body">{referred.name}</div>
+                                  <div className="text-[10px] text-text-body/40">{referred.email}</div>
+                                </div>
+                              </div>
+                              <div className="text-[10px] font-bold text-text-body/30">
+                                Joined {new Date(referred.createdAt).toLocaleDateString()}
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="text-sm italic text-text-body/40 text-center py-4">No referred users found.</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))
+            ) : (
+              <div className="py-24 text-center">
+                <FaUserFriends size={64} className="mx-auto text-primary/10 mb-6" />
+                <h3 className="text-2xl font-bold text-text-body mb-2">No referrals found</h3>
+                <p className="text-text-body/40">Only users who have referred others will be shown here.</p>
+              </div>
+            )}
           </div>
         ) : filteredVolunteers.length > 0 ? (
           <div className="overflow-x-auto">
@@ -336,6 +468,11 @@ const VolunteersManager = () => {
                       <div className="text-[11px] text-text-body/40 font-medium">
                         DOB: {vol.dob ? `${new Date(vol.dob).toLocaleDateString("en-GB")} (${calculateAge(vol.dob)}Y)` : "N/A"}
                       </div>
+                      {vol.referrer && (
+                        <div className="text-[10px] text-green-600 font-bold mt-1 bg-green-50 px-2 py-0.5 rounded-md border border-green-100 w-fit">
+                          Referred by: {vol.referrer.fullName} ({vol.referrer.volunteerId})
+                        </div>
+                      )}
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap">
                       <div className="text-sm font-bold text-text-body/80">{vol.email}</div>
@@ -479,10 +616,10 @@ const VolunteersManager = () => {
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto p-8 relative">
             <button
               type="button"
-              onClick={() => { setShowDocsModal(false); setDocsVolunteer(null); }}
-              className="absolute top-6 right-6 p-2 rounded-xl bg-bg hover:bg-border text-text-body font-black"
+              onClick={(e) => { e.stopPropagation(); setShowDocsModal(false); setDocsVolunteer(null); }}
+              className="absolute top-6 right-6 p-2 rounded-xl bg-bg hover:bg-border text-text-body font-black transition-all active:scale-95"
             >
-              ✕
+              <FaTimes />
             </button>
             <h3 className="text-xl font-black text-primary mb-6 pr-10">Submitted documents — {docsVolunteer.fullName}</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -514,10 +651,10 @@ const VolunteersManager = () => {
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-8 text-center relative">
             <button
               type="button"
-              onClick={() => { setShowQrModal(false); setQrVolunteer(null); }}
-              className="absolute top-4 right-4 p-2 rounded-xl bg-bg hover:bg-border font-black text-text-body"
+              onClick={(e) => { e.stopPropagation(); setShowQrModal(false); setQrVolunteer(null); }}
+              className="absolute top-4 right-4 p-2 rounded-xl bg-bg hover:bg-border font-black text-text-body transition-all active:scale-95"
             >
-              ✕
+              <FaTimes />
             </button>
             <h3 className="text-lg font-black text-primary mb-2">Emergency member card</h3>
             <p className="text-xs font-medium text-text-body/60 mb-6">{qrVolunteer.fullName}</p>
@@ -555,7 +692,7 @@ const VolunteersManager = () => {
           <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-300 text-center p-10">
             <h3 className="text-2xl font-black text-primary mb-6">Modify Standing</h3>
             <div className="grid grid-cols-1 gap-4">
-              {["active", "temporary", "banned", "rejected"].map(s => (
+              {["active", "temporary", "inactive", "banned", "rejected"].map(s => (
                 s !== updateStatusTarget.status && (
                   <button
                     key={s}
