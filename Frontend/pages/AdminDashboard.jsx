@@ -16,6 +16,7 @@ import {
   FaCommentDots,
   FaHeart,
   FaChartLine,
+  FaBolt,
 } from "react-icons/fa";
 import hclogo from "../assets/humanitycallslogo.avif";
 import axios from "axios";
@@ -34,6 +35,7 @@ const NAV_COLORS = {
   "add-gallery":{ bg: "bg-pink-500",   text: "text-pink-500",     light: "bg-pink-50",     ring: "ring-pink-200"    },
   feedback:     { bg: "bg-yellow-500",  text: "text-yellow-600",   light: "bg-yellow-50",   ring: "ring-yellow-200"  },
   donations:    { bg: "bg-rose-500",    text: "text-rose-500",     light: "bg-rose-50",     ring: "ring-rose-200"    },
+  "emergency-fundraisers": { bg: "bg-red-600", text: "text-red-600", light: "bg-red-50", ring: "ring-red-200" },
 };
 
 const AdminDashboard = () => {
@@ -97,6 +99,7 @@ const AdminDashboard = () => {
     { id: "blood-requests", label: "Blood Requests",  icon: <FaTint />, badge: openBloodRequestsCount },
     { id: "reimbursements", label: "Reimbursements",  icon: <FaMoneyCheckAlt />, badge: pendingReimbursementsCount },
     { id: "donations",      label: "Donations",       icon: <FaHeart />,         badge: pendingDonationsCount },
+    { id: "emergency-fundraisers", label: "Emergency funding", icon: <FaBolt /> },
     { id: "form-images",  label: "Form Images",       icon: <FaImage />        },
     { id: "gallery",      label: "Gallery",           icon: <FaImages />       },
     { id: "add-gallery",  label: "Add Gallery",       icon: <FaPlusCircle />   },

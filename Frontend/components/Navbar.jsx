@@ -152,6 +152,7 @@ const Navbar = () => {
       accent: "#f43f5e", // Rose
       links: [
         { label: "Donate Now", href: "/donate" },
+        { label: "Emergency Funding", href: "/emergency-funding" },
         { label: "Blood Donation Form", href: "/blood-donation" },
         { label: "Find Donors", href: "/request-donors" },
         {

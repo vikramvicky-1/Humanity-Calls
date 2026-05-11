@@ -23,6 +23,7 @@ import feedbackRoutes from "./routes/feedbackRoutes.js";
 import donationRoutes from "./routes/donationRoutes.js";
 import memberPublicRoutes from "./routes/memberPublicRoutes.js";
 import analyticsRoutes from "./routes/analyticsRoutes.js";
+import emergencyFundraiserRoutes from "./routes/emergencyFundraiserRoutes.js";
 import { initAdmin } from "./controllers/authController.js";
 import { initBirthdayCron } from "./utils/birthdayCron.js";
 
@@ -88,6 +89,7 @@ app.use("/api/feedback", feedbackRoutes);
 app.use("/api/donations", donationRoutes);
 app.use("/api/member-public", memberPublicRoutes);
 app.use("/api/analytics", analyticsRoutes);
+app.use("/api/emergency-fundraisers", emergencyFundraiserRoutes);
 app.use("/api", emailRoutes);
 
 const PORT = process.env.PORT || 5000;

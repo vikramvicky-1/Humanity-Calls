@@ -12,6 +12,7 @@ import { UserProvider } from "./context/UserContext";
 import Navbar from "./components/Navbar";
 import TopBar from "./components/TopBar";
 import ContactFloatingButton from "./components/WhatsAppButton";
+import EmergencyLiveFundFab from "./components/EmergencyLiveFundFab";
 import SmoothScroll from "./components/SmoothScroll";
 import Home from "./pages/Home";
 
@@ -33,6 +34,8 @@ const Terms = lazy(() => import("./pages/Terms"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Disclaimer = lazy(() => import("./pages/Disclaimer"));
 const DonationsMade = lazy(() => import("./pages/DonationsMade"));
+const EmergencyFunding = lazy(() => import("./pages/EmergencyFunding"));
+const EmergencyFundingDetails = lazy(() => import("./pages/EmergencyFundingDetails"));
 const BecomeAMember = lazy(() => import("./pages/BecomeAMember"));
 const ProgramDetail = lazy(() => import("./pages/ProgramDetail"));
 const Profile = lazy(() => import("./pages/Profile"));
@@ -49,6 +52,7 @@ const BloodRequestsManager = lazy(() => import("./pages/admin/BloodRequestsManag
 const ReimbursementsManager = lazy(() => import("./pages/admin/ReimbursementsManager"));
 const DonationsManager = lazy(() => import("./pages/admin/DonationsManager"));
 const FeedbackManager = lazy(() => import("./pages/admin/FeedbackManager"));
+const EmergencyFundraisersManager = lazy(() => import("./pages/admin/EmergencyFundraisersManager"));
 const AnalyticsDashboard = lazy(() => import("./pages/admin/AnalyticsDashboard"));
 const Verify = lazy(() => import("./pages/Verify"));
 const MemberPublicCard = lazy(() => import("./pages/MemberPublicCard"));
@@ -129,6 +133,8 @@ const AppContent = () => {
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/disclaimer" element={<Disclaimer />} />
             <Route path="/donations-made" element={<DonationsMade />} />
+            <Route path="/emergency-funding" element={<EmergencyFunding />} />
+            <Route path="/emergency-funding/:slug" element={<EmergencyFundingDetails />} />
             <Route path="/become-a-member" element={<BecomeAMember />} />
             <Route path="/programs/:id" element={<ProgramDetail />} />
             <Route path="/profile" element={<Profile />} />
@@ -147,6 +153,7 @@ const AppContent = () => {
               <Route path="add-gallery" element={<AddGalleryManager />} />
               <Route path="form-images" element={<FormImagesManager />} />
               <Route path="feedback" element={<FeedbackManager />} />
+              <Route path="emergency-fundraisers" element={<EmergencyFundraisersManager />} />
             </Route>
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password/:token" element={<ResetPassword />} />
@@ -161,6 +168,7 @@ const AppContent = () => {
           <Footer />
         </Suspense>
       )}
+      {!isAdminPage && <EmergencyLiveFundFab />}
       {!isAdminPage && <ContactFloatingButton />}
     </div>
   );
