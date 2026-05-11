@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { FaHeart, FaShareAlt, FaBolt, FaHandHoldingHeart } from "react-icons/fa";
 import { buildEmergencyShareUrls, copyEmergencyLink } from "../utils/emergencyShare";
 import { toast } from "react-toastify";
+import { API_URL } from "../utils/apiConfig.js";
 
 const EmergencyFunding = () => {
   const [list, setList] = useState([]);
@@ -13,8 +14,11 @@ const EmergencyFunding = () => {
 
   useEffect(() => {
     axios
-      .get(`${import.meta.env.VITE_API_URL}/emergency-fundraisers/public`)
-      .then((res) => setList(res.data || []))
+      .get(`${API_URL}/emergency-fundraisers/public`)
+      .then((res) => {
+        const raw = res?.data;
+        setList(Array.isArray(raw) ? raw : []);
+      })
       .catch(() => {
         setList([]);
         toast.error("Could not load emergency fundraisers");

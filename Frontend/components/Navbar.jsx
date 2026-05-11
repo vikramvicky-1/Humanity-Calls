@@ -17,6 +17,7 @@ import { animateNavBar } from "../utils/animations";
 import { useUser } from "../context/UserContext";
 import axios from "axios";
 import { getAuthToken } from "../utils/authToken.js";
+import { API_URL } from "../utils/apiConfig.js";
 
 const MenuButton = ({ isOpen, toggle }) => {
   return (
@@ -79,7 +80,7 @@ const Navbar = () => {
       if (token) headers["Authorization"] = `Bearer ${token}`;
       try {
         const response = await axios.get(
-          `${import.meta.env.VITE_API_URL}/volunteers/my-status`,
+          `${API_URL}/volunteers/my-status`,
           { headers, withCredentials: true },
         );
         if (response.data.status !== "none") {

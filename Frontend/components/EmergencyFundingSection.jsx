@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import axios from "axios";
 import { motion } from "framer-motion";
 import { FaHeart, FaArrowRight, FaBolt } from "react-icons/fa";
+import { API_URL } from "../utils/apiConfig.js";
 
 const EmergencyFundingSection = () => {
   const [items, setItems] = useState([]);
@@ -10,8 +11,11 @@ const EmergencyFundingSection = () => {
 
   useEffect(() => {
     axios
-      .get(`${import.meta.env.VITE_API_URL}/emergency-fundraisers/public?featured=true`)
-      .then((res) => setItems(res.data || []))
+      .get(`${API_URL}/emergency-fundraisers/public?featured=true`)
+      .then((res) => {
+        const raw = res?.data;
+        setItems(Array.isArray(raw) ? raw : []);
+      })
       .catch(() => setItems([]))
       .finally(() => setLoading(false));
   }, []);

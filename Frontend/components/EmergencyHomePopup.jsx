@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaTimes, FaHeart, FaChevronRight } from "react-icons/fa";
+import { API_URL } from "../utils/apiConfig.js";
 
 const EmergencyHomePopup = () => {
   const [data, setData] = useState(null);
@@ -12,9 +13,15 @@ const EmergencyHomePopup = () => {
   useEffect(() => {
     let cancelled = false;
     axios
-      .get(`${import.meta.env.VITE_API_URL}/emergency-fundraisers/public/popup`)
+      .get(`${API_URL}/emergency-fundraisers/public/popup`)
       .then((res) => {
-        if (!cancelled) setData(res.data);
+        const payload = res?.data;
+        const ok =
+          payload &&
+          typeof payload === "object" &&
+          !Array.isArray(payload) &&
+          (payload._id || payload.slug);
+        if (!cancelled) setData(ok ? payload : null);
       })
       .catch(() => {
         if (!cancelled) setData(null);

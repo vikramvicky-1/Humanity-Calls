@@ -22,6 +22,7 @@ import {
 import { buildEmergencyShareUrls, copyEmergencyLink } from "../utils/emergencyShare";
 import { parseVideoForEmbed } from "../utils/emergencyVideoEmbed";
 import { downloadEmergencyBannerPng } from "../utils/downloadEmergencyBanner";
+import { API_URL } from "../utils/apiConfig.js";
 
 const EmergencyFundingDetails = () => {
   const { slug } = useParams();
@@ -33,8 +34,16 @@ const EmergencyFundingDetails = () => {
   const load = useCallback(() => {
     setLoading(true);
     axios
-      .get(`${import.meta.env.VITE_API_URL}/emergency-fundraisers/public/slug/${slug}`)
-      .then((res) => setF(res.data))
+      .get(`${API_URL}/emergency-fundraisers/public/slug/${slug}`)
+      .then((res) => {
+        const payload = res?.data;
+        const ok =
+          payload &&
+          typeof payload === "object" &&
+          !Array.isArray(payload) &&
+          (payload._id || payload.slug);
+        setF(ok ? payload : null);
+      })
       .catch(() => {
         setF(null);
         toast.error("Fundraiser not found");
