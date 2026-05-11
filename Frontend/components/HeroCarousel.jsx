@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { API_URL } from "../utils/apiConfig.js";
 
 const FALLBACK_IMAGES = [
   "https://res.cloudinary.com/daokrum7i/image/upload/f_auto,q_60,w_800,c_limit/v1768556077/landing_page3_dlrxfk.jpg",
@@ -21,9 +22,11 @@ const HeroCarousel = () => {
   useEffect(() => {
     const fetchImages = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_API_URL}/carousel`);
-        if (response.data && response.data.length > 0) {
-          setImages(response.data.map(img => img.imageUrl));
+        const response = await axios.get(`${API_URL}/carousel`);
+        const rows = response?.data;
+        if (Array.isArray(rows) && rows.length > 0) {
+          const urls = rows.map((img) => img?.imageUrl).filter(Boolean);
+          setImages(urls.length > 0 ? urls : FALLBACK_IMAGES);
         } else {
           setImages(FALLBACK_IMAGES);
         }

@@ -14,6 +14,8 @@ import {
   animateCards,
 } from "../utils/animations";
 import PinnedStackingCards from "../components/PinnedStackingCards";
+import EmergencyHomePopup from "../components/EmergencyHomePopup";
+import EmergencyFundingSection from "../components/EmergencyFundingSection";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -331,9 +333,12 @@ const Home = () => {
       {/* Hero Section */}
       <HeroSection />
 
+      <EmergencyHomePopup />
+
       {/* Stacking Cards Section */}
       <PinnedStackingCards />
 
+      <EmergencyFundingSection />
 
       {/* Highlight Mission Statement */}
       <section className="pb-20 pt-8 bg-white overflow-hidden pointer-events-none">
