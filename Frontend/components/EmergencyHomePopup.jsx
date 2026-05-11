@@ -15,15 +15,14 @@ const EmergencyHomePopup = () => {
     axios
       .get(`${API_URL}/emergency-fundraisers/public/popup`)
       .then((res) => {
+        if (cancelled) return;
         const payload = res?.data;
-        const ok =
-          payload &&
-          typeof payload === "object" &&
-          !Array.isArray(payload) &&
-          (payload._id || payload.slug);
-        if (!cancelled) setData(ok ? payload : null);
+        // Backend filters for isActive:true and showPopup:true
+        const isValid = payload && typeof payload === "object" && (payload._id || payload.slug);
+        setData(isValid ? payload : null);
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error("Popup fetch failed:", err);
         if (!cancelled) setData(null);
       })
       .finally(() => {
@@ -36,76 +35,131 @@ const EmergencyHomePopup = () => {
 
   useEffect(() => {
     if (!data?._id) return;
-    const key = `hc_emergency_popup_dismissed_${data._id}`;
-    if (sessionStorage.getItem(key)) setClosed(true);
+    const key = `hc_emergency_popup_dismissed_${String(data._id)}`;
+    setClosed(!!sessionStorage.getItem(key));
   }, [data]);
 
   const dismiss = () => {
-    if (data?._id) sessionStorage.setItem(`hc_emergency_popup_dismissed_${data._id}`, "1");
+    if (data?._id) {
+      sessionStorage.setItem(`hc_emergency_popup_dismissed_${String(data._id)}`, "1");
+    }
     setClosed(true);
   };
 
-  if (loading || !data || closed) return null;
-
-  const img = data.photos?.[0] || data.bannerImage;
-  const slug = data.slug;
-  const pending = data.pendingAmount ?? Math.max(0, (data.targetAmount || 0) - (data.raisedAmount || 0));
+  const isVisible = !loading && data && !closed;
 
   return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0, y: 40, scale: 0.96 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 20 }}
-        transition={{ type: "spring", damping: 24, stiffness: 260 }}
-        className="fixed bottom-48 left-4 right-4 md:left-auto md:right-5 md:bottom-28 z-[900] max-w-md md:max-w-lg mx-auto md:mx-0 pointer-events-auto md:max-w-sm"
-      >
-        <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-white/20 bg-[#1a1a2e] text-white">
-          <div className="absolute inset-0 bg-gradient-to-br from-blood/40 via-transparent to-primary/30 pointer-events-none" />
-          <button
-            type="button"
-            onClick={dismiss}
-            className="absolute top-3 right-3 z-20 p-2 rounded-xl bg-black/30 hover:bg-black/50 text-white transition-colors"
-            aria-label="Close"
-          >
-            <FaTimes />
-          </button>
-
-          <div className="relative z-10 flex flex-col sm:flex-row gap-4 p-5 sm:p-6">
-            <div className="shrink-0 w-full sm:w-28 h-40 sm:h-28 rounded-2xl overflow-hidden bg-black/20 border border-white/10">
-              {img ? (
-                <img src={img} alt="" className="w-full h-full object-cover" />
+    <AnimatePresence mode="wait">
+      {isVisible && (
+        <motion.div
+          key={String(data._id || data.slug || "emergency-popup")}
+          initial={{ opacity: 0, y: 100, scale: 0.9, filter: "blur(20px)" }}
+          animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+          exit={{ opacity: 0, y: 50, scale: 0.95, filter: "blur(20px)" }}
+          transition={{ 
+            type: "spring", 
+            damping: 30, 
+            stiffness: 150,
+            duration: 0.6 
+          }}
+          className="fixed bottom-6 right-6 md:right-10 md:bottom-10 z-[9999] w-[calc(100vw-3rem)] sm:w-[420px] pointer-events-auto"
+        >
+          <div className="relative rounded-[2.5rem] overflow-hidden shadow-[0_30px_90px_rgba(0,0,0,0.5)] border border-white/10 bg-[#0d0d0d] text-white">
+            {/* Action Header Image */}
+            <div className="relative h-56 sm:h-64 overflow-hidden">
+              {(data.photos?.[0] || data.bannerImage) ? (
+                <img 
+                  src={data.photos?.[0] || data.bannerImage} 
+                  alt="" 
+                  className="w-full h-full object-cover" 
+                />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-white/30">
-                  <FaHeart size={36} />
+                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blood/40 to-[#1a1a1a]">
+                  <FaHeart size={64} className="text-blood/30" />
                 </div>
               )}
-            </div>
-            <div className="flex-1 min-w-0 flex flex-col justify-center gap-2">
-              <span className="text-[10px] font-black uppercase tracking-[0.35em] text-amber-300">
-                Urgent — lives need you
-              </span>
-              <h3 className="text-lg sm:text-xl font-black leading-tight line-clamp-2">{data.title}</h3>
-              <p className="text-xs text-white/70 line-clamp-2">{data.shortDescription}</p>
-              <div className="flex flex-wrap gap-3 text-[11px] font-bold mt-1">
-                <span className="px-2 py-1 rounded-lg bg-white/10">
-                  Raised: ₹{(data.raisedAmount || 0).toLocaleString("en-IN")}
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d0d] via-[#0d0d0d]/20 to-transparent" />
+              
+              {/* Badges */}
+              <div className="absolute top-6 left-6 flex flex-col gap-2">
+                <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blood text-white text-[10px] font-black uppercase tracking-[0.2em] shadow-2xl">
+                  <span className="h-2 w-2 rounded-full bg-white animate-pulse" />
+                  Critical Need
                 </span>
-                <span className="px-2 py-1 rounded-lg bg-amber-500/20 text-amber-200">
-                  Need: ₹{pending.toLocaleString("en-IN")}
+                <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-[0.2em] border border-white/10">
+                  Verified Case
                 </span>
               </div>
-              <Link
-                to={`/emergency-funding/${slug}`}
+
+              <button
+                type="button"
                 onClick={dismiss}
-                className="mt-2 inline-flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-3 rounded-xl bg-primary hover:bg-primary/90 text-white font-black text-xs uppercase tracking-widest shadow-lg shadow-primary/30 transition-colors"
+                className="absolute top-6 right-6 p-3 rounded-full bg-black/40 hover:bg-blood/80 text-white backdrop-blur-md transition-all border border-white/10 group/close"
+                aria-label="Close"
               >
-                Donate now <FaChevronRight size={10} />
-              </Link>
+                <FaTimes size={16} className="group-hover/close:rotate-90 transition-transform" />
+              </button>
+            </div>
+
+            <div className="p-8 pt-2 space-y-6">
+              <div className="space-y-3">
+                <h3 className="text-2xl sm:text-3xl font-black leading-tight tracking-tight">
+                  {data.title}
+                </h3>
+                <p className="text-sm text-white/50 leading-relaxed font-medium">
+                  {data.medicalCondition ? `${data.medicalCondition}: ` : ""}{data.shortDescription || "This family needs your immediate support for life-saving medical treatment."}
+                </p>
+              </div>
+
+              {/* Stats & Progress */}
+              <div className="space-y-4 bg-white/5 rounded-[2rem] p-6 border border-white/5">
+                <div className="flex justify-between items-end">
+                  <div className="space-y-1">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Raised so far</span>
+                    <p className="text-xl font-black text-blood">₹{(data.raisedAmount || 0).toLocaleString("en-IN")}</p>
+                  </div>
+                  <div className="text-right space-y-1">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Goal</span>
+                    <p className="text-lg font-bold text-white/80">₹{(data.targetAmount || 0).toLocaleString("en-IN")}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="h-3 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
+                    <motion.div 
+                      initial={{ width: 0 }}
+                      animate={{ width: `${Math.min(100, (data.raisedAmount / data.targetAmount) * 100)}%` }}
+                      transition={{ duration: 1.5, ease: "circOut", delay: 0.5 }}
+                      className="h-full bg-gradient-to-r from-blood via-red-500 to-primary rounded-full relative" 
+                    >
+                      <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_0%,rgba(255,255,255,0.2)_50%,transparent_100%)] animate-[shimmer_2s_infinite]" />
+                    </motion.div>
+                  </div>
+                  <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-white/30">
+                    <span>{Math.round((data.raisedAmount / data.targetAmount) * 100)}% Funded</span>
+                    <span>{data.supportersCount || 0} Supporters</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <Link
+                  to={`/emergency-funding/${data.slug}`}
+                  onClick={dismiss}
+                  className="flex-1 flex items-center justify-center gap-3 px-8 py-5 rounded-2xl bg-white text-black font-black text-[13px] uppercase tracking-[0.2em] shadow-xl hover:bg-blood hover:text-white transition-all duration-300 group/btn"
+                >
+                  <span>Donate Now</span>
+                  <FaChevronRight size={12} className="group-hover/btn:translate-x-1 transition-transform" />
+                </Link>
+              </div>
+              
+              <p className="text-center text-[10px] text-white/20 font-medium tracking-widest uppercase pb-2">
+                Every second counts in this emergency
+              </p>
             </div>
           </div>
-        </div>
-      </motion.div>
+        </motion.div>
+      )}
     </AnimatePresence>
   );
 };

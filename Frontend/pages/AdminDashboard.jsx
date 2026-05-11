@@ -46,6 +46,7 @@ const AdminDashboard = () => {
   const [openBloodRequestsCount, setOpenBloodRequestsCount] = useState(0);
   const [pendingReimbursementsCount, setPendingReimbursementsCount] = useState(0);
   const [pendingDonationsCount, setPendingDonationsCount] = useState(0);
+  const [pendingEmergencyDonationsCount, setPendingEmergencyDonationsCount] = useState(0);
   const [pendingFeedbackCount, setPendingFeedbackCount] = useState(0);
 
   useEffect(() => {
@@ -61,12 +62,13 @@ const AdminDashboard = () => {
     try {
       const token = sessionStorage.getItem("adminToken");
       const headers = { Authorization: `Bearer ${token}` };
-      const [volunteerRes, bloodRes, reimbRes, donationRes, feedbackRes] = await Promise.all([
+      const [volunteerRes, bloodRes, reimbRes, donationRes, feedbackRes, emergencyDonationRes] = await Promise.all([
         axios.get(`${import.meta.env.VITE_API_URL}/volunteers?status=pending`, { headers }),
         axios.get(`${import.meta.env.VITE_API_URL}/blood-requests?status=open`, { headers }),
         axios.get(`${import.meta.env.VITE_API_URL}/reimbursements`, { headers }),
         axios.get(`${import.meta.env.VITE_API_URL}/donations`, { headers }),
         axios.get(`${import.meta.env.VITE_API_URL}/feedback`, { headers }),
+        axios.get(`${import.meta.env.VITE_API_URL}/emergency-donations/pending-count`, { headers }),
       ]);
 
       setPendingRequestsCount(volunteerRes.data.length);
@@ -80,6 +82,7 @@ const AdminDashboard = () => {
       setPendingFeedbackCount(
         (feedbackRes.data || []).filter((f) => f.status === "pending").length,
       );
+      setPendingEmergencyDonationsCount(emergencyDonationRes.data?.count || 0);
     } catch (err) {
       console.error("Failed to fetch pending count", err);
     }
@@ -99,7 +102,7 @@ const AdminDashboard = () => {
     { id: "blood-requests", label: "Blood Requests",  icon: <FaTint />, badge: openBloodRequestsCount },
     { id: "reimbursements", label: "Reimbursements",  icon: <FaMoneyCheckAlt />, badge: pendingReimbursementsCount },
     { id: "donations",      label: "Donations",       icon: <FaHeart />,         badge: pendingDonationsCount },
-    { id: "emergency-fundraisers", label: "Emergency funding", icon: <FaBolt /> },
+    { id: "emergency-fundraisers", label: "Emergency funding", icon: <FaBolt />, badge: pendingEmergencyDonationsCount },
     { id: "form-images",  label: "Form Images",       icon: <FaImage />        },
     { id: "gallery",      label: "Gallery",           icon: <FaImages />       },
     { id: "add-gallery",  label: "Add Gallery",       icon: <FaPlusCircle />   },
@@ -161,7 +164,7 @@ const AdminDashboard = () => {
         <aside
           className={`
             fixed top-0 left-0 h-full w-72 bg-[#1E1F2E] z-[100] transform transition-transform duration-300 ease-in-out
-            flex flex-col shadow-2xl
+            flex flex-col shadow-2xl overflow-x-hidden
             ${isMobileSidebarOpen ? "translate-x-0" : "-translate-x-full"}
             lg:translate-x-0 lg:sticky lg:top-[61px] lg:h-[calc(100vh-61px)] lg:w-56 lg:shrink-0
           `}
@@ -186,7 +189,7 @@ const AdminDashboard = () => {
           </div>
 
           {/* Nav Links */}
-          <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
+          <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto overflow-x-hidden">
             <p className="text-[9px] font-black text-white/20 uppercase tracking-[0.2em] px-3 mb-2">Navigation</p>
             {menuItems.map((item) => {
               const colors = NAV_COLORS[item.id] || {};
@@ -215,7 +218,7 @@ const AdminDashboard = () => {
                           <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 border-2 border-[#1E1F2E] rounded-full animate-pulse" />
                         )}
                       </span>
-                      <span className="text-sm whitespace-nowrap flex-1">{item.label}</span>
+                      <span className="text-sm truncate flex-1">{item.label}</span>
                       {item.badge > 0 && (
                         <span className="bg-amber-400 text-amber-900 text-[10px] font-black px-2 py-0.5 rounded-full min-w-[20px] text-center shadow-sm">
                           {item.badge}

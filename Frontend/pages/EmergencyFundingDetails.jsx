@@ -18,11 +18,16 @@ import {
   FaEnvelope,
   FaUniversity,
   FaCheckCircle,
+  FaTimes,
 } from "react-icons/fa";
 import { buildEmergencyShareUrls, copyEmergencyLink } from "../utils/emergencyShare";
 import { parseVideoForEmbed } from "../utils/emergencyVideoEmbed";
 import { downloadEmergencyBannerPng } from "../utils/downloadEmergencyBanner";
 import { API_URL } from "../utils/apiConfig.js";
+import { createPortal } from "react-dom";
+import { FaCloudUploadAlt, FaTrashAlt, FaHandHoldingHeart } from "react-icons/fa";
+import { uploadPublicImage } from "../utils/publicForms";
+import { motion, AnimatePresence } from "framer-motion";
 
 const EmergencyFundingDetails = () => {
   const { slug } = useParams();
@@ -76,6 +81,42 @@ const EmergencyFundingDetails = () => {
       toast.error("Could not generate banner (try disabling strict blockers)");
     } finally {
       setBannerBusy(false);
+    }
+  };
+
+  const [donationModal, setDonationModal] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [showThankYou, setShowThankYou] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState("");
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    amount: "",
+    transactionId: "",
+  });
+
+  const onDonationSubmit = async (e) => {
+    e.preventDefault();
+    if (!selectedFile) return toast.warning("Please upload payment screenshot");
+    setSubmitting(true);
+    try {
+      const screenshotUrl = await uploadPublicImage(selectedFile);
+      await axios.post(`${API_URL}/emergency-donations/submit`, {
+        ...form,
+        fundraiserId: f._id,
+        screenshotUrl,
+      });
+      setShowThankYou(true);
+      setDonationModal(false);
+      setForm({ name: "", email: "", phone: "", amount: "", transactionId: "" });
+      setSelectedFile(null);
+      setPreviewUrl("");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Submission failed");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -329,6 +370,13 @@ const EmergencyFundingDetails = () => {
               Contact coordinator
             </a>
 
+            <button
+              onClick={() => setDonationModal(true)}
+              className="mt-3 block w-full py-4 rounded-xl bg-primary text-white text-center font-black text-sm uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
+            >
+              Submit Donation Details
+            </button>
+
             <div className="mt-6 space-y-2 text-xs text-text-body/70">
               {cd.phone ? (
                 <p className="flex items-center gap-2 font-bold">
@@ -356,6 +404,131 @@ const EmergencyFundingDetails = () => {
           </div>
         </aside>
       </div>
+
+      {donationModal && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md" onClick={() => setDonationModal(false)}>
+          <div 
+            className="bg-white rounded-[3rem] shadow-2xl w-full max-w-2xl h-full max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-500"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-8 border-b border-primary/5 flex items-center justify-between bg-primary/5 shrink-0">
+              <div>
+                <h3 className="text-xl font-black text-primary">Report Donation</h3>
+                <p className="text-[10px] font-bold text-primary/40 uppercase tracking-widest">Verify your contribution</p>
+              </div>
+              <button onClick={() => setDonationModal(false)} className="p-3 bg-white hover:bg-bg rounded-2xl shadow-sm transition-all text-primary/40 hover:text-primary">
+                <FaTimes size={20} />
+              </button>
+            </div>
+
+            <div className="p-10 overflow-y-auto flex-grow min-h-0 custom-scrollbar bg-white" style={{ overscrollBehavior: 'contain' }} data-lenis-prevent>
+              <form id="emergency-donation-form" onSubmit={onDonationSubmit} className="space-y-6">
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-primary/40 ml-1">Full Name</label>
+                    <input required className="w-full px-5 py-4 bg-bg border border-border rounded-2xl focus:ring-2 focus:ring-primary outline-none font-bold text-sm" value={form.name} onChange={(e) => setForm(p => ({ ...p, name: e.target.value }))} />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-primary/40 ml-1">Email</label>
+                    <input required type="email" className="w-full px-5 py-4 bg-bg border border-border rounded-2xl focus:ring-2 focus:ring-primary outline-none font-bold text-sm" value={form.email} onChange={(e) => setForm(p => ({ ...p, email: e.target.value }))} />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-primary/40 ml-1">Phone</label>
+                    <input required className="w-full px-5 py-4 bg-bg border border-border rounded-2xl focus:ring-2 focus:ring-primary outline-none font-bold text-sm" value={form.phone} onChange={(e) => setForm(p => ({ ...p, phone: e.target.value }))} />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-primary/40 ml-1">Amount (₹)</label>
+                    <input required type="number" min={1} className="w-full px-5 py-4 bg-bg border border-border rounded-2xl focus:ring-2 focus:ring-primary outline-none font-bold text-sm" value={form.amount} onChange={(e) => setForm(p => ({ ...p, amount: e.target.value }))} />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-primary/40 ml-1">Transaction ID</label>
+                  <input required className="w-full px-5 py-4 bg-bg border border-border rounded-2xl focus:ring-2 focus:ring-primary outline-none font-bold text-sm" value={form.transactionId} onChange={(e) => setForm(p => ({ ...p, transactionId: e.target.value }))} />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-primary/40 ml-1">Payment Screenshot</label>
+                  {!previewUrl ? (
+                    <label className="relative group block cursor-pointer">
+                      <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                        const f = e.target.files[0];
+                        if (f) { setSelectedFile(f); setPreviewUrl(URL.createObjectURL(f)); }
+                      }} />
+                      <div className="w-full py-10 px-4 border-2 border-dashed border-border bg-bg/50 rounded-3xl flex flex-col items-center justify-center gap-2 group-hover:border-primary group-hover:bg-primary/5 transition-all">
+                        <div className="w-12 h-12 bg-white text-primary shadow-sm rounded-xl flex items-center justify-center"><FaCloudUploadAlt size={24} /></div>
+                        <p className="text-sm font-bold text-text-body">Click to upload screenshot</p>
+                        <p className="text-[10px] text-text-body/40 font-black uppercase tracking-widest">PNG, JPG up to 8MB</p>
+                      </div>
+                    </label>
+                  ) : (
+                    <div className="relative rounded-[2rem] overflow-hidden border border-border shadow-sm group aspect-video">
+                      <img src={previewUrl} alt="Proof" className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <button type="button" onClick={() => { setSelectedFile(null); setPreviewUrl(""); }} className="w-12 h-12 rounded-full bg-blood text-white flex items-center justify-center hover:scale-110 transition-all">
+                          <FaTrashAlt size={18} />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </form>
+            </div>
+
+            <div className="p-8 bg-primary/5 border-t border-primary/5 flex items-center justify-end gap-4 shrink-0">
+              <button onClick={() => setDonationModal(false)} className="px-8 py-4 text-primary/40 hover:text-primary font-black text-xs uppercase tracking-widest transition-all">
+                Cancel
+              </button>
+              <button 
+                form="emergency-donation-form"
+                disabled={submitting}
+                className="px-10 py-4 bg-primary text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
+              >
+                {submitting ? "Submitting..." : "Send Verification Request"}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Thank You Popup */}
+      <AnimatePresence>
+        {showThankYou && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0, y: 40 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.8, opacity: 0, y: 40 }}
+              className="bg-white rounded-[3rem] p-8 md:p-12 max-w-lg w-full text-center shadow-2xl relative overflow-hidden"
+            >
+              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary via-blood to-primary" />
+              <div className="w-20 h-20 bg-green-50 text-green-500 rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner">
+                <FaCheckCircle size={40} className="animate-bounce" />
+              </div>
+              <h2 className="text-3xl font-black text-slate-900 mb-4 tracking-tight">Donation Reported! ❤️</h2>
+              <p className="text-slate-600 font-medium leading-relaxed mb-8">
+                Thank you for your support. Our team will verify the transaction and update the fundraiser totals shortly.
+              </p>
+              <div className="bg-slate-50 rounded-2xl p-6 mb-8 border border-slate-100 flex items-center gap-4 text-left">
+                <div className="w-12 h-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center shrink-0">
+                  <FaHandHoldingHeart size={20} />
+                </div>
+                <div>
+                  <p className="text-[11px] font-black text-primary uppercase tracking-widest leading-none mb-1">Impact Status</p>
+                  <p className="text-sm font-bold text-slate-700">Verification in progress...</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowThankYou(false)}
+                className="w-full py-5 rounded-2xl bg-primary text-white font-black uppercase tracking-[0.2em] text-sm shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+              >
+                Close
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

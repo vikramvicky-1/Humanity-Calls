@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo, useCallback } from "react";
+import { createPortal } from "react-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
 import {
@@ -18,8 +19,10 @@ import {
   FaVideo,
   FaQrcode,
   FaSearch,
+  FaTimes,
+  FaUserFriends,
 } from "react-icons/fa";
-import { useOutletContext } from "react-router-dom";
+import { useOutletContext, useNavigate } from "react-router-dom";
 import { downloadEmergencyBannerPng } from "../../utils/downloadEmergencyBanner";
 
 /** Mobile Safari often omits MIME type; iOS uses HEIC / video/quicktime. */
@@ -81,7 +84,9 @@ const emptyForm = () => ({
 
 const EmergencyFundraisersManager = () => {
   const { onStatusUpdate } = useOutletContext();
+  const navigate = useNavigate();
   const [rows, setRows] = useState([]);
+  const [pendingCounts, setPendingCounts] = useState({});
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
@@ -90,14 +95,39 @@ const EmergencyFundraisersManager = () => {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(null);
 
+  // Body scroll lock
+  useEffect(() => {
+    if (modalOpen) {
+      const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
+      document.body.style.overflow = "hidden";
+      document.body.style.paddingRight = `${scrollBarWidth}px`;
+      if (window.__lenis) window.__lenis.stop();
+    } else {
+      document.body.style.overflow = "unset";
+      document.body.style.paddingRight = "0px";
+      if (window.__lenis) window.__lenis.start();
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+      document.body.style.paddingRight = "0px";
+      if (window.__lenis) window.__lenis.start();
+    };
+  }, [modalOpen]);
+
   const token = () => sessionStorage.getItem("adminToken");
   const headers = () => ({ Authorization: `Bearer ${token()}` });
 
   const fetchRows = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${import.meta.env.VITE_API_URL}/emergency-fundraisers`, { headers: headers() });
-      setRows(res.data || []);
+      const [fRes, pRes] = await Promise.all([
+        axios.get(`${import.meta.env.VITE_API_URL}/emergency-fundraisers`, { headers: headers() }),
+        axios.get(`${import.meta.env.VITE_API_URL}/emergency-donations/pending-counts-grouped`, { headers: headers() }),
+      ]);
+      setRows(fRes.data || []);
+      const counts = {};
+      (pRes.data || []).forEach(c => { counts[c._id] = c.count; });
+      setPendingCounts(counts);
     } catch {
       toast.error("Failed to load fundraisers");
     } finally {
@@ -369,7 +399,7 @@ const EmergencyFundraisersManager = () => {
                   <th className="px-4 py-3">Campaign</th>
                   <th className="px-4 py-3">Progress</th>
                   <th className="px-4 py-3 text-center">Flags</th>
-                  <th className="px-4 py-3 text-right">Actions</th>
+                  <th className="px-4 py-3 text-right min-w-[180px]">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -421,19 +451,36 @@ const EmergencyFundraisersManager = () => {
                         </div>
                       </td>
                       <td className="px-4 py-4 text-right">
-                        <div className="flex flex-wrap justify-end gap-1">
-                          <button type="button" onClick={() => openEdit(r)} className="p-2 text-primary hover:bg-primary/10 rounded-lg" title="Edit">
-                            <FaEdit />
+                        <div className="flex flex-col gap-2">
+                          <button 
+                            type="button" 
+                            onClick={() => navigate(`/admin/emergency-donors?fundraiserId=${r._id}`)} 
+                            className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white rounded-xl font-black text-[10px] uppercase tracking-widest transition-all relative group shadow-sm border border-indigo-100" 
+                            title="Manage Donors"
+                          >
+                            <FaUserFriends className="group-hover:scale-110 transition-transform" /> 
+                            <span>Manage Donors</span>
+                            {pendingCounts[r._id] > 0 && (
+                              <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-lg ring-2 ring-white animate-bounce">
+                                {pendingCounts[r._id]}
+                              </span>
+                            )}
                           </button>
-                          <button type="button" onClick={() => copyLink(r)} className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg" title="Copy link">
-                            <FaCopy />
-                          </button>
-                          <button type="button" onClick={() => adminBanner(r)} className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg" title="Banner">
-                            <FaDownload />
-                          </button>
-                          <button type="button" onClick={() => remove(r._id)} className="p-2 text-blood hover:bg-blood/10 rounded-lg" title="Delete">
-                            <FaTrash />
-                          </button>
+                          
+                          <div className="flex justify-end gap-1">
+                            <button type="button" onClick={() => openEdit(r)} className="p-2 text-primary hover:bg-primary/10 rounded-lg" title="Edit">
+                              <FaEdit />
+                            </button>
+                            <button type="button" onClick={() => copyLink(r)} className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg" title="Copy link">
+                              <FaCopy />
+                            </button>
+                            <button type="button" onClick={() => adminBanner(r)} className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg" title="Banner">
+                              <FaDownload />
+                            </button>
+                            <button type="button" onClick={() => remove(r._id)} className="p-2 text-blood hover:bg-blood/10 rounded-lg" title="Delete">
+                              <FaTrash />
+                            </button>
+                          </div>
                         </div>
                       </td>
                     </tr>
@@ -445,216 +492,229 @@ const EmergencyFundraisersManager = () => {
         )}
       </div>
 
-      {modalOpen && (
-        <div className="fixed inset-0 z-[300] flex items-center justify-center p-3 sm:p-4 bg-black/70 backdrop-blur-sm overflow-y-auto overscroll-contain touch-pan-y">
+      {modalOpen && createPortal(
+        <div 
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md"
+          onClick={() => setModalOpen(false)}
+        >
           <div
-            className="bg-white rounded-3xl shadow-2xl w-full max-w-3xl max-h-[min(92dvh,920px)] overflow-y-auto overscroll-contain p-5 sm:p-8 md:p-10 my-4 sm:my-8 touch-pan-y"
-            style={{ WebkitOverflowScrolling: "touch" }}
+            className="bg-white rounded-[3rem] shadow-2xl w-full max-w-5xl h-full max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-500"
+            onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex justify-between items-start gap-4 mb-6">
-              <h3 className="text-2xl font-black text-primary">{editingId ? "Edit fundraiser" : "New fundraiser"}</h3>
-              <button type="button" onClick={() => setModalOpen(false)} className="text-text-body/50 font-black hover:text-primary">
-                ✕
+            {/* Fixed Header */}
+            <div className="p-8 border-b border-primary/5 flex items-center justify-between bg-primary/5 shrink-0">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center text-white shadow-lg">
+                  <FaHeart size={24} />
+                </div>
+                <div>
+                  <h3 className="text-xl font-black text-primary">{editingId ? "Edit Fundraiser" : "New Fundraiser"}</h3>
+                  <p className="text-[10px] font-bold text-primary/40 uppercase tracking-widest">Update campaign information</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setModalOpen(false)} 
+                className="p-3 bg-white hover:bg-bg rounded-2xl shadow-sm transition-all text-primary/40 hover:text-primary"
+              >
+                <FaTimes size={20} />
               </button>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-4 mb-6 p-4 rounded-2xl bg-primary/5 border border-primary/10">
-              <div>
-                <p className="text-[10px] font-black uppercase text-text-body/40">Live preview</p>
-                <p className="text-lg font-black text-primary">₹{preview.pending.toLocaleString("en-IN")} pending</p>
+            {/* Scrollable Content Area */}
+            <div 
+              className="p-10 overflow-y-auto flex-grow min-h-0 custom-scrollbar bg-white"
+              style={{ overscrollBehavior: 'contain' }}
+              data-lenis-prevent
+            >
+              <div className="grid md:grid-cols-2 gap-4 mb-8 p-6 rounded-[2rem] bg-primary/5 border border-primary/10">
+                <div>
+                  <p className="text-[10px] font-black uppercase text-text-body/40 tracking-widest">Live preview</p>
+                  <p className="text-xl font-black text-primary mt-1">₹{preview.pending.toLocaleString("en-IN")} pending</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase text-text-body/40 tracking-widest">Goal Progress</p>
+                  <div className="flex items-center justify-between mt-1">
+                    <p className="text-sm font-black">{preview.pct}%</p>
+                    {preview.goalReached && <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">GOAL REACHED</span>}
+                  </div>
+                  <div className="h-2 rounded-full bg-black/10 mt-2 overflow-hidden">
+                    <div className="h-full rounded-full bg-primary transition-all duration-500" style={{ width: `${preview.pct}%` }} />
+                  </div>
+                </div>
               </div>
-              <div>
-                <p className="text-[10px] font-black uppercase text-text-body/40">Progress</p>
-                <p className="text-lg font-black">{preview.pct}% {preview.goalReached ? "· Goal reached" : ""}</p>
-                <div className="h-2 rounded-full bg-black/10 mt-2">
-                  <div className="h-full rounded-full bg-primary" style={{ width: `${preview.pct}%` }} />
+
+              <div className="space-y-8">
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="md:col-span-2 space-y-1">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/40 ml-1">Title *</label>
+                    <input className={input} value={form.title} onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))} />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/40 ml-1">Slug (optional)</label>
+                    <input className={input} value={form.slug} onChange={(e) => setForm((p) => ({ ...p, slug: e.target.value }))} placeholder="auto from title" />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/40 ml-1">Patient name</label>
+                    <input className={input} value={form.patientName} onChange={(e) => setForm((p) => ({ ...p, patientName: e.target.value }))} />
+                  </div>
+                  <div className="md:col-span-2 space-y-1">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/40 ml-1">Short description</label>
+                    <textarea className={input + " min-h-[72px] resize-none"} value={form.shortDescription} onChange={(e) => setForm((p) => ({ ...p, shortDescription: e.target.value }))} />
+                  </div>
+                  <div className="md:col-span-2 space-y-1">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/40 ml-1">Full story</label>
+                    <textarea className={input + " min-h-[160px] resize-none"} value={form.fullDescription} onChange={(e) => setForm((p) => ({ ...p, fullDescription: e.target.value }))} />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/40 ml-1">Hospital</label>
+                    <input className={input} value={form.hospitalName} onChange={(e) => setForm((p) => ({ ...p, hospitalName: e.target.value }))} />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/40 ml-1">Medical condition</label>
+                    <input className={input} value={form.medicalCondition} onChange={(e) => setForm((p) => ({ ...p, medicalCondition: e.target.value }))} />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/40 ml-1">Target (₹) *</label>
+                    <input type="number" min={1} className={input} value={form.targetAmount} onChange={(e) => setForm((p) => ({ ...p, targetAmount: e.target.value }))} />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/40 ml-1">Raised (₹)</label>
+                    <input type="number" min={0} className={input} value={form.raisedAmount} onChange={(e) => setForm((p) => ({ ...p, raisedAmount: e.target.value }))} />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/40 ml-1">Supporters count</label>
+                    <input type="number" min={0} className={input} value={form.supportersCount} onChange={(e) => setForm((p) => ({ ...p, supportersCount: e.target.value }))} />
+                  </div>
+                </div>
+
+                <div className="p-8 bg-bg/50 rounded-[2.5rem] border border-primary/5 space-y-6">
+                  <h4 className="text-xs font-black text-primary uppercase tracking-[0.2em]">Campaign Media</h4>
+                  <div className="flex flex-wrap gap-3">
+                    <label className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-white border border-primary/10 cursor-pointer text-[10px] font-black uppercase tracking-widest hover:bg-primary hover:text-white transition-all shadow-sm">
+                      <FaImage /> Add photo
+                      <input type="file" accept="image/*,.heic,.heif" className="hidden" disabled={!!uploading} onChange={(e) => onPickImage(e, "photo")} />
+                    </label>
+                    <label className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-white border border-primary/10 cursor-pointer text-[10px] font-black uppercase tracking-widest hover:bg-primary hover:text-white transition-all shadow-sm">
+                      <FaVideo /> Upload video
+                      <input type="file" accept="video/*" className="hidden" disabled={!!uploading} onChange={onPickVideo} />
+                    </label>
+                    <label className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-white border border-primary/10 cursor-pointer text-[10px] font-black uppercase tracking-widest hover:bg-primary hover:text-white transition-all shadow-sm">
+                      <FaQrcode /> QR image
+                      <input type="file" accept="image/*" className="hidden" disabled={!!uploading} onChange={(e) => onPickImage(e, "qrCodeImage")} />
+                    </label>
+                    <label className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-white border border-primary/10 cursor-pointer text-[10px] font-black uppercase tracking-widest hover:bg-primary hover:text-white transition-all shadow-sm">
+                      Banner
+                      <input type="file" accept="image/*" className="hidden" disabled={!!uploading} onChange={(e) => onPickImage(e, "bannerImage")} />
+                    </label>
+                  </div>
+                  
+                  {uploading && <p className="text-xs font-black text-primary animate-pulse italic">Uploading {uploading}...</p>}
+                  
+                  <div className="flex flex-wrap gap-3">
+                    {(form.photos || []).map((url, i) => (
+                      <div key={i} className="relative w-24 h-24 rounded-2xl overflow-hidden border-2 border-white shadow-md group">
+                        <img src={url} alt="" className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          className="absolute inset-0 bg-blood/60 text-white text-[10px] font-black uppercase opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                          onClick={() => setForm((p) => ({ ...p, photos: p.photos.filter((_, j) => j !== i) }))}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    {form.qrCodeImage && (
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase text-primary/40 ml-1">Current QR</label>
+                        <img src={form.qrCodeImage} alt="QR" className="w-full h-32 object-contain bg-white rounded-2xl border border-primary/5 p-2" />
+                      </div>
+                    )}
+                    {form.bannerImage && (
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase text-primary/40 ml-1">Current Banner</label>
+                        <img src={form.bannerImage} alt="Banner" className="w-full h-32 object-cover rounded-2xl border border-primary/5" />
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/40 ml-1">Video URL (YouTube/File)</label>
+                    <input className={input} value={form.videoUrl} onChange={(e) => setForm((p) => ({ ...p, videoUrl: e.target.value }))} placeholder="https://..." />
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-10">
+                  <div className="p-8 bg-bg/50 rounded-[2.5rem] border border-primary/5 space-y-6">
+                    <h4 className="text-xs font-black text-primary uppercase tracking-[0.2em]">Bank Details</h4>
+                    {["accountHolderName", "bankName", "accountNumber", "ifscCode", "upiId"].map((k) => (
+                      <div key={k} className="space-y-1">
+                        <label className="text-[10px] font-black uppercase text-primary/40 ml-1">{k.replace(/([A-Z])/g, ' $1').trim()}</label>
+                        <input
+                          className={input}
+                          value={form.bankDetails[k] || ""}
+                          onChange={(e) => setForm((p) => ({ ...p, bankDetails: { ...p.bankDetails, [k]: e.target.value } }))}
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="p-8 bg-bg/50 rounded-[2.5rem] border border-primary/5 space-y-6">
+                    <h4 className="text-xs font-black text-primary uppercase tracking-[0.2em]">Contact Information</h4>
+                    {["phone", "alternatePhone", "email"].map((k) => (
+                      <div key={k} className="space-y-1">
+                        <label className="text-[10px] font-black uppercase text-primary/40 ml-1">{k.replace(/([A-Z])/g, ' $1').trim()}</label>
+                        <input
+                          className={input}
+                          value={form.contactDetails[k] || ""}
+                          onChange={(e) => setForm((p) => ({ ...p, contactDetails: { ...p.contactDetails, [k]: e.target.value } }))}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="p-8 bg-bg/50 rounded-[2.5rem] border border-primary/5 flex flex-wrap gap-8 justify-center">
+                  <label className="flex items-center gap-3 cursor-pointer group">
+                    <input type="checkbox" checked={form.isActive} onChange={(e) => setForm((p) => ({ ...p, isActive: e.target.checked }))} className="w-5 h-5 rounded-lg border-primary/20 text-primary focus:ring-primary/20" />
+                    <span className="text-sm font-black text-text-body/60 group-hover:text-primary transition-colors uppercase tracking-widest">Active</span>
+                  </label>
+                  <label className="flex items-center gap-3 cursor-pointer group">
+                    <input type="checkbox" checked={form.isFeatured} onChange={(e) => setForm((p) => ({ ...p, isFeatured: e.target.checked }))} className="w-5 h-5 rounded-lg border-primary/20 text-primary focus:ring-primary/20" />
+                    <span className="text-sm font-black text-text-body/60 group-hover:text-primary transition-colors uppercase tracking-widest">Featured</span>
+                  </label>
+                  <label className="flex items-center gap-3 cursor-pointer group">
+                    <input type="checkbox" checked={form.showPopup} onChange={(e) => setForm((p) => ({ ...p, showPopup: e.target.checked }))} className="w-5 h-5 rounded-lg border-primary/20 text-primary focus:ring-primary/20" />
+                    <span className="text-sm font-black text-text-body/60 group-hover:text-primary transition-colors uppercase tracking-widest">Popup</span>
+                  </label>
                 </div>
               </div>
             </div>
 
-            <div className="space-y-6">
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="md:col-span-2">
-                  <label className="text-[10px] font-black uppercase text-text-body/40">Title *</label>
-                  <input className={input + " mt-1"} value={form.title} onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))} />
-                </div>
-                <div>
-                  <label className="text-[10px] font-black uppercase text-text-body/40">Slug (optional)</label>
-                  <input className={input + " mt-1"} value={form.slug} onChange={(e) => setForm((p) => ({ ...p, slug: e.target.value }))} placeholder="auto from title" />
-                </div>
-                <div>
-                  <label className="text-[10px] font-black uppercase text-text-body/40">Patient name</label>
-                  <input className={input + " mt-1"} value={form.patientName} onChange={(e) => setForm((p) => ({ ...p, patientName: e.target.value }))} />
-                </div>
-                <div className="md:col-span-2">
-                  <label className="text-[10px] font-black uppercase text-text-body/40">Short description</label>
-                  <textarea className={input + " mt-1 min-h-[72px]"} value={form.shortDescription} onChange={(e) => setForm((p) => ({ ...p, shortDescription: e.target.value }))} />
-                </div>
-                <div className="md:col-span-2">
-                  <label className="text-[10px] font-black uppercase text-text-body/40">Full story</label>
-                  <textarea className={input + " mt-1 min-h-[120px]"} value={form.fullDescription} onChange={(e) => setForm((p) => ({ ...p, fullDescription: e.target.value }))} />
-                </div>
-                <div>
-                  <label className="text-[10px] font-black uppercase text-text-body/40">Hospital</label>
-                  <input className={input + " mt-1"} value={form.hospitalName} onChange={(e) => setForm((p) => ({ ...p, hospitalName: e.target.value }))} />
-                </div>
-                <div>
-                  <label className="text-[10px] font-black uppercase text-text-body/40">Medical condition</label>
-                  <input className={input + " mt-1"} value={form.medicalCondition} onChange={(e) => setForm((p) => ({ ...p, medicalCondition: e.target.value }))} />
-                </div>
-                <div>
-                  <label className="text-[10px] font-black uppercase text-text-body/40">Target (₹) *</label>
-                  <input type="number" min={1} className={input + " mt-1"} value={form.targetAmount} onChange={(e) => setForm((p) => ({ ...p, targetAmount: e.target.value }))} />
-                </div>
-                <div>
-                  <label className="text-[10px] font-black uppercase text-text-body/40">Raised (₹)</label>
-                  <input type="number" min={0} className={input + " mt-1"} value={form.raisedAmount} onChange={(e) => setForm((p) => ({ ...p, raisedAmount: e.target.value }))} />
-                </div>
-                <div>
-                  <label className="text-[10px] font-black uppercase text-text-body/40">Supporters count</label>
-                  <input type="number" min={0} className={input + " mt-1"} value={form.supportersCount} onChange={(e) => setForm((p) => ({ ...p, supportersCount: e.target.value }))} />
-                </div>
-              </div>
-
-              <div className="border-t border-border pt-6">
-                <p className="text-xs font-black uppercase tracking-widest text-primary mb-3">Media</p>
-                <div className="flex flex-wrap gap-3 mb-3">
-                  <label className="inline-flex items-center gap-2 px-4 py-3 min-h-[44px] rounded-xl bg-bg border border-border cursor-pointer text-xs font-black uppercase touch-manipulation">
-                    <FaImage /> Add photo
-                    <input
-                      type="file"
-                      accept="image/*,.heic,.heif"
-                      className="hidden"
-                      disabled={!!uploading}
-                      onChange={(e) => onPickImage(e, "photo")}
-                    />
-                  </label>
-                  <label className="inline-flex items-center gap-2 px-4 py-3 min-h-[44px] rounded-xl bg-bg border border-border cursor-pointer text-xs font-black uppercase touch-manipulation">
-                    <FaVideo /> Upload video
-                    <input
-                      type="file"
-                      accept="video/*,video/mp4,video/quicktime,.mp4,.mov,.webm,.mkv,.m4v"
-                      className="hidden"
-                      disabled={!!uploading}
-                      onChange={onPickVideo}
-                    />
-                  </label>
-                  <label className="inline-flex items-center gap-2 px-4 py-3 min-h-[44px] rounded-xl bg-bg border border-border cursor-pointer text-xs font-black uppercase touch-manipulation">
-                    <FaQrcode /> QR image
-                    <input
-                      type="file"
-                      accept="image/*,.heic,.heif"
-                      className="hidden"
-                      disabled={!!uploading}
-                      onChange={(e) => onPickImage(e, "qrCodeImage")}
-                    />
-                  </label>
-                  <label className="inline-flex items-center gap-2 px-4 py-3 min-h-[44px] rounded-xl bg-bg border border-border cursor-pointer text-xs font-black uppercase touch-manipulation">
-                    Banner
-                    <input
-                      type="file"
-                      accept="image/*,.heic,.heif"
-                      className="hidden"
-                      disabled={!!uploading}
-                      onChange={(e) => onPickImage(e, "bannerImage")}
-                    />
-                  </label>
-                </div>
-                <p className="text-[10px] text-text-body/45 font-medium mb-2 leading-relaxed">
-                  Phone gallery &amp; camera supported. Photos up to 8MB. Long campaign videos (e.g. ~30 minutes) are allowed up to{" "}
-                  {(MAX_VIDEO_BYTES / (1024 * 1024 * 1024)).toFixed(0)} GB — ensure your Cloudinary plan and server/proxy (e.g.{" "}
-                  <code className="text-[9px] bg-bg px-1 rounded">client_max_body_size</code>) allow large uploads.
-                </p>
-                {uploading ? <p className="text-xs font-bold text-primary mb-2">Uploading {uploading}…</p> : null}
-                <div className="flex flex-wrap gap-2 mb-3">
-                  {(form.photos || []).map((url, i) => (
-                    <div key={i} className="relative w-20 h-20 rounded-xl overflow-hidden border border-border group">
-                      <img src={url} alt="" className="w-full h-full object-cover" />
-                      <button
-                        type="button"
-                        className="absolute inset-0 bg-black/50 text-white text-xs font-black opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={() => setForm((p) => ({ ...p, photos: p.photos.filter((_, j) => j !== i) }))}
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  ))}
-                </div>
-                {form.videoUrl ? (
-                  <p className="text-xs break-all text-text-body/60 mb-2">
-                    Video: <a href={form.videoUrl} className="text-primary underline" target="_blank" rel="noreferrer">{form.videoUrl}</a>
-                    <button type="button" className="ml-2 text-blood font-bold" onClick={() => setForm((p) => ({ ...p, videoUrl: "" }))}>
-                      Clear
-                    </button>
-                  </p>
-                ) : null}
-                <div className="grid grid-cols-2 gap-3">
-                  {form.qrCodeImage ? <img src={form.qrCodeImage} alt="QR" className="h-24 object-contain border rounded-xl p-1" /> : null}
-                  {form.bannerImage ? <img src={form.bannerImage} alt="Banner" className="h-24 object-cover border rounded-xl" /> : null}
-                </div>
-                <p className="text-[10px] text-text-body/40 mt-2">Or paste video URL (YouTube / file URL)</p>
-                <input className={input + " mt-1"} value={form.videoUrl} onChange={(e) => setForm((p) => ({ ...p, videoUrl: e.target.value }))} placeholder="https://..." />
-              </div>
-
-              <div className="border-t border-border pt-6 grid md:grid-cols-2 gap-4">
-                <p className="md:col-span-2 text-xs font-black uppercase tracking-widest text-primary">Bank</p>
-                {["accountHolderName", "bankName", "accountNumber", "ifscCode", "upiId"].map((k) => (
-                  <div key={k}>
-                    <label className="text-[10px] font-black uppercase text-text-body/40">{k}</label>
-                    <input
-                      className={input + " mt-1"}
-                      value={form.bankDetails[k] || ""}
-                      onChange={(e) => setForm((p) => ({ ...p, bankDetails: { ...p.bankDetails, [k]: e.target.value } }))}
-                    />
-                  </div>
-                ))}
-              </div>
-
-              <div className="border-t border-border pt-6 grid md:grid-cols-2 gap-4">
-                <p className="md:col-span-2 text-xs font-black uppercase tracking-widest text-primary">Contact</p>
-                {["phone", "alternatePhone", "email"].map((k) => (
-                  <div key={k} className={k === "email" ? "md:col-span-2" : ""}>
-                    <label className="text-[10px] font-black uppercase text-text-body/40">{k}</label>
-                    <input
-                      className={input + " mt-1"}
-                      value={form.contactDetails[k] || ""}
-                      onChange={(e) => setForm((p) => ({ ...p, contactDetails: { ...p.contactDetails, [k]: e.target.value } }))}
-                    />
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex flex-wrap gap-6 border-t border-border pt-6">
-                <label className="flex items-center gap-2 text-sm font-bold cursor-pointer">
-                  <input type="checkbox" checked={form.isActive} onChange={(e) => setForm((p) => ({ ...p, isActive: e.target.checked }))} /> Active
-                </label>
-                <label className="flex items-center gap-2 text-sm font-bold cursor-pointer">
-                  <input type="checkbox" checked={form.isFeatured} onChange={(e) => setForm((p) => ({ ...p, isFeatured: e.target.checked }))} /> Featured on home
-                </label>
-                <label className="flex items-center gap-2 text-sm font-bold cursor-pointer">
-                  <input type="checkbox" checked={form.showPopup} onChange={(e) => setForm((p) => ({ ...p, showPopup: e.target.checked }))} /> Homepage popup
-                </label>
-              </div>
-            </div>
-
-            <div className="flex gap-3 mt-8 pt-6 border-t border-border">
-              <button type="button" onClick={() => setModalOpen(false)} className="flex-1 py-3 rounded-xl border-2 border-border font-black text-sm">
+            {/* Fixed Footer */}
+            <div className="p-8 bg-primary/5 border-t border-primary/5 flex items-center justify-end gap-4 shrink-0">
+              <button 
+                onClick={() => setModalOpen(false)} 
+                className="px-8 py-4 text-primary/40 hover:text-primary font-black text-xs uppercase tracking-widest transition-all"
+              >
                 Cancel
               </button>
               <button
-                type="button"
                 disabled={saving}
                 onClick={save}
-                className="flex-1 py-3 rounded-xl bg-primary text-white font-black text-sm uppercase tracking-widest disabled:opacity-50"
+                className="px-10 py-4 bg-primary text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
               >
-                {saving ? "Saving…" : "Save"}
+                {saving ? "Saving Changes..." : "Save All Changes"}
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
-    </div>
-  );
+  </div>
+);
 };
 
 export default EmergencyFundraisersManager;

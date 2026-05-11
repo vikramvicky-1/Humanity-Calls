@@ -3,10 +3,11 @@ import User from "../models/User.js";
 
 export const protect = async (req, res, next) => {
   try {
-    let token = req.cookies.token;
-
-    if (!token && req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
+    let token;
+    if (req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
       token = req.headers.authorization.split(" ")[1];
+    } else if (req.cookies.token) {
+      token = req.cookies.token;
     }
 
     if (!token) {
@@ -37,10 +38,11 @@ export const adminOnly = (req, res, next) => {
 
 export const optionalProtect = async (req, _res, next) => {
   try {
-    let token = req.cookies.token;
-
-    if (!token && req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
+    let token;
+    if (req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
       token = req.headers.authorization.split(" ")[1];
+    } else if (req.cookies.token) {
+      token = req.cookies.token;
     }
 
     if (!token) {

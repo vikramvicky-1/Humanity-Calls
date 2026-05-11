@@ -55,7 +55,7 @@ const EmergencyFunding = () => {
           <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 text-amber-200 text-[10px] font-black uppercase tracking-[0.35em] border border-white/10">
             <FaBolt /> Emergency crowdfunding
           </span>
-          <h1 className="mt-6 text-3xl md:text-6xl font-black tracking-tight leading-[1.1]">
+          <h1 className="mt-6 text-3xl md:text-6xl font-black tracking-tight leading-[1.1] text-white">
             When minutes matter, <span className="text-amber-300 italic">your help</span> saves lives
           </h1>
           <p className="mt-6 text-white/75 text-sm md:text-lg max-w-2xl mx-auto font-medium leading-relaxed">

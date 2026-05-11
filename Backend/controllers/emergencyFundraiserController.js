@@ -120,6 +120,12 @@ export const createEmergencyFundraiser = async (req, res) => {
     const raised = Math.max(0, p.raisedAmount ?? 0);
     const supporters = Math.max(0, p.supportersCount ?? 0);
 
+    const isPopup = !!p.showPopup;
+    if (isPopup) {
+      // Ensure only one popup at a time
+      await EmergencyFundraiser.updateMany({}, { showPopup: false });
+    }
+
     const doc = await EmergencyFundraiser.create({
       title: p.title.trim(),
       slug,
@@ -139,7 +145,7 @@ export const createEmergencyFundraiser = async (req, res) => {
       supportersCount: supporters,
       isActive: p.isActive !== false,
       isFeatured: !!p.isFeatured,
-      showPopup: !!p.showPopup,
+      showPopup: isPopup,
       bannerImage: p.bannerImage || "",
       createdBy: req.user?._id || null,
     });
@@ -264,7 +270,13 @@ export const updateEmergencyFundraiser = async (req, res) => {
     }
     if (p.isActive !== undefined) doc.isActive = !!p.isActive;
     if (p.isFeatured !== undefined) doc.isFeatured = !!p.isFeatured;
-    if (p.showPopup !== undefined) doc.showPopup = !!p.showPopup;
+    if (p.showPopup !== undefined) {
+      const isPopup = !!p.showPopup;
+      if (isPopup && !doc.showPopup) {
+        await EmergencyFundraiser.updateMany({ _id: { $ne: id } }, { showPopup: false });
+      }
+      doc.showPopup = isPopup;
+    }
     if (p.bannerImage !== undefined) doc.bannerImage = p.bannerImage;
 
     if (p.slugIn && String(p.slugIn).trim()) {
@@ -313,5 +325,26 @@ const toggleField = (field) => async (req, res) => {
 };
 
 export const toggleActive = toggleField("isActive");
-export const togglePopup = toggleField("showPopup");
+export const togglePopup = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid id" });
+    }
+    const doc = await EmergencyFundraiser.findById(id);
+    if (!doc) return res.status(404).json({ message: "Not found" });
+
+    const newVal = !doc.showPopup;
+    if (newVal) {
+      // Set others to false
+      await EmergencyFundraiser.updateMany({ _id: { $ne: id } }, { showPopup: false });
+    }
+    doc.showPopup = newVal;
+    await doc.save();
+    res.json({ message: "Updated", fundraiser: enrich(doc) });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 export const toggleFeatured = toggleField("isFeatured");
