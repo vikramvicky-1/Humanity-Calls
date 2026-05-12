@@ -37,25 +37,34 @@ const SEO = ({ title, description, keywords, image }) => {
     updateMeta('og:type', open_graph.og_type, true);
     updateMeta('og:site_name', open_graph.og_site_name, true);
     updateMeta('og:image', finalImage, true);
+    updateMeta('og:url', window.location.href, true);
     updateMeta('og:locale', open_graph.og_locale, true);
 
     // Twitter Tags
     updateMeta('twitter:card', twitter['twitter:card']);
-    updateMeta('twitter:title', title || twitter['twitter:title']);
+    updateMeta('twitter:title', seoTitle);
     updateMeta('twitter:description', seoDescription);
     updateMeta('twitter:image', finalImage);
     updateMeta('twitter:site', twitter['twitter:site']);
+    updateMeta('twitter:creator', twitter['twitter:site']);
 
     // Schema.org JSON-LD
     const schemaEl = document.querySelector('script[type="application/ld+json"]');
+    const schemas = seoData.seo.schemas.map(s => ({
+      ...s,
+      name: title ? `${title} | Humanity Calls` : s.name,
+      description: seoDescription
+    }));
+    
     if (schemaEl) {
-      schemaEl.innerHTML = JSON.stringify(seoData.seo.schemas);
+      schemaEl.innerHTML = JSON.stringify(schemas);
     } else {
       const script = document.createElement('script');
       script.type = 'application/ld+json';
-      script.innerHTML = JSON.stringify(seoData.seo.schemas);
+      script.innerHTML = JSON.stringify(schemas);
       document.head.appendChild(script);
     }
+
 
   }, [title, description, keywords, image]);
 

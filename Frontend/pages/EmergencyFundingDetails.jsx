@@ -60,7 +60,7 @@ const EmergencyFundingDetails = () => {
     load();
   }, [load]);
 
-  const pageUrl = typeof window !== "undefined" && f ? f.shareLink || `${window.location.origin}/emergency-funding/${f.slug}` : "";
+  const pageUrl = typeof window !== "undefined" && f ? `${window.location.origin}/emergency-funding/${f.slug}` : "";
 
   const handleBanner = async () => {
     if (!f) return;

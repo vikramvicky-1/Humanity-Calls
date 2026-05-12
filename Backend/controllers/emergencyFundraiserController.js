@@ -283,10 +283,13 @@ export const updateEmergencyFundraiser = async (req, res) => {
       const newBase = slugify(p.slugIn);
       if (newBase !== doc.slug) {
         doc.slug = await ensureUniqueSlug(newBase);
+        // Force update shareLink when slug changes
+        doc.shareLink = `${frontendBase()}/emergency-funding/${doc.slug}`;
       }
     }
 
     doc.shareLink = doc.shareLink || `${frontendBase()}/emergency-funding/${doc.slug}`;
+
     await doc.save();
     res.json({ message: "Updated", fundraiser: enrich(doc) });
   } catch (error) {
