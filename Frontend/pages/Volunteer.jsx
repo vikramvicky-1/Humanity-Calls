@@ -6,13 +6,15 @@ import SEO from "../components/SEO";
 import Button from "../components/Button";
 import withFormAuth from "../components/withFormAuth";
 import ProfilePictureCropper from "../components/ProfilePictureCropper";
+import LicenseImageCropper from "../components/LicenseImageCropper";
 import axios from "axios";
+import { API_URL } from "../utils/apiConfig.js";
 import { toast } from "react-toastify";
 import { getCurrentLocationLabel } from "../utils/location";
 import { getAuthToken } from "../utils/authToken.js";
 import { useUser } from "../context/UserContext";
 import { Navigate, Link } from "react-router-dom";
-import { FaCheckCircle, FaTimes, FaCamera, FaInfoCircle, FaPen, FaShareAlt, FaCloudUploadAlt, FaTrashAlt, FaUser } from "react-icons/fa";
+import { FaCheckCircle, FaTimes, FaCamera, FaInfoCircle, FaPen, FaShareAlt, FaCloudUploadAlt, FaTrashAlt, FaUser, FaFilePdf } from "react-icons/fa";
 import hclogo from "../assets/humanitycallslogo.avif";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -45,6 +47,9 @@ const Volunteer = ({
   const { loading: authLoading } = useUser();
   const [selectedDlFile, setSelectedDlFile] = useState(null);
   const [dlPreview, setDlPreview] = useState(null);
+  const [dlIsPdf, setDlIsPdf] = useState(false);
+  const [rawDlImage, setRawDlImage] = useState(null);
+  const [showDlCropModal, setShowDlCropModal] = useState(false);
   const [referredByName, setReferredByName] = useState("");
   const [isReferredByVerified, setIsReferredByVerified] = useState(false);
   const [isVerifyingReferral, setIsVerifyingReferral] = useState(false);
@@ -125,7 +130,7 @@ const Volunteer = ({
       document.body.style.overflow = "";
       if (lenis) lenis.start();
     };
-  }, [showTerms, showSuccessPopup, showCropModal]);
+  }, [showTerms, showSuccessPopup, showCropModal, showDlCropModal]);
 
   useEffect(() => {
     const fetchStatus = async () => {
@@ -138,7 +143,7 @@ const Volunteer = ({
       if (token) headers["Authorization"] = `Bearer ${token}`;
       try {
         const response = await axios.get(
-          `${import.meta.env.VITE_API_URL}/volunteers/my-status`,
+          `${API_URL}/volunteers/my-status`,
           { headers, withCredentials: true }
         );
         if (response.data.status !== "none") {
@@ -153,7 +158,7 @@ const Volunteer = ({
     fetchStatus();
 
     // Fetch active volunteer count (public, no auth)
-    axios.get(`${import.meta.env.VITE_API_URL}/volunteers/count`)
+    axios.get(`${API_URL}/volunteers/count`)
       .then(res => setActiveCount(res.data.count))
       .catch(() => setActiveCount(null));
   }, [user]);
@@ -227,31 +232,75 @@ const Volunteer = ({
     const file = e.target.files[0];
     if (!file) return;
 
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("File size should be less than 5MB");
+    const maxBytes = type === "dl" ? 8 * 1024 * 1024 : 5 * 1024 * 1024;
+    if (file.size > maxBytes) {
+      toast.error(type === "dl" ? "DL file must be under 8MB" : "File size should be less than 5MB");
+      e.target.value = "";
+      return;
+    }
+
+    if (type === "profile") {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setRawProfileImage(reader.result);
+        setShowCropModal(true);
+      };
+      reader.readAsDataURL(file);
+      e.target.value = "";
+      return;
+    }
+
+    if (type === "dl") {
+      const isPdf =
+        file.type === "application/pdf" || String(file.name || "").toLowerCase().endsWith(".pdf");
+      if (isPdf) {
+        setDlIsPdf(true);
+        setSelectedDlFile(file);
+        setDlPreview(null);
+        setFormData((prev) => ({ ...prev, drivingLicenseImageUrl: "" }));
+        setRawDlImage(null);
+        setShowDlCropModal(false);
+        e.target.value = "";
+        return;
+      }
+      setDlIsPdf(false);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setRawDlImage(reader.result);
+        setShowDlCropModal(true);
+      };
+      reader.readAsDataURL(file);
+      e.target.value = "";
       return;
     }
 
     const reader = new FileReader();
     reader.onloadend = () => {
       const base64String = reader.result;
-      if (type === "profile") {
-        // Open crop modal instead of using directly
-        setRawProfileImage(base64String);
-        setShowCropModal(true);
-      } else if (type === "dl") {
-        setSelectedDlFile(file);
-        setDlPreview(base64String);
-        setFormData((prev) => ({ ...prev, drivingLicenseImageUrl: base64String }));
-      } else {
-        setSelectedFile(file);
-        setGovIdPreview(base64String);
-        setFormData((prev) => ({ ...prev, govIdImage: base64String }));
-      }
+      setSelectedFile(file);
+      setGovIdPreview(base64String);
+      setFormData((prev) => ({ ...prev, govIdImage: base64String }));
     };
     reader.readAsDataURL(file);
-    // Reset input so same file can be re-selected
     e.target.value = "";
+  };
+
+  const handleDlCropDone = (croppedFile) => {
+    setDlIsPdf(false);
+    setSelectedDlFile(croppedFile);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setDlPreview(reader.result);
+      setFormData((prev) => ({ ...prev, drivingLicenseImageUrl: reader.result }));
+    };
+    reader.readAsDataURL(croppedFile);
+    setShowDlCropModal(false);
+    setRawDlImage(null);
+  };
+
+  const handleDlCropCancel = () => {
+    setShowDlCropModal(false);
+    setRawDlImage(null);
   };
 
   const handleProfileCropDone = (croppedFile) => {
@@ -345,10 +394,10 @@ const Volunteer = ({
       const profileData = new FormData();
       profileData.append("image", selectedProfileFile);
       const profileResponse = await axios.post(
-        `${import.meta.env.VITE_API_URL}/volunteers/upload`,
+        `${API_URL}/volunteers/upload`,
         profileData,
         {
-          headers: { "Content-Type": "multipart/form-data", ...authHeaders },
+          headers: { ...authHeaders },
           withCredentials: true,
         },
       );
@@ -358,10 +407,10 @@ const Volunteer = ({
       const govIdData = new FormData();
       govIdData.append("image", selectedFile);
       const govIdResponse = await axios.post(
-        `${import.meta.env.VITE_API_URL}/volunteers/upload`,
+        `${API_URL}/volunteers/upload`,
         govIdData,
         {
-          headers: { "Content-Type": "multipart/form-data", ...authHeaders },
+          headers: { ...authHeaders },
           withCredentials: true,
         },
       );
@@ -371,15 +420,11 @@ const Volunteer = ({
       if (formData.hasDrivingLicense === "yes") {
         if (selectedDlFile) {
           const dlData = new FormData();
-          dlData.append("image", selectedDlFile);
-          const dlResponse = await axios.post(
-            `${import.meta.env.VITE_API_URL}/volunteers/upload`,
-            dlData,
-            {
-              headers: { "Content-Type": "multipart/form-data", ...authHeaders },
-              withCredentials: true,
-            },
-          );
+          dlData.append("file", selectedDlFile);
+          const dlResponse = await axios.post(`${API_URL}/volunteers/upload-license`, dlData, {
+            headers: { ...authHeaders },
+            withCredentials: true,
+          });
           drivingLicenseImageUrl = dlResponse.data.imageUrl;
         } else if (/^https?:\/\//i.test(String(formData.drivingLicenseImageUrl || ""))) {
           drivingLicenseImageUrl = formData.drivingLicenseImageUrl;
@@ -396,7 +441,7 @@ const Volunteer = ({
       };
 
       await axios.post(
-        `${import.meta.env.VITE_API_URL}/volunteers/apply`,
+        `${API_URL}/volunteers/apply`,
         finalData,
         { headers: authHeaders, withCredentials: true },
       );
@@ -434,6 +479,7 @@ const Volunteer = ({
       setGovIdPreview(null);
       setProfilePreview(null);
       setDlPreview(null);
+      setDlIsPdf(false);
       setHasScrolledToBottom(false);
     } catch (error) {
       console.error("Upload error:", error);
@@ -514,7 +560,7 @@ const Volunteer = ({
     }
     setIsVerifyingReferral(true);
     try {
-      const res = await axios.get(`${import.meta.env.VITE_API_URL}/volunteers/verify-id/${formData.referredBy}`);
+      const res = await axios.get(`${API_URL}/volunteers/verify-id/${formData.referredBy}`);
       setReferredByName(res.data.name);
       setIsReferredByVerified(true);
       toast.success("Referral ID verified!");
@@ -1026,45 +1072,55 @@ const Volunteer = ({
                   {formData.hasDrivingLicense === "yes" ? (
                     <div className="space-y-1 md:col-span-2">
                       <label className="text-xs text-gray-500 ml-1">
-                        Upload driving license image *
+                        {t("volunteer.dl_upload_label", "Driving license (image or PDF)")} *
                       </label>
                       <div className="relative group">
                         <input
                           type="file"
-                          accept="image/*"
+                          accept="image/jpeg,image/jpg,image/png,image/webp,image/heic,image/heif,.pdf,application/pdf"
                           onChange={(e) => handleFileChange(e, "dl")}
                           className="hidden"
                           id="dl-upload"
                         />
                         <label
                           htmlFor="dl-upload"
-                          className={`w-full flex flex-col items-center justify-center gap-2 px-4 py-3 border-2 border-dashed rounded-lg cursor-pointer transition-all ${dlPreview ? "border-primary bg-primary/5 h-32" : "border-border hover:border-primary/50 h-12"}`}
+                          className={`w-full flex flex-col items-center justify-center gap-2 px-4 py-3 border-2 border-dashed rounded-lg cursor-pointer transition-all ${dlPreview || dlIsPdf ? "border-primary bg-primary/5 min-h-[8rem]" : "border-border hover:border-primary/50 h-12"}`}
                         >
-                          {dlPreview ? (
-                            <div className="relative w-full h-full flex items-center justify-center">
+                          {dlIsPdf && selectedDlFile ? (
+                            <div className="relative w-full flex flex-col items-center justify-center gap-2 py-4">
+                              <FaFilePdf className="text-red-600 text-4xl" />
+                              <span className="text-sm font-bold text-gray-700 break-all px-2 text-center">
+                                {selectedDlFile.name}
+                              </span>
+                              <span className="text-[10px] font-black uppercase tracking-widest text-primary">
+                                {t("volunteer.dl_pdf_ready", "PDF ready to upload")}
+                              </span>
+                            </div>
+                          ) : dlPreview ? (
+                            <div className="relative w-full h-full flex items-center justify-center min-h-[6rem]">
                               <img
                                 src={dlPreview}
                                 alt="Driving license preview"
-                                className="h-full w-auto object-contain rounded shadow-sm"
+                                className="h-full max-h-40 w-auto object-contain rounded shadow-sm"
                               />
                               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded">
                                 <span className="text-white text-xs font-bold uppercase tracking-widest">
-                                  Change image
+                                  {t("volunteer.dl_change", "Change file")}
                                 </span>
                               </div>
                             </div>
                           ) : (
-                            <div className="flex items-center gap-2">
-                              <FaCamera className="text-gray-400" />
+                            <div className="flex items-center gap-2 px-2 text-center">
+                              <FaCamera className="text-gray-400 shrink-0" />
                               <span className="text-sm font-medium text-gray-500">
-                                Upload license (JPEG / PNG)
+                                {t("volunteer.dl_upload_hint", "JPG, PNG, WebP, HEIC, or PDF — images can be cropped after selection")}
                               </span>
                             </div>
                           )}
                         </label>
                       </div>
                       <p className="text-[11px] text-gray-400 font-medium">
-                        Required when you answer Yes. Admin may verify this document.
+                        {t("volunteer.dl_upload_note", "Required when you answer Yes. For photos we resize after crop (max ~2000px).")}
                       </p>
                     </div>
                   ) : null}
@@ -1301,6 +1357,15 @@ const Volunteer = ({
           imageSrc={rawProfileImage}
           onCropDone={handleProfileCropDone}
           onCancel={handleProfileCropCancel}
+        />
+      )}
+
+      {showDlCropModal && rawDlImage && (
+        <LicenseImageCropper
+          imageSrc={rawDlImage}
+          onCropDone={handleDlCropDone}
+          onCancel={handleDlCropCancel}
+          title={t("volunteer.dl_crop_title", "Crop driving license")}
         />
       )}
 

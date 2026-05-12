@@ -7,12 +7,13 @@ const emergencyDonationSchema = new mongoose.Schema(
       ref: "EmergencyFundraiser",
       required: true,
     },
-    name: { type: String, required: true },
-    email: { type: String, required: true },
-    phone: { type: String, required: true },
+    name: { type: String, required: true, trim: true },
+    email: { type: String, trim: true, default: "" },
+    phone: { type: String, trim: true, default: "" },
     amount: { type: Number, required: true, min: 1 },
-    transactionId: { type: String, required: true, unique: true },
-    screenshotUrl: { type: String, required: true },
+    /** Optional; unique only when present (sparse index). */
+    transactionId: { type: String, trim: true, unique: true, sparse: true },
+    screenshotUrl: { type: String, trim: true, default: "" },
     status: {
       type: String,
       enum: ["pending", "approved", "rejected"],

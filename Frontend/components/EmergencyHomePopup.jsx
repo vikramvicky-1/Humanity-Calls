@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaTimes, FaHeart, FaChevronRight } from "react-icons/fa";
 import { API_URL } from "../utils/apiConfig.js";
+import { trackEmergencyEvent } from "../utils/emergencyShare";
 
 const EmergencyHomePopup = () => {
+  const { t } = useTranslation();
   const [data, setData] = useState(null);
   const [closed, setClosed] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -38,6 +41,13 @@ const EmergencyHomePopup = () => {
     const key = `hc_emergency_popup_dismissed_${String(data._id)}`;
     setClosed(!!sessionStorage.getItem(key));
   }, [data]);
+
+  useEffect(() => {
+    if (!data?._id || loading) return;
+    const key = `hc_emergency_popup_dismissed_${String(data._id)}`;
+    if (sessionStorage.getItem(key)) return;
+    trackEmergencyEvent("popup_impression", data.slug || "");
+  }, [data, loading]);
 
   const dismiss = () => {
     if (data?._id) {
@@ -84,7 +94,7 @@ const EmergencyHomePopup = () => {
               <div className="absolute top-3 left-3 flex flex-col gap-1.5">
                 <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blood text-white text-[8px] font-black uppercase tracking-wider shadow-2xl">
                   <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
-                  Urgent
+                  {t("emergency.section_urgent")}
                 </span>
               </div>
 
@@ -101,13 +111,14 @@ const EmergencyHomePopup = () => {
             <div className="p-4 pt-1 space-y-3">
               <div className="space-y-1">
                 <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white/40">
-                  Emergency Appeal
+                  {t("emergency.popup_appeal")}
                 </span>
                 <h3 className="text-lg font-black leading-tight tracking-tight text-white">
                   {data.title}
                 </h3>
                 <p className="text-[11px] text-white/70 leading-relaxed font-medium line-clamp-3">
-                  {data.medicalCondition ? `${data.medicalCondition}: ` : ""}{data.shortDescription || "This family needs your immediate support for life-saving medical treatment."}
+                  {data.medicalCondition ? `${data.medicalCondition}: ` : ""}
+                  {data.shortDescription || t("emergency.popup_default_desc")}
                 </p>
               </div>
 
@@ -115,27 +126,41 @@ const EmergencyHomePopup = () => {
               <div className="space-y-2.5 bg-white/5 rounded-2xl p-3.5 border border-white/5">
                 <div className="flex justify-between items-end">
                   <div className="space-y-0.5">
-                    <span className="text-[8px] font-black uppercase tracking-widest text-white/40">Raised</span>
+                    <span className="text-[8px] font-black uppercase tracking-widest text-white/40">{t("emergency.popup_raised")}</span>
                     <p className="text-sm font-black text-blood">₹{(data.raisedAmount || 0).toLocaleString("en-IN")}</p>
                   </div>
                   <div className="text-right space-y-0.5">
-                    <span className="text-[8px] font-black uppercase tracking-widest text-white/40">Goal</span>
+                    <span className="text-[8px] font-black uppercase tracking-widest text-white/40">{t("emergency.goal")}</span>
                     <p className="text-xs font-bold text-white/70">₹{(data.targetAmount || 0).toLocaleString("en-IN")}</p>
                   </div>
                 </div>
 
                 <div className="space-y-1">
                   <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                    <motion.div 
+                    <motion.div
                       initial={{ width: 0 }}
-                      animate={{ width: `${Math.min(100, (data.raisedAmount / data.targetAmount) * 100)}%` }}
+                      animate={{
+                        width: `${Math.min(
+                          100,
+                          (Number(data.targetAmount) || 0) > 0
+                            ? ((Number(data.raisedAmount) || 0) / Number(data.targetAmount)) * 100
+                            : 0,
+                        )}%`,
+                      }}
                       transition={{ duration: 1.5, ease: "circOut", delay: 0.5 }}
-                      className="h-full bg-gradient-to-r from-blood to-red-500 rounded-full relative" 
+                      className="h-full bg-gradient-to-r from-blood to-red-500 rounded-full relative"
                     />
                   </div>
                   <div className="flex justify-between text-[8px] font-black uppercase tracking-widest text-white/30">
-                    <span>{Math.round((data.raisedAmount / data.targetAmount) * 100)}% Funded</span>
-                    <span>{data.supportersCount || 0} Donors</span>
+                    <span>
+                      {t("emergency.pct_funded_short", {
+                        pct:
+                          (Number(data.targetAmount) || 0) > 0
+                            ? Math.round(((Number(data.raisedAmount) || 0) / Number(data.targetAmount)) * 100)
+                            : 0,
+                      })}
+                    </span>
+                    <span>{t("emergency.donors_short", { count: data.supportersCount || 0 })}</span>
                   </div>
                 </div>
               </div>
@@ -146,13 +171,13 @@ const EmergencyHomePopup = () => {
                   onClick={dismiss}
                   className="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-lg bg-white text-black font-black text-[10px] uppercase tracking-wider shadow-lg hover:bg-blood hover:text-white transition-all duration-300 group/btn"
                 >
-                  <span>Donate Now</span>
+                  <span>{t("emergency.popup_donate")}</span>
                   <FaChevronRight size={9} className="group-hover/btn:translate-x-0.5 transition-transform" />
                 </Link>
               </div>
               
               <p className="text-center text-[8px] text-white/20 font-bold tracking-widest uppercase pb-1">
-                Help Save a Life Today
+                {t("emergency.popup_footer")}
               </p>
             </div>
           </div>

@@ -13,14 +13,28 @@ const getRoleTier = (role) => {
 const MemberCard = ({ node }) => (
   <div className="w-full md:w-[280px] rounded-2xl border border-border bg-white px-5 py-4 shadow-sm">
     <div className="flex items-center gap-3 min-w-0">
-      <div className="w-11 h-11 rounded-full overflow-hidden border border-border bg-bg shrink-0">
-        {node.profilePicture ? (
+      <div className="relative w-11 h-11 rounded-full overflow-hidden border border-border bg-bg shrink-0">
+        {node.profilePicture && !/\.pdf(\?|$)/i.test(node.profilePicture) ? (
           <img src={node.profilePicture} alt={node.name} className="w-full h-full object-cover" />
+        ) : node.profilePicture && /\.pdf(\?|$)/i.test(node.profilePicture) ? (
+          <a
+            href={node.profilePicture}
+            target="_blank"
+            rel="noreferrer"
+            className="w-full h-full flex items-center justify-center text-[8px] font-black text-primary"
+          >
+            PDF
+          </a>
         ) : (
           <div className="w-full h-full flex items-center justify-center text-primary font-black">
             {(node.name || "?").charAt(0).toUpperCase()}
           </div>
         )}
+        {node.volunteerRolePreference ? (
+          <span className="absolute bottom-0 left-0 right-0 text-[6px] font-black uppercase tracking-tighter text-white bg-black/55 px-0.5 py-0.5 text-center truncate leading-none">
+            {node.volunteerRolePreference}
+          </span>
+        ) : null}
       </div>
       <div className="min-w-0">
         <div className="text-sm font-black text-text-body truncate">{node.name}</div>

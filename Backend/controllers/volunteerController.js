@@ -1,5 +1,6 @@
 import Volunteer from "../models/Volunteer.js";
 import User from "../models/User.js";
+import { v2 as cloudinary } from "cloudinary";
 import { triggerEmail } from "../controllers/emailController.js";
 import {
   volunteerApplicationReceivedTemplate,
@@ -12,6 +13,7 @@ import {
   temporaryToActiveTemplate,
   profilePictureRemovedByAdminTemplate,
   profilePictureReplacedByAdminTemplate,
+  profilePictureReuploadRequestedByAdminTemplate,
 } from "../utils/emailTemplates.js";
 
 export const applyVolunteer = async (req, res) => {
@@ -96,6 +98,7 @@ export const applyVolunteer = async (req, res) => {
       joiningDate,
       termsAccepted,
       referredBy,
+      adminProfileApproval: "pending",
     });
 
     // Handle Referral logic
@@ -182,6 +185,16 @@ export const updateVolunteerStatus = async (req, res) => {
 
     const previous = await Volunteer.findById(id);
     if (!previous) return res.status(404).json({ message: "Volunteer not found" });
+
+    const needsProfileApproval =
+      previous.status === "pending" &&
+      ["active", "temporary", "inactive"].includes(status);
+    if (needsProfileApproval && previous.adminProfileApproval !== "approved") {
+      return res.status(400).json({
+        message:
+          "Approve the volunteer profile before moving them to Active, Temporary, or Inactive from Pending.",
+      });
+    }
 
     const updateData = { status };
     if (status === "rejected") updateData.rejectionReason = reason;
@@ -296,16 +309,90 @@ export const updateMyProfilePicture = async (req, res) => {
   }
 };
 
+const VOLUNTEER_ADMIN_UPDATE_FIELDS = new Set([
+  "fullName",
+  "email",
+  "phone",
+  "emergencyContact",
+  "gender",
+  "interest",
+  "occupation",
+  "occupationDetail",
+  "skills",
+  "timeCommitment",
+  "workingMode",
+  "rolePreference",
+  "locationAddress",
+  "deviceDonationChoices",
+  "govIdType",
+  "govIdImage",
+  "hasDrivingLicense",
+  "drivingLicenseImageUrl",
+  "bloodGroup",
+  "dob",
+  "joiningDate",
+  "termsAccepted",
+  "profilePicture",
+  "referredBy",
+]);
+
 export const updateVolunteer = async (req, res) => {
   try {
     const { id } = req.params;
-    const volunteer = await Volunteer.findByIdAndUpdate(id, req.body, { new: true })
+    const payload = {};
+    for (const key of VOLUNTEER_ADMIN_UPDATE_FIELDS) {
+      if (req.body[key] !== undefined) payload[key] = req.body[key];
+    }
+    const volunteer = await Volunteer.findByIdAndUpdate(id, payload, { new: true })
       .populate("user", "name email")
       .populate("referrer", "fullName volunteerId");
     if (!volunteer) return res.status(404).json({ message: "Volunteer not found" });
     res.status(200).json({ message: "Volunteer updated successfully", volunteer });
   } catch (error) {
     res.status(500).json({ message: "Error updating volunteer", error: error.message });
+  }
+};
+
+export const updateVolunteerProfileApproval = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { decision } = req.body;
+    if (!["approved", "rejected"].includes(decision)) {
+      return res.status(400).json({ message: "decision must be approved or rejected" });
+    }
+    const volunteer = await Volunteer.findByIdAndUpdate(
+      id,
+      { adminProfileApproval: decision },
+      { new: true },
+    )
+      .populate("user", "name email")
+      .populate("referrer", "fullName volunteerId");
+    if (!volunteer) return res.status(404).json({ message: "Volunteer not found" });
+    res.status(200).json({ message: "Profile review updated", volunteer });
+  } catch (error) {
+    res.status(500).json({ message: "Error updating profile approval", error: error.message });
+  }
+};
+
+export const adminRequestProfileReupload = async (req, res) => {
+  try {
+    const volunteer = await Volunteer.findById(req.params.id);
+    if (!volunteer) return res.status(404).json({ message: "Volunteer not found" });
+    volunteer.profileReuploadRequestedAt = new Date();
+    await volunteer.save();
+    const senderEmail = process.env.BREVO_SENDER_EMAIL;
+    const senderName = process.env.BREVO_SENDER_NAME || "Humanity Calls";
+    if (volunteer.email && senderEmail && process.env.BREVO_API_KEY) {
+      triggerEmail({
+        sender: { name: senderName, email: senderEmail },
+        to: [{ email: volunteer.email, name: volunteer.fullName }],
+        subject: "Please re-upload your profile photo — Humanity Calls",
+        htmlContent: profilePictureReuploadRequestedByAdminTemplate(volunteer.fullName),
+      }).catch((err) => console.error("Re-upload request email failed:", err.message));
+    }
+    res.status(200).json({ message: "Volunteer notified to re-upload profile photo", volunteer });
+  } catch (error) {
+    res.status(500).json({ message: "Error sending re-upload request", error: error.message });
   }
 };
 
@@ -387,6 +474,40 @@ export const adminReplaceVolunteerProfilePicture = async (req, res) => {
     res.status(200).json({ message: "Profile picture updated", volunteer });
   } catch (error) {
     res.status(500).json({ message: "Error updating profile picture", error: error.message });
+  }
+};
+
+/** Admin: replace profile with image or PDF via memory upload + Cloudinary. */
+export const adminReplaceVolunteerProfileMedia = async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ message: "No file uploaded" });
+    cloudinary.config({
+      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+      api_key: process.env.CLOUDINARY_API_KEY,
+      api_secret: process.env.CLOUDINARY_API_SECRET,
+    });
+    const dataUri = `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`;
+    const uploaded = await cloudinary.uploader.upload(dataUri, {
+      folder: "humanity_calls_volunteers/profiles",
+      resource_type: "auto",
+    });
+    const volunteer = await Volunteer.findById(req.params.id);
+    if (!volunteer) return res.status(404).json({ message: "Volunteer not found" });
+    volunteer.profilePicture = uploaded.secure_url;
+    await volunteer.save();
+    const senderEmail = process.env.BREVO_SENDER_EMAIL;
+    const senderName = process.env.BREVO_SENDER_NAME || "Humanity Calls";
+    if (volunteer.email && senderEmail && process.env.BREVO_API_KEY) {
+      triggerEmail({
+        sender: { name: senderName, email: senderEmail },
+        to: [{ email: volunteer.email, name: volunteer.fullName }],
+        subject: "Your profile photo was updated by admin — Humanity Calls",
+        htmlContent: profilePictureReplacedByAdminTemplate(volunteer.fullName),
+      }).catch((err) => console.error("Profile replace email failed:", err.message));
+    }
+    res.status(200).json({ message: "Profile media updated", volunteer });
+  } catch (error) {
+    res.status(500).json({ message: "Error updating profile media", error: error.message });
   }
 };
 

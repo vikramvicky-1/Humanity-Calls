@@ -15,7 +15,10 @@ import {
   getReferralStats,
   adminRemoveVolunteerProfilePicture,
   adminReplaceVolunteerProfilePicture,
+  adminReplaceVolunteerProfileMedia,
   setManualReferral,
+  updateVolunteerProfileApproval,
+  adminRequestProfileReupload,
 } from "../controllers/volunteerController.js";
 import { uploadFileOnly } from "../controllers/galleryController.js";
 import { protect, adminOnly, optionalProtect } from "../middleware/auth.js";
@@ -39,7 +42,7 @@ const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: "humanity_calls_volunteers",
-    allowed_formats: ["jpg", "png", "jpeg", "webp"],
+    allowed_formats: ["jpg", "png", "jpeg", "webp", "heic", "heif"],
   },
 });
 
@@ -47,8 +50,8 @@ const upload = multer({
   storage: storage,
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
-    const allowedMimes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
-    const allowedExtensions = [".jpg", ".jpeg", ".png", ".webp"];
+    const allowedMimes = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/heic", "image/heif"];
+    const allowedExtensions = [".jpg", ".jpeg", ".png", ".webp", ".heic", ".heif"];
     const fileExt = file.originalname.toLowerCase().substring(file.originalname.lastIndexOf("."));
     
     const isMimeValid = allowedMimes.includes(file.mimetype.toLowerCase());
@@ -77,6 +80,52 @@ router.post("/upload", optionalProtect, (req, res, next) => {
     next();
   });
 }, uploadFileOnly);
+
+const licenseMemory = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 8 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const m = String(file.mimetype || "").toLowerCase();
+    const name = String(file.originalname || "").toLowerCase();
+    const ok =
+      /^image\/(jpeg|jpg|png|webp|heic|heif)$/i.test(m) ||
+      m === "application/pdf" ||
+      (m === "application/octet-stream" &&
+        (name.endsWith(".pdf") || /\.(jpg|jpeg|png|webp|heic)$/i.test(name)));
+    if (ok) cb(null, true);
+    else cb(new Error("Upload JPG, PNG, WebP, HEIC, or PDF (max 8MB)."));
+  },
+});
+
+router.post("/upload-license", optionalProtect, (req, res, next) => {
+  licenseMemory.single("file")(req, res, (err) => {
+    if (err) {
+      console.error("License upload multer:", err.message);
+      return res.status(400).json({ message: err.message });
+    }
+    next();
+  });
+}, async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+    const dataUri = `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`;
+    const uploaded = await cloudinary.uploader.upload(dataUri, {
+      folder: "humanity_calls_volunteers/licenses",
+      resource_type: "auto",
+    });
+    res.status(200).json({
+      imageUrl: uploaded.secure_url,
+      publicId: uploaded.public_id,
+      success: true,
+    });
+  } catch (e) {
+    console.error("License upload:", e);
+    res.status(500).json({ message: e.message || "Upload failed" });
+  }
+});
+
 router.get("/", protect, adminOnly, getVolunteers);
 router.put("/status/:id", protect, adminOnly, updateVolunteerStatus);
 router.delete("/:id/profile-picture", protect, adminOnly, adminRemoveVolunteerProfilePicture);
@@ -95,6 +144,23 @@ router.post(
   },
   adminReplaceVolunteerProfilePicture,
 );
+router.post(
+  "/:id/profile-media",
+  protect,
+  adminOnly,
+  (req, res, next) => {
+    licenseMemory.single("file")(req, res, (err) => {
+      if (err) {
+        console.error("Profile media multer:", err.message);
+        return res.status(400).json({ message: err.message });
+      }
+      next();
+    });
+  },
+  adminReplaceVolunteerProfileMedia,
+);
+router.put("/:id/profile-approval", protect, adminOnly, updateVolunteerProfileApproval);
+router.post("/:id/request-profile-reupload", protect, adminOnly, adminRequestProfileReupload);
 router.put("/:id", protect, adminOnly, updateVolunteer);
 router.delete("/:id", protect, adminOnly, deleteVolunteer);
 

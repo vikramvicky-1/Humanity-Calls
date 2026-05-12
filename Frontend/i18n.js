@@ -8,6 +8,7 @@ import teTranslation from './locales/te.json';
 import taTranslation from './locales/ta.json';
 import mlTranslation from './locales/ml.json';
 import hiTranslation from './locales/hi.json';
+import mrTranslation from './locales/mr.json';
 
 i18n
   .use(LanguageDetector)
@@ -20,8 +21,11 @@ i18n
       ta: { translation: taTranslation },
       ml: { translation: mlTranslation },
       hi: { translation: hiTranslation },
+      mr: { translation: mrTranslation },
     },
     fallbackLng: 'en',
+    supportedLngs: ['en', 'hi', 'kn', 'te', 'ta', 'ml', 'mr'],
+    nonExplicitSupportedLngs: true,
     interpolation: {
       escapeValue: false,
     },

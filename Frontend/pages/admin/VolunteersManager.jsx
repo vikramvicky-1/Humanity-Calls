@@ -150,7 +150,37 @@ const VolunteersManager = () => {
       if (onStatusUpdate) onStatusUpdate();
       setShowUpdateStatusPopup(false);
     } catch (err) {
-      toast.error("Status update failed");
+      toast.error(err.response?.data?.message || "Status update failed");
+    }
+  };
+
+  const setProfileApproval = async (id, decision) => {
+    try {
+      const token = sessionStorage.getItem("adminToken");
+      await axios.put(
+        `${import.meta.env.VITE_API_URL}/volunteers/${id}/profile-approval`,
+        { decision },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      toast.success(decision === "approved" ? "Profile approved" : "Profile marked as rejected");
+      fetchVolunteers();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Profile review update failed");
+    }
+  };
+
+  const requestProfileReupload = async (vol) => {
+    try {
+      const token = sessionStorage.getItem("adminToken");
+      await axios.post(
+        `${import.meta.env.VITE_API_URL}/volunteers/${vol._id}/request-profile-reupload`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      toast.success("Volunteer was emailed to re-upload their profile photo");
+      fetchVolunteers();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Request failed");
     }
   };
 
@@ -240,9 +270,9 @@ const VolunteersManager = () => {
     try {
       const token = sessionStorage.getItem("adminToken");
       const fd = new FormData();
-      fd.append("image", file);
+      fd.append("file", file);
       await axios.post(
-        `${import.meta.env.VITE_API_URL}/volunteers/${replacePhotoTarget._id}/profile-picture`,
+        `${import.meta.env.VITE_API_URL}/volunteers/${replacePhotoTarget._id}/profile-media`,
         fd,
         {
           headers: {
@@ -251,7 +281,7 @@ const VolunteersManager = () => {
           },
         },
       );
-      toast.success("Profile photo replaced");
+      toast.success("Profile media replaced");
       setReplacePhotoTarget(null);
       fetchVolunteers();
     } catch (err) {
@@ -449,14 +479,39 @@ const VolunteersManager = () => {
                   <tr key={vol._id} className="hover:bg-bg/50 transition-colors group">
                     <td className="px-4 py-4 text-center">
                       <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-primary/20 mx-auto shadow-inner">
-                        {vol.profilePicture ? (
+                        {vol.profilePicture && !/\.pdf(\?|$)/i.test(vol.profilePicture) ? (
                           <img src={vol.profilePicture} alt={vol.fullName} className="w-full h-full object-cover" />
+                        ) : vol.profilePicture && /\.pdf(\?|$)/i.test(vol.profilePicture) ? (
+                          <a
+                            href={vol.profilePicture}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="w-full h-full flex items-center justify-center text-[9px] font-black text-primary bg-bg px-1 text-center leading-tight"
+                          >
+                            PDF
+                          </a>
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-primary/20 bg-bg">
                             <FaUserFriends size={28} />
                           </div>
                         )}
                       </div>
+                      {volunteerStatusTab === "pending" && (
+                        <div className="mt-1 text-[9px] font-black uppercase tracking-tight text-text-body/50">
+                          Profile:{" "}
+                          <span
+                            className={
+                              vol.adminProfileApproval === "approved"
+                                ? "text-emerald-600"
+                                : vol.adminProfileApproval === "rejected"
+                                  ? "text-blood"
+                                  : "text-amber-600"
+                            }
+                          >
+                            {vol.adminProfileApproval || "pending"}
+                          </span>
+                        </div>
+                      )}
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap">
                       <div className="font-bold text-text-body text-base">{vol.fullName}</div>
@@ -520,8 +575,33 @@ const VolunteersManager = () => {
                           onClick={() => pickReplacePhoto(vol)}
                           className="inline-flex items-center justify-center gap-2 px-2 py-1.5 rounded-lg border border-primary/40 text-primary text-[10px] font-black uppercase tracking-wider hover:bg-primary/10"
                         >
-                          <FaSyncAlt size={11} /> Replace pic
+                          <FaSyncAlt size={11} /> Replace media
                         </button>
+                        <button
+                          type="button"
+                          onClick={() => requestProfileReupload(vol)}
+                          className="inline-flex items-center justify-center gap-2 px-2 py-1.5 rounded-lg border border-slate-300 text-slate-700 text-[10px] font-black uppercase tracking-wider hover:bg-slate-50"
+                        >
+                          Ask re-upload
+                        </button>
+                        {volunteerStatusTab === "pending" && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => setProfileApproval(vol._id, "approved")}
+                              className="inline-flex items-center justify-center gap-2 px-2 py-1.5 rounded-lg bg-emerald-600 text-white text-[10px] font-black uppercase tracking-wider hover:bg-emerald-700"
+                            >
+                              Approve profile
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setProfileApproval(vol._id, "rejected")}
+                              className="inline-flex items-center justify-center gap-2 px-2 py-1.5 rounded-lg bg-amber-100 text-amber-900 text-[10px] font-black uppercase tracking-wider hover:bg-amber-200"
+                            >
+                              Reject profile
+                            </button>
+                          </>
+                        )}
                       </div>
                     </td>
                     <td className="px-4 py-4">
@@ -606,7 +686,7 @@ const VolunteersManager = () => {
       <input
         ref={replacePhotoInputRef}
         type="file"
-        accept="image/jpeg,image/png,image/webp"
+        accept="image/jpeg,image/png,image/webp,image/heic,.pdf,application/pdf"
         className="hidden"
         onChange={onReplacePhotoChange}
       />
@@ -632,9 +712,20 @@ const VolunteersManager = () => {
               <div>
                 <p className="text-[10px] font-black uppercase tracking-widest text-text-body/40 mb-2">Driving license</p>
                 {docsVolunteer.hasDrivingLicense && docsVolunteer.drivingLicenseImageUrl ? (
-                  <a href={docsVolunteer.drivingLicenseImageUrl} target="_blank" rel="noreferrer" className="block rounded-2xl border border-border overflow-hidden bg-bg">
-                    <img src={docsVolunteer.drivingLicenseImageUrl} alt="Driving license" className="w-full h-auto object-contain max-h-72" />
-                  </a>
+                  /\.pdf(\?|$)/i.test(docsVolunteer.drivingLicenseImageUrl) ? (
+                    <a
+                      href={docsVolunteer.drivingLicenseImageUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="block rounded-2xl border border-border overflow-hidden bg-bg p-6 text-center font-black text-primary hover:bg-primary/5"
+                    >
+                      Open driving license (PDF)
+                    </a>
+                  ) : (
+                    <a href={docsVolunteer.drivingLicenseImageUrl} target="_blank" rel="noreferrer" className="block rounded-2xl border border-border overflow-hidden bg-bg">
+                      <img src={docsVolunteer.drivingLicenseImageUrl} alt="Driving license" className="w-full h-auto object-contain max-h-72" />
+                    </a>
+                  )
                 ) : (
                   <div className="rounded-2xl border border-dashed border-border p-8 text-center text-sm font-bold text-text-body/50">
                     {docsVolunteer.hasDrivingLicense ? "No upload on file" : "Not applicable (No license declared)"}
@@ -678,11 +769,11 @@ const VolunteersManager = () => {
 
       <IdModal isOpen={showIdModal} onClose={() => setShowIdModal(false)} idImage={selectedIdImage} />
       <ViewMoreModal isOpen={showViewMoreModal} onClose={() => setShowViewMoreModal(false)} vol={selectedVolunteerDetails} />
-      <VolunteerEditModal 
-        isOpen={showVolunteerEditModal} 
-        onClose={() => setShowVolunteerEditModal(false)} 
-        volunteer={volunteerToEdit} 
-        onUpdate={fetchVolunteers} 
+      <VolunteerEditModal
+        isOpen={showVolunteerEditModal}
+        onClose={() => setShowVolunteerEditModal(false)}
+        volunteer={volunteerToEdit}
+        onUpdate={fetchVolunteers}
       />
 
 
@@ -691,6 +782,12 @@ const VolunteersManager = () => {
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
           <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-300 text-center p-10">
             <h3 className="text-2xl font-black text-primary mb-6">Modify Standing</h3>
+            {updateStatusTarget.status === "pending" &&
+              updateStatusTarget.adminProfileApproval !== "approved" && (
+                <p className="text-xs font-bold text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mb-4 text-left">
+                  Approve this volunteer&apos;s profile first (use &quot;Approve profile&quot; in the row actions). Only then you can move them to Active, Temporary, or Inactive from Pending.
+                </p>
+              )}
             <div className="grid grid-cols-1 gap-4">
               {["active", "temporary", "inactive", "banned", "rejected"].map(s => (
                 s !== updateStatusTarget.status && (

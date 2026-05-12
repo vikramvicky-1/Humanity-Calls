@@ -64,7 +64,7 @@ const Profile = () => {
     amount: "",
     purpose: "",
     spentOnDate: "",
-    receiptImageUrl: "",
+    receiptUrls: [],
   });
   const [reimbUploading, setReimbUploading] = useState(false);
 
@@ -347,30 +347,40 @@ const Profile = () => {
   };
 
   const handleReimbReceiptUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("File size should be less than 5MB");
-      return;
-    }
+    const files = Array.from(e.target.files || []);
+    e.target.value = "";
+    if (!files.length) return;
     setReimbUploading(true);
+    let anyAdded = false;
     try {
       const token = getAuthToken();
       const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
-      const uploadData = new FormData();
-      uploadData.append("image", file);
-      const uploadRes = await axios.post(
-        `${import.meta.env.VITE_API_URL}/volunteers/upload`,
-        uploadData,
-        { headers: { "Content-Type": "multipart/form-data", ...authHeaders }, withCredentials: true },
-      );
-      setReimbForm((p) => ({ ...p, receiptImageUrl: uploadRes.data.imageUrl }));
-      toast.success("Receipt uploaded");
+      for (const file of files) {
+        if (file.size > 8 * 1024 * 1024) {
+          toast.error(`${file.name} must be under 8MB`);
+          continue;
+        }
+        const fd = new FormData();
+        fd.append("file", file);
+        const uploadRes = await axios.post(
+          `${import.meta.env.VITE_API_URL}/volunteers/upload-license`,
+          fd,
+          { headers: { "Content-Type": "multipart/form-data", ...authHeaders }, withCredentials: true },
+        );
+        const url = uploadRes.data?.imageUrl;
+        if (!url) continue;
+        setReimbForm((p) => {
+          const cur = [...(p.receiptUrls || [])];
+          if (cur.length >= 12) return p;
+          return { ...p, receiptUrls: [...cur, url] };
+        });
+        anyAdded = true;
+      }
+      if (anyAdded) toast.success("Receipt(s) uploaded");
     } catch (err) {
       toast.error(err.response?.data?.message || "Receipt upload failed");
     } finally {
       setReimbUploading(false);
-      e.target.value = "";
     }
   };
 
@@ -390,12 +400,13 @@ const Profile = () => {
           amount: reimbForm.amount,
           purpose: reimbForm.purpose,
           spentOnDate: reimbForm.spentOnDate,
-          receiptImageUrl: reimbForm.receiptImageUrl,
+          receiptUrls: reimbForm.receiptUrls || [],
+          receiptImageUrl: reimbForm.receiptUrls?.[0] || "",
         },
         { headers, withCredentials: true },
       );
       toast.success("Reimbursement request submitted");
-      setReimbForm({ amount: "", purpose: "", spentOnDate: "", receiptImageUrl: "" });
+      setReimbForm({ amount: "", purpose: "", spentOnDate: "", receiptUrls: [] });
       fetchMyReimbursements();
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to submit request");
@@ -1009,22 +1020,48 @@ const Profile = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-text-body/40 uppercase tracking-widest">Receipt (optional)</label>
+                  <label className="text-xs font-bold text-text-body/40 uppercase tracking-widest">
+                    Receipts (optional, multiple images or PDFs)
+                  </label>
                   <label className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl border-2 border-dashed border-border hover:border-primary transition-colors cursor-pointer bg-bg/30">
                     <span className="inline-flex items-center gap-2 text-sm font-bold text-text-body/70">
                       <FaPaperclip className="text-primary" />
-                      {reimbForm.receiptImageUrl ? "Change uploaded receipt" : "Upload receipt image"}
+                      {(reimbForm.receiptUrls || []).length
+                        ? `Add more (${(reimbForm.receiptUrls || []).length} uploaded)`
+                        : "Upload receipts"}
                     </span>
-                    <span className="text-[10px] font-black uppercase tracking-widest text-primary">
-                      Browse
-                    </span>
-                    <input type="file" accept="image/*" onChange={handleReimbReceiptUpload} className="hidden" />
+                    <span className="text-[10px] font-black uppercase tracking-widest text-primary">Browse</span>
+                    <input
+                      type="file"
+                      accept="image/*,.pdf,application/pdf"
+                      multiple
+                      onChange={handleReimbReceiptUpload}
+                      className="hidden"
+                    />
                   </label>
                   {reimbUploading && <p className="text-xs text-text-body/60">Uploading receipt...</p>}
-                  {reimbForm.receiptImageUrl && (
-                    <a href={reimbForm.receiptImageUrl} target="_blank" rel="noreferrer" className="text-xs font-bold text-primary hover:underline">
-                      View uploaded receipt
-                    </a>
+                  {(reimbForm.receiptUrls || []).length > 0 && (
+                    <ul className="text-xs font-bold text-primary space-y-1">
+                      {(reimbForm.receiptUrls || []).map((url, idx) => (
+                        <li key={url} className="flex items-center justify-between gap-2">
+                          <a href={url} target="_blank" rel="noreferrer" className="hover:underline truncate min-w-0">
+                            File {idx + 1}
+                          </a>
+                          <button
+                            type="button"
+                            className="text-blood text-[10px] font-black uppercase shrink-0"
+                            onClick={() =>
+                              setReimbForm((p) => ({
+                                ...p,
+                                receiptUrls: (p.receiptUrls || []).filter((u) => u !== url),
+                              }))
+                            }
+                          >
+                            Remove
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
                   )}
                 </div>
 

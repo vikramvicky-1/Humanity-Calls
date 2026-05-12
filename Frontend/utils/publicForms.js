@@ -1,7 +1,6 @@
 import axios from "axios";
 import { toast } from "react-toastify";
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+import { API_URL } from "./apiConfig.js";
 
 const errorToast = (message) =>
   toast.error(message || "Something went wrong. Please try again.", {
@@ -12,11 +11,22 @@ const errorToast = (message) =>
     },
   });
 
+/** Public image upload (JPEG/PNG/WebP, etc.) — do not set Content-Type manually (browser sets boundary). */
 export const uploadPublicImage = async (file) => {
   const formData = new FormData();
   formData.append("image", file);
   const response = await axios.post(`${API_URL}/public/upload-image`, formData, {
-    headers: { "Content-Type": "multipart/form-data" },
+    withCredentials: true,
+  });
+  return response.data?.imageUrl;
+};
+
+/** Image or PDF proof (e.g. emergency donation) — max 8MB server-side. */
+export const uploadPublicProofFile = async (file) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  const response = await axios.post(`${API_URL}/public/upload-proof`, formData, {
+    withCredentials: true,
   });
   return response.data?.imageUrl;
 };

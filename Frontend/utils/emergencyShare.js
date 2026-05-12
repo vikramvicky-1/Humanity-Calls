@@ -11,6 +11,23 @@ export function buildEmergencyShareUrls({ pageUrl, title, summary }) {
   };
 }
 
+import { API_URL } from "./apiConfig.js";
+
+/** Fire-and-forget emergency funding engagement event (public, rate-limited). */
+export function trackEmergencyEvent(eventType, slug = "") {
+  try {
+    const body = JSON.stringify({ eventType, slug: slug || "" });
+    fetch(`${API_URL}/emergency-analytics/event`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body,
+      keepalive: true,
+    }).catch(() => null);
+  } catch {
+    /* ignore */
+  }
+}
+
 export async function copyEmergencyLink(url) {
   try {
     await navigator.clipboard.writeText(url);

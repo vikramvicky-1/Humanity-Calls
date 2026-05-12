@@ -186,16 +186,31 @@ const ReimbursementsManager = () => {
                     <td className="px-4 py-4 whitespace-nowrap font-black text-primary">₹{i.amount}</td>
                     <td className="px-4 py-4">{i.purpose}</td>
                     <td className="px-4 py-4">
-                      {i.receiptImageUrl ? (
-                        <button 
-                          onClick={() => setSelectedProof(i.receiptImageUrl)}
-                          className="px-4 py-2 rounded-lg border border-border bg-bg/30 text-primary font-black text-[10px] uppercase tracking-widest hover:bg-primary hover:text-white transition-all shadow-sm"
-                        >
-                          View Receipt
-                        </button>
-                      ) : (
-                        <span className="text-[11px] text-text-body/30 italic">—</span>
-                      )}
+                      {(() => {
+                        const urls =
+                          Array.isArray(i.receiptUrls) && i.receiptUrls.length > 0
+                            ? i.receiptUrls
+                            : i.receiptImageUrl
+                              ? [i.receiptImageUrl]
+                              : [];
+                        if (!urls.length) {
+                          return <span className="text-[11px] text-text-body/30 italic">—</span>;
+                        }
+                        return (
+                          <div className="flex flex-col gap-1">
+                            {urls.map((u, idx) => (
+                              <button
+                                key={`${u}-${idx}`}
+                                type="button"
+                                onClick={() => setSelectedProof(u)}
+                                className="px-3 py-1.5 rounded-lg border border-border bg-bg/30 text-primary font-black text-[10px] uppercase tracking-widest hover:bg-primary hover:text-white transition-all shadow-sm text-left"
+                              >
+                                Receipt {idx + 1}
+                              </button>
+                            ))}
+                          </div>
+                        );
+                      })()}
                     </td>
                     <td className="px-4 py-4 font-bold uppercase text-[11px]">
                       <span className={`px-2.5 py-1 rounded-full ${
@@ -334,11 +349,25 @@ const ReimbursementsManager = () => {
               >
                 <FaTimes size={24} />
               </button>
-              <img 
-                src={selectedProof} 
-                className="max-w-full max-h-full object-contain rounded-2xl shadow-2xl border border-white/10" 
-                alt="Receipt Full Size" 
-              />
+              {/\.pdf(\?|$)/i.test(selectedProof) ? (
+                <div className="bg-white rounded-2xl p-6 max-w-3xl w-full max-h-[85vh] overflow-auto">
+                  <a
+                    href={selectedProof}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-primary font-black underline text-sm"
+                  >
+                    Open receipt PDF
+                  </a>
+                  <iframe title="Receipt PDF" src={selectedProof} className="w-full min-h-[60vh] mt-4 rounded-xl border border-border" />
+                </div>
+              ) : (
+                <img
+                  src={selectedProof}
+                  className="max-w-full max-h-full object-contain rounded-2xl shadow-2xl border border-white/10"
+                  alt="Receipt Full Size"
+                />
+              )}
             </motion.div>
           </div>
         )}

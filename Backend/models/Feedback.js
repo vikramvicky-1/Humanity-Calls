@@ -13,6 +13,10 @@ const feedbackSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  attachmentUrls: {
+    type: [String],
+    default: [],
+  },
   status: {
     type: String,
     enum: ["pending", "reviewed", "resolved"],

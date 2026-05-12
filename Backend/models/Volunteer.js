@@ -107,6 +107,16 @@ const volunteerSchema = new mongoose.Schema({
     enum: ["pending", "active", "temporary", "inactive", "rejected", "banned"],
     default: "pending",
   },
+  /** Admin must approve profile details before moving a pending volunteer to active/temporary/inactive. */
+  adminProfileApproval: {
+    type: String,
+    enum: ["pending", "approved", "rejected"],
+    default: "approved",
+  },
+  profileReuploadRequestedAt: {
+    type: Date,
+    default: null,
+  },
   termsAccepted: {
     type: Boolean,
     required: true,
