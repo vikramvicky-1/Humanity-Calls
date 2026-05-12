@@ -25,6 +25,7 @@ import memberPublicRoutes from "./routes/memberPublicRoutes.js";
 import analyticsRoutes from "./routes/analyticsRoutes.js";
 import emergencyFundraiserRoutes from "./routes/emergencyFundraiserRoutes.js";
 import emergencyDonationRoutes from "./routes/emergencyDonationRoutes.js";
+import emergencyAnalyticsRoutes from "./routes/emergencyAnalyticsRoutes.js";
 import { initAdmin } from "./controllers/authController.js";
 import { initBirthdayCron } from "./utils/birthdayCron.js";
 
@@ -92,6 +93,7 @@ app.use("/api/member-public", memberPublicRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/emergency-fundraisers", emergencyFundraiserRoutes);
 app.use("/api/emergency-donations", emergencyDonationRoutes);
+app.use("/api/emergency-analytics", emergencyAnalyticsRoutes);
 app.use("/api", emailRoutes);
 
 const PORT = process.env.PORT || 5000;

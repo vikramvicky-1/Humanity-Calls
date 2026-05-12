@@ -21,7 +21,7 @@ import {
   FaCheckCircle,
   FaTimes,
 } from "react-icons/fa";
-import { buildEmergencyShareUrls, copyEmergencyLink } from "../utils/emergencyShare";
+import { buildEmergencyShareUrls, copyEmergencyLink, trackEmergencyEvent } from "../utils/emergencyShare";
 import { parseVideoForEmbed } from "../utils/emergencyVideoEmbed";
 import { downloadEmergencyBannerPng } from "../utils/downloadEmergencyBanner";
 import { API_URL } from "../utils/apiConfig.js";
@@ -62,6 +62,12 @@ const EmergencyFundingDetails = () => {
     load();
   }, [load]);
 
+  useEffect(() => {
+    if (f?.slug) {
+      trackEmergencyEvent("detail_view", f.slug);
+    }
+  }, [f?.slug]);
+
   const pageUrl = typeof window !== "undefined" && f ? `${window.location.origin}/emergency-funding/${f.slug}` : "";
 
   const handleBanner = async () => {
@@ -79,6 +85,7 @@ const EmergencyFundingDetails = () => {
         filename: `HC-emergency-${f.slug}.png`,
       });
       toast.success(t("emergency.banner_ok"));
+      trackEmergencyEvent("download_banner", f.slug);
     } catch {
       toast.error(t("emergency.banner_fail"));
     } finally {
@@ -131,6 +138,7 @@ const EmergencyFundingDetails = () => {
       if (screenshotUrl) payload.screenshotUrl = screenshotUrl;
 
       await axios.post(`${API_URL}/emergency-donations/submit`, payload);
+      trackEmergencyEvent("donation_submit", f.slug);
       setShowThankYou(true);
       setDonationModal(false);
       setForm({ name: "", email: "", phone: "", amount: "", transactionId: "" });
@@ -255,11 +263,9 @@ const EmergencyFundingDetails = () => {
             </div>
             <h1 className="text-2xl md:text-4xl font-black text-[#1a1a1a] leading-tight tracking-tight">{f.title}</h1>
             {f.patientName ? (
-            {f.patientName ? (
               <p className="mt-2 text-sm font-bold text-text-body/50 uppercase tracking-widest">
                 {t("emergency.for_patient", { name: f.patientName })}
               </p>
-            ) : null}
             ) : null}
 
             {f.fullDescription ? (
@@ -287,22 +293,47 @@ const EmergencyFundingDetails = () => {
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <a href={shareUrls.whatsapp} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#25D366] text-white font-bold text-sm min-h-[44px]">
+            <a
+              href={shareUrls.whatsapp}
+              target="_blank"
+              rel="noreferrer"
+              onClick={() => trackEmergencyEvent("share_whatsapp", f.slug)}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#25D366] text-white font-bold text-sm min-h-[44px]"
+            >
               <FaWhatsapp size={18} /> {t("emergency.whatsapp")}
             </a>
-            <a href={shareUrls.twitter} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-black text-white font-bold text-sm min-h-[44px]">
+            <a
+              href={shareUrls.twitter}
+              target="_blank"
+              rel="noreferrer"
+              onClick={() => trackEmergencyEvent("share_twitter", f.slug)}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-black text-white font-bold text-sm min-h-[44px]"
+            >
               <FaTwitter size={16} /> {t("emergency.twitter")}
             </a>
-            <a href={shareUrls.facebook} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#1877F2] text-white font-bold text-sm min-h-[44px]">
+            <a
+              href={shareUrls.facebook}
+              target="_blank"
+              rel="noreferrer"
+              onClick={() => trackEmergencyEvent("share_facebook", f.slug)}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#1877F2] text-white font-bold text-sm min-h-[44px]"
+            >
               <FaFacebookF size={16} /> {t("emergency.facebook")}
             </a>
-            <a href={shareUrls.telegram} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0088cc] text-white font-bold text-sm min-h-[44px]">
+            <a
+              href={shareUrls.telegram}
+              target="_blank"
+              rel="noreferrer"
+              onClick={() => trackEmergencyEvent("share_telegram", f.slug)}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0088cc] text-white font-bold text-sm min-h-[44px]"
+            >
               <FaTelegramPlane size={18} /> {t("emergency.telegram")}
             </a>
             <button
               type="button"
               onClick={async () => {
                 const ok = await copyEmergencyLink(pageUrl);
+                if (ok) trackEmergencyEvent("copy_link", f.slug);
                 toast[ok ? "success" : "error"](ok ? t("emergency.link_copied") : t("emergency.copy_failed"));
               }}
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-border font-bold text-sm hover:border-primary min-h-[44px]"
@@ -406,7 +437,10 @@ const EmergencyFundingDetails = () => {
             </a>
 
             <button
-              onClick={() => setDonationModal(true)}
+              onClick={() => {
+                trackEmergencyEvent("donate_form_open", f.slug);
+                setDonationModal(true);
+              }}
               className="mt-3 block w-full py-4 rounded-xl bg-primary text-white text-center font-black text-sm uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all min-h-[48px]"
             >
               {t("emergency.submit_donation_btn")}

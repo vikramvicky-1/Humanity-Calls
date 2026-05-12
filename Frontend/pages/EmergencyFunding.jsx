@@ -5,7 +5,7 @@ import axios from "axios";
 import SEO from "../components/SEO";
 import { motion } from "framer-motion";
 import { FaHeart, FaShareAlt, FaBolt, FaHandHoldingHeart } from "react-icons/fa";
-import { buildEmergencyShareUrls, copyEmergencyLink } from "../utils/emergencyShare";
+import { buildEmergencyShareUrls, trackEmergencyEvent } from "../utils/emergencyShare";
 import { toast } from "react-toastify";
 import { API_URL } from "../utils/apiConfig.js";
 
@@ -28,7 +28,14 @@ const EmergencyFunding = () => {
       .finally(() => setLoading(false));
   }, []);
 
+  useEffect(() => {
+    if (!loading && list.length > 0) {
+      trackEmergencyEvent("list_view", "");
+    }
+  }, [loading, list.length]);
+
   const share = (f) => {
+    trackEmergencyEvent("share_whatsapp", f.slug);
     const url = f.shareLink || `${window.location.origin}/emergency-funding/${f.slug}`;
     const urls = buildEmergencyShareUrls({
       pageUrl: url,
@@ -90,7 +97,11 @@ const EmergencyFunding = () => {
                   transition={{ delay: idx * 0.05 }}
                   className="bg-white rounded-[2rem] overflow-hidden border border-black/6 shadow-[0_8px_40px_rgba(0,0,0,0.06)] flex flex-col hover:shadow-[0_20px_50px_rgba(198,40,40,0.12)] transition-shadow duration-500"
                 >
-                  <Link to={`/emergency-funding/${f.slug}`} className="relative aspect-[16/10] block overflow-hidden group">
+                  <Link
+                    to={`/emergency-funding/${f.slug}`}
+                    onClick={() => trackEmergencyEvent("list_card_open", f.slug)}
+                    className="relative aspect-[16/10] block overflow-hidden group"
+                  >
                     {cover ? (
                       <img
                         src={cover}
@@ -115,7 +126,11 @@ const EmergencyFunding = () => {
                   </Link>
                   <div className="p-6 md:p-7 flex flex-col flex-1">
                     <h2 className="text-xl md:text-2xl font-black text-[#1a1a1a] leading-snug line-clamp-2">
-                      <Link to={`/emergency-funding/${f.slug}`} className="hover:text-primary transition-colors">
+                      <Link
+                        to={`/emergency-funding/${f.slug}`}
+                        onClick={() => trackEmergencyEvent("list_card_open", f.slug)}
+                        className="hover:text-primary transition-colors"
+                      >
                         {f.title}
                       </Link>
                     </h2>
@@ -146,6 +161,7 @@ const EmergencyFunding = () => {
                     <div className="mt-6 flex gap-3">
                       <Link
                         to={`/emergency-funding/${f.slug}`}
+                        onClick={() => trackEmergencyEvent("list_card_open", f.slug)}
                         className="flex-1 py-3.5 rounded-xl bg-[#1a1a2e] text-white text-center font-black text-xs uppercase tracking-widest hover:bg-primary transition-colors"
                       >
                         {t("emergency.donate")}

@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaHeart, FaBolt } from "react-icons/fa";
+import { trackEmergencyEvent } from "../utils/emergencyShare";
 
 /**
  * Bottom-right “live” CTA — links to emergency funding list.
@@ -33,6 +34,7 @@ const EmergencyLiveFundFab = () => {
           <span className="absolute -inset-1 rounded-full bg-blood/40 blur-md opacity-80 animate-pulse" aria-hidden />
           <Link
             to="/emergency-funding"
+            onClick={() => trackEmergencyEvent("fab_click", "")}
             className="relative flex items-center gap-2 sm:gap-3 pl-3 pr-4 sm:pl-4 sm:pr-5 py-3 min-h-[48px] rounded-full bg-gradient-to-r from-blood via-[#c62828] to-primary text-white font-black text-[11px] sm:text-xs uppercase tracking-[0.12em] sm:tracking-[0.18em] shadow-[0_12px_40px_rgba(198,40,40,0.45)] border border-white/25 ring-2 ring-white/10 touch-manipulation active:scale-[0.98] transition-transform"
           >
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/15 border border-white/20">

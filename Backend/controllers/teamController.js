@@ -19,6 +19,7 @@ const toNode = (user, volunteer) => ({
   name: volunteer?.fullName || user.name,
   email: volunteer?.email || user.email,
   teamRole: pickRole(user, volunteer),
+  volunteerRolePreference: volunteer?.rolePreference ? String(volunteer.rolePreference) : "",
   reportsTo: user.reportsTo ? String(user.reportsTo) : null,
   profilePicture: volunteer?.profilePicture || "",
   volunteerStatus: volunteer?.status || null,
@@ -35,7 +36,7 @@ export const getTeamTree = async (_req, res) => {
       status: { $in: ["active", "temporary", "inactive", "pending"] },
     })
       .populate("user", "name email teamRole reportsTo role")
-      .select("user fullName email profilePicture rolePreference interest status")
+      .select("user fullName email profilePicture rolePreference interest status joiningDate createdAt")
       .lean();
 
     const volunteerUsers = volunteers
@@ -145,6 +146,44 @@ export const updateTeamAssignment = async (req, res) => {
     res.status(200).json({ message: "Team assignment updated", user: updated });
   } catch (error) {
     res.status(500).json({ message: "Failed to update team assignment", error: error.message });
+  }
+};
+
+/** Admin: roster of all non-admin users with volunteer profile fields for hierarchy UI. */
+export const getTeamRoster = async (_req, res) => {
+  try {
+    const users = await User.find({ role: { $ne: "admin" } })
+      .select("name email teamRole reportsTo createdAt")
+      .lean();
+
+    const volunteers = await Volunteer.find({})
+      .select("user fullName email profilePicture rolePreference status volunteerId joiningDate")
+      .lean();
+
+    const byUserId = new Map();
+    volunteers.forEach((v) => {
+      if (v.user) byUserId.set(String(v.user), v);
+    });
+
+    const roster = users.map((u) => {
+      const v = byUserId.get(String(u._id));
+      return {
+        userId: String(u._id),
+        name: v?.fullName || u.name,
+        email: v?.email || u.email,
+        teamRole: u.teamRole || "",
+        reportsTo: u.reportsTo ? String(u.reportsTo) : null,
+        profilePicture: v?.profilePicture || "",
+        volunteerRolePreference: v?.rolePreference || "",
+        volunteerId: v?.volunteerId || "",
+        volunteerStatus: v?.status || null,
+        joiningDate: v?.joiningDate || null,
+      };
+    });
+
+    res.status(200).json({ roster });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch team roster", error: error.message });
   }
 };
 

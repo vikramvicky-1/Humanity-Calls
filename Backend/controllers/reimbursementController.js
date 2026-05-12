@@ -5,10 +5,17 @@ import { reimbursementApprovedTemplate, reimbursementPaidTemplate } from "../uti
 
 export const createReimbursementRequest = async (req, res) => {
   try {
-    const { amount, purpose, spentOnDate, receiptImageUrl } = req.body;
+    const { amount, purpose, spentOnDate, receiptImageUrl, receiptUrls } = req.body;
 
     const vol = await Volunteer.findOne({ user: req.user.id });
     if (!vol) return res.status(403).json({ message: "You must be a volunteer to request reimbursement." });
+
+    let urls = [];
+    if (Array.isArray(receiptUrls) && receiptUrls.length > 0) {
+      urls = receiptUrls.map((u) => String(u || "").trim()).filter(Boolean).slice(0, 12);
+    } else if (receiptImageUrl) {
+      urls = [String(receiptImageUrl).trim()].filter(Boolean);
+    }
 
     const doc = await ReimbursementRequest.create({
       user: req.user.id,
@@ -16,7 +23,8 @@ export const createReimbursementRequest = async (req, res) => {
       amount: Number(amount),
       purpose,
       spentOnDate: spentOnDate ? new Date(spentOnDate) : null,
-      receiptImageUrl: receiptImageUrl || "",
+      receiptImageUrl: urls[0] || "",
+      receiptUrls: urls,
     });
 
     // Notify admin (fire and forget)
@@ -24,6 +32,12 @@ export const createReimbursementRequest = async (req, res) => {
     const senderEmail = process.env.BREVO_SENDER_EMAIL;
     const senderName = process.env.BREVO_SENDER_NAME || "Humanity Calls";
     if (process.env.BREVO_API_KEY && adminEmail && senderEmail) {
+      const receiptLinks =
+        urls.length > 0
+          ? urls.map((u) => `<li><a href="${u}">View</a></li>`).join("")
+          : receiptImageUrl
+            ? `<li><a href="${receiptImageUrl}">View</a></li>`
+            : "<li>—</li>";
       triggerEmail({
         sender: { name: senderName, email: senderEmail },
         to: [{ email: adminEmail, name: "HCT Admin" }],
@@ -35,7 +49,8 @@ export const createReimbursementRequest = async (req, res) => {
             <p><strong>Email:</strong> ${vol.email}</p>
             <p><strong>Amount:</strong> ₹${Number(amount)}</p>
             <p><strong>Purpose:</strong> ${purpose}</p>
-            <p><strong>Receipt:</strong> ${receiptImageUrl ? `<a href="${receiptImageUrl}">View</a>` : "—"}</p>
+            <p><strong>Receipts:</strong></p>
+            <ul>${receiptLinks}</ul>
           </div>
         `,
       }).catch(() => null);

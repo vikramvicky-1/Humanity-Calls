@@ -20,6 +20,7 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Loader2,
+  Zap,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -30,6 +31,8 @@ const AnalyticsDashboard = () => {
   const [graphData, setGraphData] = useState([]);
   const [loadingStats, setLoadingStats] = useState(true);
   const [loadingGraph, setLoadingGraph] = useState(true);
+  const [emergencySummary, setEmergencySummary] = useState(null);
+  const [loadingEmergency, setLoadingEmergency] = useState(true);
 
   const fetchStats = async () => {
     setLoadingStats(true);
@@ -63,8 +66,26 @@ const AnalyticsDashboard = () => {
     }
   };
 
+  const fetchEmergencySummary = async () => {
+    setLoadingEmergency(true);
+    try {
+      const token = sessionStorage.getItem("adminToken");
+      const { data } = await axios.get(
+        `${import.meta.env.VITE_API_URL}/emergency-analytics/summary?range=${range}`,
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      setEmergencySummary(data);
+    } catch (error) {
+      console.error("Error fetching emergency analytics:", error);
+      setEmergencySummary(null);
+    } finally {
+      setLoadingEmergency(false);
+    }
+  };
+
   useEffect(() => {
     fetchStats();
+    fetchEmergencySummary();
   }, [range]);
 
   useEffect(() => {
@@ -197,6 +218,59 @@ const AnalyticsDashboard = () => {
                 </motion.div>
               ))}
         </AnimatePresence>
+      </div>
+
+      <div className="bg-white rounded-[1.5rem] p-5 border border-slate-100 shadow-sm mb-4">
+        <div className="flex items-start gap-3 mb-4">
+          <div className="p-2 rounded-xl bg-red-50 text-red-600">
+            <Zap className="w-5 h-5" />
+          </div>
+          <div>
+            <h3 className="text-lg font-black text-slate-800 leading-none">Emergency funding engagement</h3>
+            <p className="text-slate-500 text-[10px] font-medium mt-1 max-w-3xl">
+              Anonymous page events for the selected range: opens, shares, link copies, banner downloads, donation modal
+              opens, and submitted donation forms. Approved offline/UPI emergency donations are summarized separately.
+            </p>
+          </div>
+        </div>
+        {loadingEmergency ? (
+          <div className="flex justify-center py-10">
+            <Loader2 className="w-8 h-8 text-red-500 animate-spin" />
+          </div>
+        ) : emergencySummary ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            {[
+              ["list_view", "List opens"],
+              ["detail_view", "Campaign detail views"],
+              ["list_card_open", "Campaign card taps"],
+              ["fab_click", "Floating button taps"],
+              ["home_section_view", "Home section loads"],
+              ["popup_impression", "Home popup shown"],
+              ["share_whatsapp", "WhatsApp share taps"],
+              ["share_twitter", "X / Twitter share taps"],
+              ["share_facebook", "Facebook share taps"],
+              ["share_telegram", "Telegram share taps"],
+              ["copy_link", "Copy link successes"],
+              ["download_banner", "Banner downloads"],
+              ["donate_form_open", "Donate modal opens"],
+              ["donation_submit", "Donation forms submitted"],
+            ].map(([key, label]) => (
+              <div key={key} className="rounded-xl border border-slate-100 bg-slate-50/80 p-3">
+                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wide leading-snug">{label}</p>
+                <p className="text-lg font-black text-slate-800 mt-1">{emergencySummary.events?.[key] ?? 0}</p>
+              </div>
+            ))}
+            <div className="rounded-xl border border-emerald-100 bg-emerald-50/90 p-4 col-span-2 sm:col-span-3 lg:col-span-4">
+              <p className="text-[9px] font-bold text-emerald-800 uppercase tracking-wide">Approved emergency donations (bank/UPI)</p>
+              <p className="text-xl font-black text-emerald-950 mt-1">
+                {emergencySummary.donations?.approvedCount ?? 0} recorded — ₹
+                {(emergencySummary.donations?.approvedAmount || 0).toLocaleString("en-IN")}
+              </p>
+            </div>
+          </div>
+        ) : (
+          <p className="text-sm text-slate-400 font-medium py-4">Emergency analytics unavailable.</p>
+        )}
       </div>
 
       {/* Graph Section */}

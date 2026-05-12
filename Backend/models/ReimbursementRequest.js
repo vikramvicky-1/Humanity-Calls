@@ -31,6 +31,11 @@ const reimbursementRequestSchema = new mongoose.Schema(
       default: "",
       trim: true,
     },
+    /** Multiple receipt proofs (images or PDF URLs). Preferred over receiptImageUrl when present. */
+    receiptUrls: {
+      type: [String],
+      default: [],
+    },
     status: {
       type: String,
       enum: ["pending", "approved", "rejected", "paid"],

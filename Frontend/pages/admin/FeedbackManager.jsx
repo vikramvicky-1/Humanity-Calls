@@ -252,6 +252,21 @@ const FeedbackManager = () => {
                         <p className="text-sm text-slate-500 leading-relaxed whitespace-pre-wrap">
                           {fb.message}
                         </p>
+                        {Array.isArray(fb.attachmentUrls) && fb.attachmentUrls.length > 0 && (
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            {fb.attachmentUrls.map((url, i) => (
+                              <a
+                                key={url}
+                                href={url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-lg bg-slate-100 text-primary border border-slate-200 hover:bg-slate-200"
+                              >
+                                Attachment {i + 1}
+                              </a>
+                            ))}
+                          </div>
+                        )}
                       </div>
 
                       {/* Actions */}

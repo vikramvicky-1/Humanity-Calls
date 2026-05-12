@@ -5,6 +5,7 @@ import axios from "axios";
 import { motion } from "framer-motion";
 import { FaHeart, FaArrowRight, FaBolt } from "react-icons/fa";
 import { API_URL } from "../utils/apiConfig.js";
+import { trackEmergencyEvent } from "../utils/emergencyShare";
 
 const EmergencyFundingSection = () => {
   const { t } = useTranslation();
@@ -21,6 +22,12 @@ const EmergencyFundingSection = () => {
       .catch(() => setItems([]))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (!loading && items.length > 0) {
+      trackEmergencyEvent("home_section_view", items[0]?.slug || "");
+    }
+  }, [loading, items]);
 
   if (loading) {
     return (
@@ -67,6 +74,7 @@ const EmergencyFundingSection = () => {
           </div>
           <Link
             to="/emergency-funding"
+            onClick={() => trackEmergencyEvent("home_section_view", "")}
             className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl border-2 border-primary text-primary font-black text-xs uppercase tracking-widest hover:bg-primary hover:text-white transition-all shrink-0 min-h-[48px]"
           >
             {t("emergency.section_view_all")} <FaArrowRight size={11} />
@@ -87,7 +95,11 @@ const EmergencyFundingSection = () => {
                 transition={{ delay: idx * 0.06 }}
                 className="group bg-white rounded-[2rem] border border-black/6 shadow-sm hover:shadow-2xl hover:shadow-primary/10 overflow-hidden flex flex-col"
               >
-                <Link to={`/emergency-funding/${f.slug}`} className="block relative aspect-[16/10] overflow-hidden">
+                <Link
+                  to={`/emergency-funding/${f.slug}`}
+                  onClick={() => trackEmergencyEvent("list_card_open", f.slug)}
+                  className="block relative aspect-[16/10] overflow-hidden"
+                >
                   {cover ? (
                     <img src={cover} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                   ) : (

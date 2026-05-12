@@ -5,6 +5,7 @@ import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaTimes, FaHeart, FaChevronRight } from "react-icons/fa";
 import { API_URL } from "../utils/apiConfig.js";
+import { trackEmergencyEvent } from "../utils/emergencyShare";
 
 const EmergencyHomePopup = () => {
   const { t } = useTranslation();
@@ -40,6 +41,13 @@ const EmergencyHomePopup = () => {
     const key = `hc_emergency_popup_dismissed_${String(data._id)}`;
     setClosed(!!sessionStorage.getItem(key));
   }, [data]);
+
+  useEffect(() => {
+    if (!data?._id || loading) return;
+    const key = `hc_emergency_popup_dismissed_${String(data._id)}`;
+    if (sessionStorage.getItem(key)) return;
+    trackEmergencyEvent("popup_impression", data.slug || "");
+  }, [data, loading]);
 
   const dismiss = () => {
     if (data?._id) {

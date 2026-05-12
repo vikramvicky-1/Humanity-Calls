@@ -208,9 +208,9 @@ export const ViewMoreModal = ({ isOpen, onClose, vol }) => {
               
               <div className="p-6 bg-bg/50 rounded-3xl space-y-4">
                 <h4 className="text-xs font-black text-primary uppercase tracking-widest border-b border-primary/10 pb-2">Engagement Preferences</h4>
-                <DetailList label="Time Commitment" items={vol.timeCommitment} />
-                <DetailList label="Preferred Working Mode" items={vol.workingMode} />
-                <DetailList label="Role Preferences" items={vol.rolePreference} />
+                <DetailItem label="Time Commitment" value={vol.timeCommitment} />
+                <DetailItem label="Preferred Working Mode" value={vol.workingMode} />
+                <DetailItem label="Role preference" value={vol.rolePreference} />
                 <DetailList label="Donation Support" items={vol.deviceDonationChoices} />
               </div>
             </div>
@@ -251,20 +251,60 @@ export const VolunteerEditModal = ({ isOpen, onClose, volunteer, onUpdate }) => 
 
   useEffect(() => {
     if (volunteer) {
-      setFormData({ ...volunteer });
+      setFormData({
+        ...volunteer,
+        deviceDonationChoices: Array.isArray(volunteer.deviceDonationChoices) ? volunteer.deviceDonationChoices : [],
+      });
     }
   }, [volunteer]);
 
   if (!isOpen || !formData) return null;
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
+    if (type === "checkbox" && name === "deviceDonationChoices") {
+      const opt = e.target.value;
+      setFormData((prev) => {
+        const arr = Array.isArray(prev.deviceDonationChoices) ? [...prev.deviceDonationChoices] : [];
+        if (checked) {
+          if (!arr.includes(opt)) arr.push(opt);
+        } else {
+          return { ...prev, deviceDonationChoices: arr.filter((x) => x !== opt) };
+        }
+        return { ...prev, deviceDonationChoices: arr };
+      });
+      return;
+    }
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleFileChange = async (e, type) => {
     const file = e.target.files[0];
     if (!file) return;
+
+    if (type === "dl") {
+      if (file.size > 8 * 1024 * 1024) {
+        toast.error("License file must be under 8MB");
+        return;
+      }
+      setIsUploading(true);
+      try {
+        const token = sessionStorage.getItem("adminToken") || getAuthToken();
+        const fd = new FormData();
+        fd.append("file", file);
+        const res = await axios.post(`${import.meta.env.VITE_API_URL}/volunteers/upload-license`, fd, {
+          headers: { Authorization: `Bearer ${token}`, "Content-Type": "multipart/form-data" },
+        });
+        setFormData((prev) => ({ ...prev, drivingLicenseImageUrl: res.data.imageUrl }));
+        toast.success("License uploaded");
+      } catch (err) {
+        toast.error(err.response?.data?.message || "Upload failed");
+      } finally {
+        setIsUploading(false);
+      }
+      e.target.value = "";
+      return;
+    }
 
     if (file.size > 5 * 1024 * 1024) {
       toast.error("File size must be under 5MB");
@@ -273,12 +313,8 @@ export const VolunteerEditModal = ({ isOpen, onClose, volunteer, onUpdate }) => 
 
     const reader = new FileReader();
     reader.onload = () => {
-      if (type === 'dl') {
-        setFormData(prev => ({ ...prev, drivingLicenseImageUrl: reader.result }));
-      } else {
-        setCropImage(reader.result);
-        setCropType(type);
-      }
+      setCropImage(reader.result);
+      setCropType(type);
     };
     reader.readAsDataURL(file);
   };
@@ -287,12 +323,41 @@ export const VolunteerEditModal = ({ isOpen, onClose, volunteer, onUpdate }) => 
     setIsUpdating(true);
     try {
       const token = sessionStorage.getItem("adminToken") || getAuthToken();
-      const res = await axios.patch(
+      const payload = {};
+      const keys = [
+        "fullName",
+        "email",
+        "phone",
+        "emergencyContact",
+        "gender",
+        "interest",
+        "occupation",
+        "occupationDetail",
+        "skills",
+        "timeCommitment",
+        "workingMode",
+        "rolePreference",
+        "locationAddress",
+        "deviceDonationChoices",
+        "govIdType",
+        "govIdImage",
+        "hasDrivingLicense",
+        "drivingLicenseImageUrl",
+        "bloodGroup",
+        "dob",
+        "joiningDate",
+        "termsAccepted",
+        "profilePicture",
+      ];
+      keys.forEach((k) => {
+        if (formData[k] !== undefined) payload[k] = formData[k];
+      });
+      await axios.put(
         `${import.meta.env.VITE_API_URL}/volunteers/${formData._id}`,
-        formData,
-        { headers: { Authorization: `Bearer ${token}` } }
+        payload,
+        { headers: { Authorization: `Bearer ${token}` } },
       );
-      onUpdate(res.data.volunteer);
+      onUpdate?.();
       toast.success("Volunteer updated successfully");
       onClose();
     } catch (err) {
@@ -303,8 +368,35 @@ export const VolunteerEditModal = ({ isOpen, onClose, volunteer, onUpdate }) => 
   };
 
   const bloodGroups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
-  const occupations = ["Student", "Professional", "Business", "Home Maker", "Retired", "Other"];
-  const interests = ["Education", "Healthcare", "Environment", "Animal Welfare", "Social Service", "Disaster Relief"];
+  const interestOptions = [
+    "Community & Field Engagement",
+    "Education & Skill Development",
+    "Health & Well-being",
+    "Environment & Sustainability",
+    "Creative & Media Support",
+    "Administration & Management",
+    "Fundraising & Partnerships",
+    "Blood Donation",
+    "Poor/Needy Support",
+    "Animal Rescue",
+    "Event Organizing",
+  ];
+  const occupationOptions = [
+    "Student (School / College)",
+    "Working Professional",
+    "Business Owner / Entrepreneur",
+    "Homemaker",
+    "Retired Professional",
+    "Freelancer",
+    "Government Employee",
+    "NGO / Social Sector Professional",
+    "Medical Professional",
+    "Legal Professional",
+    "Educator / Teacher",
+    "IT Professional",
+    "Other",
+  ];
+  const donationOpts = ["T-Shirts", "Gadgets", "Laptops", "Phones"];
   const govIdOptions = ["Aadhar Card", "Voter ID", "PAN Card", "Passport", "Other"];
 
   const labelClasses = "text-[10px] font-black uppercase tracking-[0.2em] text-primary/40 ml-1";
@@ -347,6 +439,22 @@ export const VolunteerEditModal = ({ isOpen, onClose, volunteer, onUpdate }) => 
                   <input name="phone" type="text" value={formData.phone} onChange={handleChange} className={inputClasses} />
                 </div>
                 <div className="space-y-1">
+                  <label className={labelClasses}>Emergency Contact</label>
+                  <input name="emergencyContact" type="text" value={formData.emergencyContact || ""} onChange={handleChange} className={inputClasses} />
+                </div>
+                <div className="space-y-1">
+                  <label className={labelClasses}>Email</label>
+                  <input
+                    name="email"
+                    type="email"
+                    value={formData.email || ""}
+                    onChange={handleChange}
+                    readOnly
+                    title="Email is the application login identity"
+                    className={`${inputClasses} bg-slate-50 cursor-not-allowed`}
+                  />
+                </div>
+                <div className="space-y-1">
                   <label className={labelClasses}>Gender</label>
                   <select name="gender" value={formData.gender} onChange={handleChange} className={inputClasses}>
                     <option value="">Select Gender</option>
@@ -366,17 +474,25 @@ export const VolunteerEditModal = ({ isOpen, onClose, volunteer, onUpdate }) => 
                   <label className={labelClasses}>Area of Interest</label>
                   <select name="interest" value={formData.interest} onChange={handleChange} className={inputClasses}>
                     <option value="">Select Interest</option>
-                    {interests.map(i => <option key={i} value={i}>{i}</option>)}
+                    {interestOptions.map((i) => (
+                      <option key={i} value={i}>
+                        {i}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div className="space-y-1">
                   <label className={labelClasses}>Occupation</label>
                   <select name="occupation" value={formData.occupation} onChange={handleChange} className={inputClasses}>
                     <option value="">Select Occupation</option>
-                    {occupations.map(o => <option key={o} value={o}>{o}</option>)}
+                    {occupationOptions.map((o) => (
+                      <option key={o} value={o}>
+                        {o}
+                      </option>
+                    ))}
                   </select>
                 </div>
-                {formData.occupation === 'Other' && (
+                {formData.occupation === "Other" && (
                   <div className="space-y-1">
                     <label className={labelClasses}>Specify Occupation</label>
                     <input name="occupationDetail" type="text" value={formData.occupationDetail} onChange={handleChange} className={inputClasses} />
@@ -412,8 +528,25 @@ export const VolunteerEditModal = ({ isOpen, onClose, volunteer, onUpdate }) => 
                       {["Team Member", "Team Leader", "Coordinator", "Consultant / Advisor", "Intern"].map(opt => <option key={opt} value={opt}>{opt}</option>)}
                     </select>
                   </div>
+                  <div className="space-y-2 pt-2">
+                    <label className={labelClasses}>Optional donation support</label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {donationOpts.map((opt) => (
+                        <label key={opt} className="flex items-center gap-2 text-xs font-bold text-text-body cursor-pointer">
+                          <input
+                            type="checkbox"
+                            name="deviceDonationChoices"
+                            value={opt}
+                            checked={formData.deviceDonationChoices?.includes(opt)}
+                            onChange={handleChange}
+                            className="accent-primary rounded"
+                          />
+                          {opt}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-
                 {formData.referrer && (
                   <div className="space-y-1 pt-4">
                     <label className={labelClasses}>Referred By (Read Only)</label>
@@ -454,7 +587,7 @@ export const VolunteerEditModal = ({ isOpen, onClose, volunteer, onUpdate }) => 
                         </div>
                         <label className="px-4 py-2 bg-white border border-primary/10 rounded-lg text-[10px] font-black cursor-pointer hover:bg-primary hover:text-white transition-all">
                           Update DL
-                          <input type="file" className="hidden" onChange={(e) => handleFileChange(e, 'dl')} accept="image/*" />
+                          <input type="file" className="hidden" onChange={(e) => handleFileChange(e, 'dl')} accept="image/*,.pdf,application/pdf" />
                         </label>
                       </div>
                     </div>

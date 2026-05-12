@@ -15,7 +15,10 @@ import {
   getReferralStats,
   adminRemoveVolunteerProfilePicture,
   adminReplaceVolunteerProfilePicture,
+  adminReplaceVolunteerProfileMedia,
   setManualReferral,
+  updateVolunteerProfileApproval,
+  adminRequestProfileReupload,
 } from "../controllers/volunteerController.js";
 import { uploadFileOnly } from "../controllers/galleryController.js";
 import { protect, adminOnly, optionalProtect } from "../middleware/auth.js";
@@ -141,6 +144,23 @@ router.post(
   },
   adminReplaceVolunteerProfilePicture,
 );
+router.post(
+  "/:id/profile-media",
+  protect,
+  adminOnly,
+  (req, res, next) => {
+    licenseMemory.single("file")(req, res, (err) => {
+      if (err) {
+        console.error("Profile media multer:", err.message);
+        return res.status(400).json({ message: err.message });
+      }
+      next();
+    });
+  },
+  adminReplaceVolunteerProfileMedia,
+);
+router.put("/:id/profile-approval", protect, adminOnly, updateVolunteerProfileApproval);
+router.post("/:id/request-profile-reupload", protect, adminOnly, adminRequestProfileReupload);
 router.put("/:id", protect, adminOnly, updateVolunteer);
 router.delete("/:id", protect, adminOnly, deleteVolunteer);
 

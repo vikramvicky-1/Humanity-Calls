@@ -421,6 +421,22 @@ export const profilePictureReplacedByAdminTemplate = (memberName) => {
   return wrap(inner, "Your profile photo was updated");
 };
 
+export const profilePictureReuploadRequestedByAdminTemplate = (memberName) => {
+  const inner = `
+    <tr>
+      <td style="padding:40px 32px 40px;">
+        <div style="color:#333;font-size:16px;line-height:1.7;">
+          <p style="margin-top:0;">Dear <strong>${memberName}</strong>,</p>
+          <p>Our team needs a clearer profile photo for your volunteer record. Please sign in, open your profile, and upload a new image or document we can use for verification.</p>
+          <p style="margin-bottom:0;">If you need help, reply to this thread or contact your coordinator.</p>
+          <p style="margin-top:24px;margin-bottom:0;">Warm regards,<br><strong>Team Humanity Calls</strong></p>
+        </div>
+      </td>
+    </tr>
+  `;
+  return wrap(inner, "Please re-upload your profile photo");
+};
+
 export const reimbursementApprovedTemplate = (memberName, amount) => {
   const inner = `
     <tr>
