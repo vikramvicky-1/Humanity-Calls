@@ -17,6 +17,7 @@ const EmergencyDonorsManager = () => {
   const [filter, setFilter] = useState("pending");
   const [commentDraft, setCommentDraft] = useState({});
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [selectedProof, setSelectedProof] = useState(null);
 
   const fetchItems = async () => {
     setIsLoading(true);
@@ -176,14 +177,17 @@ const EmergencyDonorsManager = () => {
                     </td>
                     <td className="px-6 py-6">
                       {i.screenshotUrl ? (
-                        <a 
-                          href={i.screenshotUrl} 
-                          target="_blank" 
-                          rel="noreferrer"
-                          className="flex items-center justify-center w-12 h-12 rounded-xl border border-border overflow-hidden hover:border-primary transition-all shadow-sm"
+                        <button 
+                          onClick={() => setSelectedProof(i.screenshotUrl)}
+                          className="flex items-center justify-center w-12 h-12 rounded-xl border border-border overflow-hidden hover:border-primary transition-all shadow-sm group/proof relative"
                         >
                           <img src={i.screenshotUrl} className="w-full h-full object-cover" alt="Proof" />
-                        </a>
+                          <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover/proof:opacity-100 transition-opacity flex items-center justify-center">
+                            <div className="bg-white/90 p-1.5 rounded-full shadow-lg">
+                              <FaSearch size={10} className="text-primary" />
+                            </div>
+                          </div>
+                        </button>
                       ) : (
                         <span className="text-[11px] text-text-body/30 italic">No proof</span>
                       )}
@@ -233,6 +237,35 @@ const EmergencyDonorsManager = () => {
             </div>
           </div>
         )}
+      {/* Proof Preview Modal */}
+      <AnimatePresence>
+        {selectedProof && (
+          <div 
+            className="fixed inset-0 z-[1000] flex items-center justify-center p-4 md:p-12 bg-black/90 backdrop-blur-md"
+            onClick={() => setSelectedProof(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="relative max-w-5xl w-full h-full flex items-center justify-center"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setSelectedProof(null)}
+                className="absolute -top-12 right-0 md:-right-12 p-3 text-white hover:text-blood transition-colors bg-white/10 rounded-full backdrop-blur-md border border-white/20"
+              >
+                <FaTimes size={24} />
+              </button>
+              <img 
+                src={selectedProof} 
+                className="max-w-full max-h-full object-contain rounded-2xl shadow-2xl border border-white/10" 
+                alt="Proof Full Size" 
+              />
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
       </div>
     </div>
   );

@@ -154,7 +154,11 @@ const EmergencyFundingDetails = () => {
 
   return (
     <div className="min-h-screen bg-[#f4f6fb] pb-20">
-      <SEO title={`${f.title} | Emergency Funding`} description={f.shortDescription || f.title} />
+      <SEO 
+        title={`${f.title} | Emergency Funding`} 
+        description={f.shortDescription || f.title}
+        image={photos[0]}
+      />
 
       <div className="bg-white border-b border-black/5">
         <div className="max-w-6xl mx-auto px-[5%] py-4 flex items-center gap-4">

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { FaMoneyCheckAlt, FaSearch, FaCheck, FaTimes, FaWallet, FaExclamationTriangle } from "react-icons/fa";
@@ -14,8 +14,9 @@ const ReimbursementsManager = () => {
   const [commentDraft, setCommentDraft] = useState({});
   const [payConfirm, setPayConfirm] = useState(null);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [selectedProof, setSelectedProof] = useState(null);
 
-  const fetchItems = async () => {
+  const fetchItems = useCallback(async () => {
     setIsLoading(true);
     try {
       const token = sessionStorage.getItem("adminToken");
@@ -29,12 +30,11 @@ const ReimbursementsManager = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [onStatusUpdate]);
 
   useEffect(() => {
     fetchItems();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [fetchItems]);
 
   const filtered = useMemo(() => {
     let result = items;
@@ -77,7 +77,7 @@ const ReimbursementsManager = () => {
     rejected: items.filter(i => i.status === "rejected").length,
   }), [items]);
 
-  const updateStatus = async (id, status) => {
+  const updateStatus = useCallback(async (id, status) => {
     setIsUpdating(true);
     try {
       const token = sessionStorage.getItem("adminToken");
@@ -95,7 +95,7 @@ const ReimbursementsManager = () => {
     } finally {
       setIsUpdating(false);
     }
-  };
+  }, [commentDraft, fetchItems]);
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -187,9 +187,12 @@ const ReimbursementsManager = () => {
                     <td className="px-4 py-4">{i.purpose}</td>
                     <td className="px-4 py-4">
                       {i.receiptImageUrl ? (
-                        <a className="text-primary font-bold text-[11px] hover:underline" href={i.receiptImageUrl} target="_blank" rel="noreferrer">
-                          View
-                        </a>
+                        <button 
+                          onClick={() => setSelectedProof(i.receiptImageUrl)}
+                          className="px-4 py-2 rounded-lg border border-border bg-bg/30 text-primary font-black text-[10px] uppercase tracking-widest hover:bg-primary hover:text-white transition-all shadow-sm"
+                        >
+                          View Receipt
+                        </button>
                       ) : (
                         <span className="text-[11px] text-text-body/30 italic">—</span>
                       )}
@@ -309,7 +312,36 @@ const ReimbursementsManager = () => {
             </motion.div>
           </div>
         )}
+      {/* Receipt Preview Modal */}
+      <AnimatePresence>
+        {selectedProof && (
+          <div 
+            className="fixed inset-0 z-[1000] flex items-center justify-center p-4 md:p-12 bg-black/90 backdrop-blur-md"
+            onClick={() => setSelectedProof(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="relative max-w-5xl w-full h-full flex items-center justify-center"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setSelectedProof(null)}
+                className="absolute -top-12 right-0 md:-right-12 p-3 text-white hover:text-blood transition-colors bg-white/10 rounded-full backdrop-blur-md border border-white/20"
+              >
+                <FaTimes size={24} />
+              </button>
+              <img 
+                src={selectedProof} 
+                className="max-w-full max-h-full object-contain rounded-2xl shadow-2xl border border-white/10" 
+                alt="Receipt Full Size" 
+              />
+            </motion.div>
+          </div>
+        )}
       </AnimatePresence>
+      </div>
     </div>
   );
 };

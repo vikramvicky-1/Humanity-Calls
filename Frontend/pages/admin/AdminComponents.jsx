@@ -48,7 +48,7 @@ const DetailList = ({ label, items }) => {
   );
 };
 
-export const IdModal = ({ isOpen, onClose, imageUrl }) => {
+export const IdModal = ({ isOpen, onClose, idImage }) => {
   useEffect(() => {
     if (isOpen) {
       const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
@@ -73,7 +73,7 @@ export const IdModal = ({ isOpen, onClose, imageUrl }) => {
             <FaTimes size={20} />
           </button>
         </div>
-        <img src={imageUrl} alt="ID" className="w-full h-auto max-h-[85vh] object-contain mx-auto" />
+        <img src={idImage} alt="ID" className="w-full h-auto max-h-[85vh] object-contain mx-auto" />
       </div>
     </div>,
     document.body
@@ -166,7 +166,17 @@ export const ViewMoreModal = ({ isOpen, onClose, vol }) => {
 
               <div className="p-6 bg-bg/50 rounded-3xl space-y-4">
                 <h4 className="text-xs font-black text-primary uppercase tracking-widest border-b border-primary/10 pb-2">Verification Information</h4>
-                <DetailItem label="Government ID" value={vol.govIdType} />
+                <div className="space-y-4">
+                  <DetailItem label="Government ID" value={vol.govIdType} />
+                  {vol.govIdImage && (
+                    <div className="space-y-2">
+                      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/40">ID Card Image</p>
+                      <a href={vol.govIdImage} target="_blank" rel="noreferrer" className="block w-full h-32 rounded-2xl border border-primary/10 overflow-hidden bg-white hover:border-primary transition-all shadow-sm">
+                        <img src={vol.govIdImage} className="w-full h-full object-contain" alt="ID Card" />
+                      </a>
+                    </div>
+                  )}
+                </div>
                 <DetailItem
                   label="Driving license"
                   value={

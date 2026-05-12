@@ -9,6 +9,9 @@ const SEO = ({ title, description, keywords, image }) => {
     const seoDescription = description || meta.description;
     const seoKeywords = keywords || meta.keywords;
     const seoImage = image || open_graph.og_image;
+    const finalImage = seoImage && seoImage.startsWith('/') 
+      ? `${window.location.origin}${seoImage}` 
+      : seoImage;
 
     document.title = seoTitle;
     
@@ -33,14 +36,14 @@ const SEO = ({ title, description, keywords, image }) => {
     updateMeta('og:description', seoDescription, true);
     updateMeta('og:type', open_graph.og_type, true);
     updateMeta('og:site_name', open_graph.og_site_name, true);
-    updateMeta('og:image', seoImage, true);
+    updateMeta('og:image', finalImage, true);
     updateMeta('og:locale', open_graph.og_locale, true);
 
     // Twitter Tags
     updateMeta('twitter:card', twitter['twitter:card']);
     updateMeta('twitter:title', title || twitter['twitter:title']);
     updateMeta('twitter:description', seoDescription);
-    updateMeta('twitter:image', seoImage);
+    updateMeta('twitter:image', finalImage);
     updateMeta('twitter:site', twitter['twitter:site']);
 
     // Schema.org JSON-LD
