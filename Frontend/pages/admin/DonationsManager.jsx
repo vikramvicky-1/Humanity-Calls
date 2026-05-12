@@ -301,8 +301,7 @@ const DonationsManager = () => {
         )}
       </AnimatePresence>
       </div>
-    </div>
-  );
-};
+    );
+  };
 
 export default DonationsManager;

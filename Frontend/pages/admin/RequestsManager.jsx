@@ -379,7 +379,7 @@ const RequestsManager = () => {
           </div>
         </div>
       )}
-    </div>
+      </div>
     </div>
   );
 };

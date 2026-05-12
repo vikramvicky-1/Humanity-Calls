@@ -312,6 +312,8 @@ const ReimbursementsManager = () => {
             </motion.div>
           </div>
         )}
+      </AnimatePresence>
+
       {/* Receipt Preview Modal */}
       <AnimatePresence>
         {selectedProof && (
@@ -341,7 +343,6 @@ const ReimbursementsManager = () => {
           </div>
         )}
       </AnimatePresence>
-      </div>
     </div>
   );
 };

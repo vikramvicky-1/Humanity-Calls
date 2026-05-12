@@ -724,7 +724,7 @@ const VolunteersManager = () => {
           </div>
         </div>
       )}
-    </div>
+      </div>
     </div>
   );
 };
