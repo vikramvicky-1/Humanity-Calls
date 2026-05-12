@@ -8,6 +8,7 @@ import FeedbackModal from "./FeedbackModal";
 const LANGUAGES = [
   { code: "en", label: "English", flag: "🇬🇧" },
   { code: "hi", label: "हिन्दी", flag: "🇮🇳" },
+  { code: "mr", label: "मराठी", flag: "🇮🇳" },
   { code: "kn", label: "ಕನ್ನಡ", flag: "🇮🇳" },
   { code: "te", label: "తెలుగు", flag: "🇮🇳" },
   { code: "ta", label: "தமிழ்", flag: "🇮🇳" },
@@ -81,7 +82,7 @@ const TopBar = () => {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -4, scale: 0.95 }}
                   transition={{ duration: 0.15 }}
-                  className="absolute right-0 top-full mt-2 w-44 bg-white rounded-xl shadow-2xl shadow-black/20 border border-black/5 overflow-hidden z-[100]"
+                  className="absolute right-0 top-full mt-2 w-[min(100vw-2rem,16rem)] max-h-[min(70vh,22rem)] overflow-y-auto bg-white rounded-xl shadow-2xl shadow-black/20 border border-black/5 overflow-x-hidden z-[100]"
                 >
                   <div className="p-1.5">
                     {LANGUAGES.map((lang) => (

@@ -632,9 +632,20 @@ const VolunteersManager = () => {
               <div>
                 <p className="text-[10px] font-black uppercase tracking-widest text-text-body/40 mb-2">Driving license</p>
                 {docsVolunteer.hasDrivingLicense && docsVolunteer.drivingLicenseImageUrl ? (
-                  <a href={docsVolunteer.drivingLicenseImageUrl} target="_blank" rel="noreferrer" className="block rounded-2xl border border-border overflow-hidden bg-bg">
-                    <img src={docsVolunteer.drivingLicenseImageUrl} alt="Driving license" className="w-full h-auto object-contain max-h-72" />
-                  </a>
+                  /\.pdf(\?|$)/i.test(docsVolunteer.drivingLicenseImageUrl) ? (
+                    <a
+                      href={docsVolunteer.drivingLicenseImageUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="block rounded-2xl border border-border overflow-hidden bg-bg p-6 text-center font-black text-primary hover:bg-primary/5"
+                    >
+                      Open driving license (PDF)
+                    </a>
+                  ) : (
+                    <a href={docsVolunteer.drivingLicenseImageUrl} target="_blank" rel="noreferrer" className="block rounded-2xl border border-border overflow-hidden bg-bg">
+                      <img src={docsVolunteer.drivingLicenseImageUrl} alt="Driving license" className="w-full h-auto object-contain max-h-72" />
+                    </a>
+                  )
                 ) : (
                   <div className="rounded-2xl border border-dashed border-border p-8 text-center text-sm font-bold text-text-body/50">
                     {docsVolunteer.hasDrivingLicense ? "No upload on file" : "Not applicable (No license declared)"}

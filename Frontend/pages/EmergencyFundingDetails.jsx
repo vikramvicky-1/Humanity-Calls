@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import axios from "axios";
 import SEO from "../components/SEO";
 import { toast } from "react-toastify";
@@ -25,11 +26,12 @@ import { parseVideoForEmbed } from "../utils/emergencyVideoEmbed";
 import { downloadEmergencyBannerPng } from "../utils/downloadEmergencyBanner";
 import { API_URL } from "../utils/apiConfig.js";
 import { createPortal } from "react-dom";
-import { FaCloudUploadAlt, FaTrashAlt, FaHandHoldingHeart } from "react-icons/fa";
-import { uploadPublicImage } from "../utils/publicForms";
+import { FaCloudUploadAlt, FaTrashAlt, FaHandHoldingHeart, FaFilePdf } from "react-icons/fa";
+import { uploadPublicProofFile } from "../utils/publicForms";
 import { motion, AnimatePresence } from "framer-motion";
 
 const EmergencyFundingDetails = () => {
+  const { t } = useTranslation();
   const { slug } = useParams();
   const [f, setF] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -51,7 +53,7 @@ const EmergencyFundingDetails = () => {
       })
       .catch(() => {
         setF(null);
-        toast.error("Fundraiser not found");
+        toast.error(t("emergency.fundraiser_not_found"));
       })
       .finally(() => setLoading(false));
   }, [slug]);
@@ -76,9 +78,9 @@ const EmergencyFundingDetails = () => {
         qrImageUrl: f.qrCodeImage,
         filename: `HC-emergency-${f.slug}.png`,
       });
-      toast.success("Banner downloaded");
+      toast.success(t("emergency.banner_ok"));
     } catch {
-      toast.error("Could not generate banner (try disabling strict blockers)");
+      toast.error(t("emergency.banner_fail"));
     } finally {
       setBannerBusy(false);
     }
@@ -88,6 +90,7 @@ const EmergencyFundingDetails = () => {
   const [submitting, setSubmitting] = useState(false);
   const [showThankYou, setShowThankYou] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [proofIsPdf, setProofIsPdf] = useState(false);
   const [previewUrl, setPreviewUrl] = useState("");
   const [form, setForm] = useState({
     name: "",
@@ -99,22 +102,44 @@ const EmergencyFundingDetails = () => {
 
   const onDonationSubmit = async (e) => {
     e.preventDefault();
-    if (!selectedFile) return toast.warning("Please upload payment screenshot");
+    const name = String(form.name || "").trim();
+    const amt = Number(form.amount);
+    if (!name) {
+      toast.warning(t("emergency.need_name_amount"));
+      return;
+    }
+    if (!Number.isFinite(amt) || amt < 1) {
+      toast.warning(t("emergency.need_name_amount"));
+      return;
+    }
+
     setSubmitting(true);
     try {
-      const screenshotUrl = await uploadPublicImage(selectedFile);
-      await axios.post(`${API_URL}/emergency-donations/submit`, {
-        ...form,
+      let screenshotUrl = "";
+      if (selectedFile) {
+        screenshotUrl = (await uploadPublicProofFile(selectedFile)) || "";
+      }
+
+      const payload = {
+        name,
+        amount: amt,
         fundraiserId: f._id,
-        screenshotUrl,
-      });
+        email: String(form.email || "").trim(),
+        phone: String(form.phone || "").trim(),
+        transactionId: String(form.transactionId || "").trim(),
+      };
+      if (screenshotUrl) payload.screenshotUrl = screenshotUrl;
+
+      await axios.post(`${API_URL}/emergency-donations/submit`, payload);
       setShowThankYou(true);
       setDonationModal(false);
       setForm({ name: "", email: "", phone: "", amount: "", transactionId: "" });
       setSelectedFile(null);
+      setProofIsPdf(false);
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
       setPreviewUrl("");
     } catch (err) {
-      toast.error(err.response?.data?.message || "Submission failed");
+      toast.error(err.response?.data?.message || t("emergency.submit_fail"));
     } finally {
       setSubmitting(false);
     }
@@ -131,10 +156,10 @@ const EmergencyFundingDetails = () => {
   if (!f) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center px-6 bg-[#fafafa]">
-        <SEO title="Not found | Humanity Calls" />
-        <p className="text-lg font-black text-text-body">This fundraiser is not available.</p>
+        <SEO title={`${t("emergency.not_found_title")} | Humanity Calls`} />
+        <p className="text-lg font-black text-text-body">{t("emergency.not_found_title")}</p>
         <Link to="/emergency-funding" className="mt-6 text-primary font-bold underline">
-          Back to all campaigns
+          {t("emergency.back_campaigns")}
         </Link>
       </div>
     );
@@ -154,24 +179,24 @@ const EmergencyFundingDetails = () => {
 
   return (
     <div className="min-h-screen bg-[#f4f6fb] pb-20">
-      <SEO 
-        title={`${f.title} | Emergency Funding`} 
+      <SEO
+        title={`${f.title}${t("emergency.meta_detail_suffix")}`}
         description={f.shortDescription || f.title}
         image={photos[0]}
       />
 
       <div className="bg-white border-b border-black/5">
-        <div className="max-w-6xl mx-auto px-[5%] py-4 flex items-center gap-4">
+        <div className="max-w-6xl mx-auto px-[5%] sm:px-6 py-3 sm:py-4 flex items-center gap-4">
           <Link to="/emergency-funding" className="text-sm font-bold text-primary hover:underline flex items-center gap-2">
-            ← All campaigns
+            ← {t("emergency.all_campaigns")}
           </Link>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-[5%] pt-8 md:pt-12 grid lg:grid-cols-[1fr_380px] gap-8 lg:gap-10 items-start">
+      <div className="max-w-6xl mx-auto px-[5%] sm:px-6 pt-6 sm:pt-8 md:pt-12 grid grid-cols-1 lg:grid-cols-[1fr_minmax(0,380px)] gap-6 sm:gap-8 lg:gap-10 items-start">
         <div className="space-y-8">
           {photos.length > 0 ? (
-            <div className="relative rounded-[2rem] overflow-hidden bg-black shadow-xl border border-black/5 aspect-[16/10] max-h-[480px]">
+            <div className="relative rounded-2xl sm:rounded-[2rem] overflow-hidden bg-black shadow-xl border border-black/5 aspect-[16/10] max-h-[min(70vh,480px)]">
               <img src={photos[carousel % photos.length]} alt="" className="w-full h-full object-contain bg-black" />
               {photos.length > 1 ? (
                 <>
@@ -220,17 +245,21 @@ const EmergencyFundingDetails = () => {
           <div className="bg-white rounded-[2rem] p-6 md:p-10 border border-black/6 shadow-sm">
             <div className="flex flex-wrap gap-2 mb-4">
               <span className="px-3 py-1 rounded-full bg-blood/10 text-blood text-[10px] font-black uppercase tracking-widest">
-                Verified emergency
+                {t("emergency.verified")}
               </span>
               {f.goalReached ? (
                 <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black uppercase tracking-widest flex items-center gap-1">
-                  <FaCheckCircle /> Goal reached
+                  <FaCheckCircle /> {t("emergency.badge_goal")}
                 </span>
               ) : null}
             </div>
             <h1 className="text-2xl md:text-4xl font-black text-[#1a1a1a] leading-tight tracking-tight">{f.title}</h1>
             {f.patientName ? (
-              <p className="mt-2 text-sm font-bold text-text-body/50 uppercase tracking-widest">For {f.patientName}</p>
+            {f.patientName ? (
+              <p className="mt-2 text-sm font-bold text-text-body/50 uppercase tracking-widest">
+                {t("emergency.for_patient", { name: f.patientName })}
+              </p>
+            ) : null}
             ) : null}
 
             {f.fullDescription ? (
@@ -244,13 +273,13 @@ const EmergencyFundingDetails = () => {
             <div className="mt-10 grid sm:grid-cols-2 gap-4 text-sm">
               {f.medicalCondition ? (
                 <div className="p-4 rounded-2xl bg-bg border border-border">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-1">Medical condition</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-1">{t("emergency.medical")}</p>
                   <p className="font-bold text-text-body">{f.medicalCondition}</p>
                 </div>
               ) : null}
               {f.hospitalName ? (
                 <div className="p-4 rounded-2xl bg-bg border border-border">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-1">Hospital</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-1">{t("emergency.hospital")}</p>
                   <p className="font-bold text-text-body">{f.hospitalName}</p>
                 </div>
               ) : null}
@@ -258,55 +287,55 @@ const EmergencyFundingDetails = () => {
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <a href={shareUrls.whatsapp} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#25D366] text-white font-bold text-sm">
-              <FaWhatsapp size={18} /> WhatsApp
+            <a href={shareUrls.whatsapp} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#25D366] text-white font-bold text-sm min-h-[44px]">
+              <FaWhatsapp size={18} /> {t("emergency.whatsapp")}
             </a>
-            <a href={shareUrls.twitter} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-black text-white font-bold text-sm">
-              <FaTwitter size={16} /> X / Twitter
+            <a href={shareUrls.twitter} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-black text-white font-bold text-sm min-h-[44px]">
+              <FaTwitter size={16} /> {t("emergency.twitter")}
             </a>
-            <a href={shareUrls.facebook} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#1877F2] text-white font-bold text-sm">
-              <FaFacebookF size={16} /> Facebook
+            <a href={shareUrls.facebook} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#1877F2] text-white font-bold text-sm min-h-[44px]">
+              <FaFacebookF size={16} /> {t("emergency.facebook")}
             </a>
-            <a href={shareUrls.telegram} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0088cc] text-white font-bold text-sm">
-              <FaTelegramPlane size={18} /> Telegram
+            <a href={shareUrls.telegram} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0088cc] text-white font-bold text-sm min-h-[44px]">
+              <FaTelegramPlane size={18} /> {t("emergency.telegram")}
             </a>
             <button
               type="button"
               onClick={async () => {
                 const ok = await copyEmergencyLink(pageUrl);
-                toast[ok ? "success" : "error"](ok ? "Link copied" : "Copy failed");
+                toast[ok ? "success" : "error"](ok ? t("emergency.link_copied") : t("emergency.copy_failed"));
               }}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-border font-bold text-sm hover:border-primary"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-border font-bold text-sm hover:border-primary min-h-[44px]"
             >
-              <FaLink /> Copy link
+              <FaLink /> {t("emergency.copy_link")}
             </button>
             <button
               type="button"
               disabled={bannerBusy}
               onClick={handleBanner}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-white font-bold text-sm disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-white font-bold text-sm disabled:opacity-50 min-h-[44px]"
             >
-              <FaDownload /> Download banner
+              <FaDownload /> {t("emergency.download_banner")}
             </button>
           </div>
         </div>
 
-        <aside className="lg:sticky lg:top-28 space-y-6">
-          <div className="bg-white rounded-[2rem] p-6 md:p-8 border border-black/6 shadow-xl shadow-primary/5">
+        <aside className="lg:sticky lg:top-28 space-y-6 w-full max-w-xl mx-auto lg:max-w-none">
+          <div className="bg-white rounded-2xl sm:rounded-[2rem] p-5 sm:p-6 md:p-8 border border-black/6 shadow-xl shadow-primary/5">
             <h2 className="text-xs font-black uppercase tracking-[0.25em] text-primary mb-6 flex items-center gap-2">
-              <FaUniversity /> Donate now
+              <FaUniversity /> {t("emergency.donate_now")}
             </h2>
             <div className="space-y-4 text-sm">
               <div className="flex justify-between font-black text-lg">
-                <span className="text-text-body/50 text-xs uppercase tracking-widest self-center">Raised</span>
+                <span className="text-text-body/50 text-xs uppercase tracking-widest self-center">{t("emergency.raised")}</span>
                 <span className="text-primary">₹{(f.raisedAmount || 0).toLocaleString("en-IN")}</span>
               </div>
               <div className="flex justify-between font-bold">
-                <span className="text-text-body/50">Goal</span>
+                <span className="text-text-body/50">{t("emergency.goal")}</span>
                 <span>₹{(f.targetAmount || 0).toLocaleString("en-IN")}</span>
               </div>
               <div className="flex justify-between font-bold text-blood">
-                <span className="text-text-body/50">Pending</span>
+                <span className="text-text-body/50">{t("emergency.pending")}</span>
                 <span>₹{pending.toLocaleString("en-IN")}</span>
               </div>
               <div className="h-3 rounded-full bg-black/5 overflow-hidden">
@@ -315,19 +344,21 @@ const EmergencyFundingDetails = () => {
                   style={{ width: `${Math.min(100, pct)}%` }}
                 />
               </div>
-              <p className="text-center text-xs font-black text-text-body/50">{pct}% funded · {f.supportersCount || 0} supporters</p>
+              <p className="text-center text-xs font-black text-text-body/50">
+                {t("emergency.pct_line", { pct, count: f.supportersCount || 0 })}
+              </p>
             </div>
 
             {f.qrCodeImage ? (
               <div className="mt-6 flex flex-col items-center">
-                <p className="text-[10px] font-black uppercase tracking-widest text-text-body/40 mb-2">Scan UPI / QR</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-text-body/40 mb-2">{t("emergency.scan_qr")}</p>
                 <div className="p-3 bg-white rounded-2xl border border-border inline-block">
                   <img src={f.qrCodeImage} alt="Donation QR" className="w-40 h-40 object-contain" />
                 </div>
               </div>
             ) : (
               <div className="mt-6 flex flex-col items-center">
-                <p className="text-[10px] font-black uppercase tracking-widest text-text-body/40 mb-2">Share this page</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-text-body/40 mb-2">{t("emergency.share_page_qr")}</p>
                 <div className="p-3 bg-white rounded-2xl border border-border">
                   <QRCode value={pageUrl} size={140} level="M" />
                 </div>
@@ -337,31 +368,31 @@ const EmergencyFundingDetails = () => {
             <div className="mt-8 space-y-3 text-xs border-t border-border pt-6">
               {bd.accountHolderName ? (
                 <p>
-                  <span className="font-black text-text-body/40 uppercase tracking-wider block mb-0.5">Account name</span>
+                  <span className="font-black text-text-body/40 uppercase tracking-wider block mb-0.5">{t("emergency.account_name")}</span>
                   <span className="font-bold text-text-body">{bd.accountHolderName}</span>
                 </p>
               ) : null}
               {bd.bankName ? (
                 <p>
-                  <span className="font-black text-text-body/40 uppercase tracking-wider block mb-0.5">Bank</span>
+                  <span className="font-black text-text-body/40 uppercase tracking-wider block mb-0.5">{t("emergency.bank")}</span>
                   <span className="font-bold text-text-body">{bd.bankName}</span>
                 </p>
               ) : null}
               {bd.accountNumber ? (
                 <p>
-                  <span className="font-black text-text-body/40 uppercase tracking-wider block mb-0.5">Account number</span>
+                  <span className="font-black text-text-body/40 uppercase tracking-wider block mb-0.5">{t("emergency.account_number")}</span>
                   <span className="font-bold text-text-body tracking-wide select-all">{bd.accountNumber}</span>
                 </p>
               ) : null}
               {bd.ifscCode ? (
                 <p>
-                  <span className="font-black text-text-body/40 uppercase tracking-wider block mb-0.5">IFSC</span>
+                  <span className="font-black text-text-body/40 uppercase tracking-wider block mb-0.5">{t("emergency.ifsc")}</span>
                   <span className="font-bold text-text-body select-all">{bd.ifscCode}</span>
                 </p>
               ) : null}
               {bd.upiId ? (
                 <p>
-                  <span className="font-black text-text-body/40 uppercase tracking-wider block mb-0.5">UPI ID</span>
+                  <span className="font-black text-text-body/40 uppercase tracking-wider block mb-0.5">{t("emergency.upi")}</span>
                   <span className="font-bold text-primary select-all">{bd.upiId}</span>
                 </p>
               ) : null}
@@ -371,14 +402,14 @@ const EmergencyFundingDetails = () => {
               href={`tel:${String(cd.phone || "").replace(/\D/g, "")}`}
               className="mt-8 block w-full py-4 rounded-xl bg-[#1a1a2e] text-white text-center font-black text-sm uppercase tracking-widest hover:bg-primary transition-colors"
             >
-              Contact coordinator
+              {t("emergency.contact_coordinator")}
             </a>
 
             <button
               onClick={() => setDonationModal(true)}
-              className="mt-3 block w-full py-4 rounded-xl bg-primary text-white text-center font-black text-sm uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
+              className="mt-3 block w-full py-4 rounded-xl bg-primary text-white text-center font-black text-sm uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all min-h-[48px]"
             >
-              Submit Donation Details
+              {t("emergency.submit_donation_btn")}
             </button>
 
             <div className="mt-6 space-y-2 text-xs text-text-body/70">
@@ -403,73 +434,162 @@ const EmergencyFundingDetails = () => {
           <div className="bg-gradient-to-br from-primary/10 to-blood/10 rounded-[2rem] p-6 border border-primary/15 text-center">
             <FaHeart className="mx-auto text-primary text-2xl mb-2" />
             <p className="text-sm font-bold text-text-body leading-relaxed">
-              100% of your kindness supports verified medical care. Thank you for trusting Humanity Calls.
+              {t("emergency.trust_note")}
             </p>
           </div>
         </aside>
       </div>
 
       {donationModal && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md" onClick={() => setDonationModal(false)}>
-          <div 
-            className="bg-white rounded-[3rem] shadow-2xl w-full max-w-2xl h-full max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-500"
+        <div
+          className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-md pb-[max(0.75rem,env(safe-area-inset-bottom,0px))]"
+          onClick={() => {
+            if (previewUrl) URL.revokeObjectURL(previewUrl);
+            setPreviewUrl("");
+            setSelectedFile(null);
+            setProofIsPdf(false);
+            setDonationModal(false);
+          }}
+        >
+          <div
+            className="bg-white rounded-t-[2rem] sm:rounded-[2rem] shadow-2xl w-full max-w-2xl max-h-[min(92dvh,900px)] sm:max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-300"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="p-8 border-b border-primary/5 flex items-center justify-between bg-primary/5 shrink-0">
-              <div>
-                <h3 className="text-xl font-black text-primary">Report Donation</h3>
-                <p className="text-[10px] font-bold text-primary/40 uppercase tracking-widest">Verify your contribution</p>
+            <div className="p-5 sm:p-8 border-b border-primary/5 flex items-center justify-between bg-primary/5 shrink-0 gap-3">
+              <div className="min-w-0">
+                <h3 className="text-lg sm:text-xl font-black text-primary truncate">{t("emergency.modal_title")}</h3>
+                <p className="text-[10px] font-bold text-primary/40 uppercase tracking-widest">{t("emergency.modal_sub")}</p>
               </div>
-              <button onClick={() => setDonationModal(false)} className="p-3 bg-white hover:bg-bg rounded-2xl shadow-sm transition-all text-primary/40 hover:text-primary">
+              <button
+                type="button"
+                onClick={() => {
+                  if (previewUrl) URL.revokeObjectURL(previewUrl);
+                  setPreviewUrl("");
+                  setSelectedFile(null);
+                  setProofIsPdf(false);
+                  setDonationModal(false);
+                }}
+                className="p-3 bg-white hover:bg-bg rounded-2xl shadow-sm transition-all text-primary/40 hover:text-primary shrink-0"
+                aria-label={t("emergency.close")}
+              >
                 <FaTimes size={20} />
               </button>
             </div>
 
-            <div className="p-10 overflow-y-auto flex-grow min-h-0 custom-scrollbar bg-white" style={{ overscrollBehavior: 'contain' }} data-lenis-prevent>
+            <div
+              className="p-5 sm:p-8 overflow-y-auto flex-grow min-h-0 custom-scrollbar bg-white"
+              style={{ overscrollBehavior: "contain" }}
+              data-lenis-prevent
+            >
               <form id="emergency-donation-form" onSubmit={onDonationSubmit} className="space-y-6">
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-primary/40 ml-1">Full Name</label>
-                    <input required className="w-full px-5 py-4 bg-bg border border-border rounded-2xl focus:ring-2 focus:ring-primary outline-none font-bold text-sm" value={form.name} onChange={(e) => setForm(p => ({ ...p, name: e.target.value }))} />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
+                  <div className="space-y-1 sm:col-span-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-primary/40 ml-1">
+                      {t("emergency.label_name")} *
+                    </label>
+                    <input
+                      required
+                      className="w-full min-h-[48px] px-4 sm:px-5 py-3 sm:py-4 bg-bg border border-border rounded-2xl focus:ring-2 focus:ring-primary outline-none font-bold text-sm"
+                      value={form.name}
+                      onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+                    />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-primary/40 ml-1">Email</label>
-                    <input required type="email" className="w-full px-5 py-4 bg-bg border border-border rounded-2xl focus:ring-2 focus:ring-primary outline-none font-bold text-sm" value={form.email} onChange={(e) => setForm(p => ({ ...p, email: e.target.value }))} />
+                    <label className="text-[10px] font-black uppercase tracking-widest text-primary/40 ml-1">{t("emergency.label_email")}</label>
+                    <input
+                      type="email"
+                      className="w-full min-h-[48px] px-4 sm:px-5 py-3 sm:py-4 bg-bg border border-border rounded-2xl focus:ring-2 focus:ring-primary outline-none font-bold text-sm"
+                      value={form.email}
+                      onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
+                    />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-primary/40 ml-1">Phone</label>
-                    <input required className="w-full px-5 py-4 bg-bg border border-border rounded-2xl focus:ring-2 focus:ring-primary outline-none font-bold text-sm" value={form.phone} onChange={(e) => setForm(p => ({ ...p, phone: e.target.value }))} />
+                    <label className="text-[10px] font-black uppercase tracking-widest text-primary/40 ml-1">{t("emergency.label_phone")}</label>
+                    <input
+                      inputMode="numeric"
+                      className="w-full min-h-[48px] px-4 sm:px-5 py-3 sm:py-4 bg-bg border border-border rounded-2xl focus:ring-2 focus:ring-primary outline-none font-bold text-sm"
+                      value={form.phone}
+                      onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
+                    />
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-primary/40 ml-1">Amount (₹)</label>
-                    <input required type="number" min={1} className="w-full px-5 py-4 bg-bg border border-border rounded-2xl focus:ring-2 focus:ring-primary outline-none font-bold text-sm" value={form.amount} onChange={(e) => setForm(p => ({ ...p, amount: e.target.value }))} />
+                  <div className="space-y-1 sm:col-span-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-primary/40 ml-1">
+                      {t("emergency.label_amount")} *
+                    </label>
+                    <input
+                      required
+                      type="number"
+                      min={1}
+                      step="1"
+                      className="w-full min-h-[48px] px-4 sm:px-5 py-3 sm:py-4 bg-bg border border-border rounded-2xl focus:ring-2 focus:ring-primary outline-none font-bold text-sm"
+                      value={form.amount}
+                      onChange={(e) => setForm((p) => ({ ...p, amount: e.target.value }))}
+                    />
                   </div>
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-primary/40 ml-1">Transaction ID</label>
-                  <input required className="w-full px-5 py-4 bg-bg border border-border rounded-2xl focus:ring-2 focus:ring-primary outline-none font-bold text-sm" value={form.transactionId} onChange={(e) => setForm(p => ({ ...p, transactionId: e.target.value }))} />
+                  <label className="text-[10px] font-black uppercase tracking-widest text-primary/40 ml-1">{t("emergency.label_txn")}</label>
+                  <input
+                    className="w-full min-h-[48px] px-4 sm:px-5 py-3 sm:py-4 bg-bg border border-border rounded-2xl focus:ring-2 focus:ring-primary outline-none font-bold text-sm"
+                    value={form.transactionId}
+                    onChange={(e) => setForm((p) => ({ ...p, transactionId: e.target.value }))}
+                  />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-primary/40 ml-1">Payment Screenshot</label>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-primary/40 ml-1">{t("emergency.label_proof")}</label>
                   {!previewUrl ? (
                     <label className="relative group block cursor-pointer">
-                      <input type="file" accept="image/*" className="hidden" onChange={(e) => {
-                        const f = e.target.files[0];
-                        if (f) { setSelectedFile(f); setPreviewUrl(URL.createObjectURL(f)); }
-                      }} />
-                      <div className="w-full py-10 px-4 border-2 border-dashed border-border bg-bg/50 rounded-3xl flex flex-col items-center justify-center gap-2 group-hover:border-primary group-hover:bg-primary/5 transition-all">
-                        <div className="w-12 h-12 bg-white text-primary shadow-sm rounded-xl flex items-center justify-center"><FaCloudUploadAlt size={24} /></div>
-                        <p className="text-sm font-bold text-text-body">Click to upload screenshot</p>
-                        <p className="text-[10px] text-text-body/40 font-black uppercase tracking-widest">PNG, JPG up to 8MB</p>
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/jpg,image/png,image/webp,image/heic,image/heif,.pdf,application/pdf"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          if (file.size > 8 * 1024 * 1024) {
+                            toast.warning(t("emergency.proof_hint"));
+                            e.target.value = "";
+                            return;
+                          }
+                          const pdf = file.type === "application/pdf" || String(file.name || "").toLowerCase().endsWith(".pdf");
+                          setProofIsPdf(pdf);
+                          setSelectedFile(file);
+                          setPreviewUrl(URL.createObjectURL(file));
+                          e.target.value = "";
+                        }}
+                      />
+                      <div className="w-full py-8 sm:py-10 px-4 border-2 border-dashed border-border bg-bg/50 rounded-3xl flex flex-col items-center justify-center gap-2 group-hover:border-primary group-hover:bg-primary/5 transition-all">
+                        <div className="w-12 h-12 bg-white text-primary shadow-sm rounded-xl flex items-center justify-center">
+                          <FaCloudUploadAlt size={24} />
+                        </div>
+                        <p className="text-sm font-bold text-text-body text-center">{t("emergency.proof_pick")}</p>
+                        <p className="text-[10px] text-text-body/40 font-black uppercase tracking-widest text-center">{t("emergency.proof_hint")}</p>
                       </div>
                     </label>
                   ) : (
-                    <div className="relative rounded-[2rem] overflow-hidden border border-border shadow-sm group aspect-video">
-                      <img src={previewUrl} alt="Proof" className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <button type="button" onClick={() => { setSelectedFile(null); setPreviewUrl(""); }} className="w-12 h-12 rounded-full bg-blood text-white flex items-center justify-center hover:scale-110 transition-all">
+                    <div className="relative rounded-[2rem] overflow-hidden border border-border shadow-sm group min-h-[12rem]">
+                      {proofIsPdf ? (
+                        <div className="flex flex-col items-center justify-center gap-3 py-10 px-4 bg-bg">
+                          <FaFilePdf className="text-red-600 text-5xl" />
+                          <p className="text-xs font-bold text-text-body break-all text-center">{selectedFile?.name}</p>
+                        </div>
+                      ) : (
+                        <img src={previewUrl} alt="" className="w-full max-h-64 object-contain bg-black/5" />
+                      )}
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 sm:group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (previewUrl) URL.revokeObjectURL(previewUrl);
+                            setPreviewUrl("");
+                            setSelectedFile(null);
+                            setProofIsPdf(false);
+                          }}
+                          className="w-12 h-12 rounded-full bg-blood text-white flex items-center justify-center hover:scale-110 transition-all"
+                          aria-label={t("emergency.cancel")}
+                        >
                           <FaTrashAlt size={18} />
                         </button>
                       </div>
@@ -479,21 +599,32 @@ const EmergencyFundingDetails = () => {
               </form>
             </div>
 
-            <div className="p-8 bg-primary/5 border-t border-primary/5 flex items-center justify-end gap-4 shrink-0">
-              <button onClick={() => setDonationModal(false)} className="px-8 py-4 text-primary/40 hover:text-primary font-black text-xs uppercase tracking-widest transition-all">
-                Cancel
-              </button>
-              <button 
-                form="emergency-donation-form"
-                disabled={submitting}
-                className="px-10 py-4 bg-primary text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
+            <div className="p-5 sm:p-8 bg-primary/5 border-t border-primary/5 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-3 shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  if (previewUrl) URL.revokeObjectURL(previewUrl);
+                  setPreviewUrl("");
+                  setSelectedFile(null);
+                  setProofIsPdf(false);
+                  setDonationModal(false);
+                }}
+                className="px-6 sm:px-8 py-3 sm:py-4 text-primary/40 hover:text-primary font-black text-xs uppercase tracking-widest transition-all min-h-[48px]"
               >
-                {submitting ? "Submitting..." : "Send Verification Request"}
+                {t("emergency.cancel")}
+              </button>
+              <button
+                form="emergency-donation-form"
+                type="submit"
+                disabled={submitting}
+                className="px-8 sm:px-10 py-3 sm:py-4 bg-primary text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 min-h-[48px]"
+              >
+                {submitting ? t("emergency.submitting") : t("emergency.submit_btn")}
               </button>
             </div>
           </div>
         </div>,
-        document.body
+        document.body,
       )}
 
       {/* Thank You Popup */}
@@ -510,24 +641,25 @@ const EmergencyFundingDetails = () => {
               <div className="w-20 h-20 bg-green-50 text-green-500 rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner">
                 <FaCheckCircle size={40} className="animate-bounce" />
               </div>
-              <h2 className="text-3xl font-black text-slate-900 mb-4 tracking-tight">Donation Reported! ❤️</h2>
+              <h2 className="text-2xl sm:text-3xl font-black text-slate-900 mb-4 tracking-tight">{t("emergency.thank_title")}</h2>
               <p className="text-slate-600 font-medium leading-relaxed mb-8">
-                Thank you for your support. Our team will verify the transaction and update the fundraiser totals shortly.
+                {t("emergency.thank_body")}
               </p>
               <div className="bg-slate-50 rounded-2xl p-6 mb-8 border border-slate-100 flex items-center gap-4 text-left">
                 <div className="w-12 h-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center shrink-0">
                   <FaHandHoldingHeart size={20} />
                 </div>
                 <div>
-                  <p className="text-[11px] font-black text-primary uppercase tracking-widest leading-none mb-1">Impact Status</p>
-                  <p className="text-sm font-bold text-slate-700">Verification in progress...</p>
+                  <p className="text-[11px] font-black text-primary uppercase tracking-widest leading-none mb-1">{t("emergency.impact")}</p>
+                  <p className="text-sm font-bold text-slate-700">{t("emergency.verification")}</p>
                 </div>
               </div>
               <button
+                type="button"
                 onClick={() => setShowThankYou(false)}
-                className="w-full py-5 rounded-2xl bg-primary text-white font-black uppercase tracking-[0.2em] text-sm shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                className="w-full py-5 rounded-2xl bg-primary text-white font-black uppercase tracking-[0.2em] text-sm shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all min-h-[48px]"
               >
-                Close
+                {t("emergency.close")}
               </button>
             </motion.div>
           </div>

@@ -257,11 +257,25 @@ const EmergencyDonorsManager = () => {
               >
                 <FaTimes size={24} />
               </button>
-              <img 
-                src={selectedProof} 
-                className="max-w-full max-h-full object-contain rounded-2xl shadow-2xl border border-white/10" 
-                alt="Proof Full Size" 
-              />
+              {/\.pdf(\?|$)/i.test(selectedProof) ? (
+                <div className="w-full h-full min-h-[50vh] bg-white rounded-2xl overflow-hidden border border-white/10 shadow-2xl flex flex-col">
+                  <a
+                    href={selectedProof}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="p-4 text-center font-black text-primary bg-white"
+                  >
+                    Open proof (PDF) in new tab
+                  </a>
+                  <embed src={selectedProof} type="application/pdf" className="flex-1 w-full min-h-[40vh]" title="Payment proof" />
+                </div>
+              ) : (
+                <img
+                  src={selectedProof}
+                  className="max-w-full max-h-full object-contain rounded-2xl shadow-2xl border border-white/10"
+                  alt="Proof Full Size"
+                />
+              )}
             </motion.div>
           </div>
         )}

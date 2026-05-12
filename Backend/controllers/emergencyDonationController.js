@@ -6,8 +6,12 @@ export const submitEmergencyDonation = async (req, res) => {
   try {
     const { fundraiserId, name, email, phone, amount, transactionId, screenshotUrl } = req.body;
 
-    if (!fundraiserId || !name || !email || !phone || !amount || !transactionId || !screenshotUrl) {
-      return res.status(400).json({ message: "All fields are required" });
+    if (!fundraiserId || !name || name.trim().length < 1) {
+      return res.status(400).json({ message: "Name is required" });
+    }
+    const amt = Number(amount);
+    if (!Number.isFinite(amt) || amt < 1) {
+      return res.status(400).json({ message: "Valid donation amount (₹1 or more) is required" });
     }
 
     const fundraiser = await EmergencyFundraiser.findById(fundraiserId);
@@ -15,15 +19,26 @@ export const submitEmergencyDonation = async (req, res) => {
       return res.status(404).json({ message: "Fundraiser not found" });
     }
 
-    const donation = await EmergencyDonation.create({
+    const tid = String(transactionId || "").trim();
+    if (tid) {
+      const exists = await EmergencyDonation.findOne({ transactionId: tid }).lean();
+      if (exists) {
+        return res.status(400).json({ message: "This transaction ID was already reported" });
+      }
+    }
+
+    const doc = {
       fundraiserId,
-      name,
-      email,
-      phone,
-      amount,
-      transactionId,
-      screenshotUrl,
-    });
+      name: name.trim(),
+      email: String(email || "").trim(),
+      phone: String(phone || "").trim(),
+      amount: amt,
+    };
+    if (tid) doc.transactionId = tid;
+    const proof = String(screenshotUrl || "").trim();
+    if (proof) doc.screenshotUrl = proof;
+
+    const donation = await EmergencyDonation.create(doc);
 
     res.status(201).json({ message: "Donation submitted successfully", donation });
   } catch (error) {

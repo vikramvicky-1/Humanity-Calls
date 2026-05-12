@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import axios from "axios";
 import { motion } from "framer-motion";
 import { FaHeart, FaArrowRight, FaBolt } from "react-icons/fa";
 import { API_URL } from "../utils/apiConfig.js";
 
 const EmergencyFundingSection = () => {
+  const { t } = useTranslation();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -48,7 +50,7 @@ const EmergencyFundingSection = () => {
               viewport={{ once: true }}
               className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.35em] text-blood"
             >
-              <FaBolt /> Emergency funding
+              <FaBolt /> {t("emergency.section_kicker")}
             </motion.span>
             <motion.h2
               initial={{ opacity: 0, y: 12 }}
@@ -57,17 +59,17 @@ const EmergencyFundingSection = () => {
               className="text-3xl md:text-5xl font-black text-[#1a1a1a] mt-3 tracking-tight"
               style={{ fontFamily: '"Syne", sans-serif' }}
             >
-              Help save a <span className="text-primary italic">life today</span>
+              {t("emergency.section_title")}
             </motion.h2>
             <p className="mt-3 text-text-body/70 max-w-xl text-sm md:text-base font-medium leading-relaxed">
-              Verified medical emergencies. Every rupee reaches the family through Humanity Calls.
+              {t("emergency.section_sub")}
             </p>
           </div>
           <Link
             to="/emergency-funding"
-            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl border-2 border-primary text-primary font-black text-xs uppercase tracking-widest hover:bg-primary hover:text-white transition-all shrink-0"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl border-2 border-primary text-primary font-black text-xs uppercase tracking-widest hover:bg-primary hover:text-white transition-all shrink-0 min-h-[48px]"
           >
-            View all <FaArrowRight size={11} />
+            {t("emergency.section_view_all")} <FaArrowRight size={11} />
           </Link>
         </div>
 
@@ -94,11 +96,11 @@ const EmergencyFundingSection = () => {
                     </div>
                   )}
                   <span className="absolute top-3 left-3 px-3 py-1 rounded-full bg-blood text-white text-[10px] font-black uppercase tracking-widest shadow-lg">
-                    Urgent
+                    {t("emergency.section_urgent")}
                   </span>
                   {f.goalReached ? (
                     <span className="absolute top-3 right-3 px-3 py-1 rounded-full bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest">
-                      Goal reached
+                      {t("emergency.section_goal")}
                     </span>
                   ) : null}
                 </Link>
@@ -109,8 +111,8 @@ const EmergencyFundingSection = () => {
                   <p className="text-sm text-text-body/65 line-clamp-2 mt-2 flex-1">{f.shortDescription}</p>
                   <div className="mt-4 space-y-2">
                     <div className="flex justify-between text-[11px] font-bold text-text-body/50 uppercase tracking-wider">
-                      <span>Raised ₹{(f.raisedAmount || 0).toLocaleString("en-IN")}</span>
-                      <span>Goal ₹{(f.targetAmount || 0).toLocaleString("en-IN")}</span>
+                      <span>{t("emergency.popup_raised")} ₹{(f.raisedAmount || 0).toLocaleString("en-IN")}</span>
+                      <span>{t("emergency.goal")} ₹{(f.targetAmount || 0).toLocaleString("en-IN")}</span>
                     </div>
                     <div className="h-2.5 rounded-full bg-black/5 overflow-hidden">
                       <div
@@ -119,18 +121,18 @@ const EmergencyFundingSection = () => {
                       />
                     </div>
                     <div className="flex justify-between items-center text-xs font-bold">
-                      <span className="text-blood">{pct}% funded</span>
-                      <span className="text-text-body/60">{f.supportersCount || 0} supporters</span>
+                      <span className="text-blood">{t("emergency.section_funded", { pct })}</span>
+                      <span className="text-text-body/60">{t("emergency.section_supporters", { count: f.supportersCount || 0 })}</span>
                     </div>
                     <p className="text-[11px] font-bold text-amber-800/90">
-                      ₹{pending.toLocaleString("en-IN")} still needed
+                      {t("emergency.section_needed", { amount: pending.toLocaleString("en-IN") })}
                     </p>
                   </div>
                   <Link
                     to={`/emergency-funding/${f.slug}`}
                     className="mt-5 w-full py-3.5 rounded-xl bg-[#1a1a2e] text-white text-center font-black text-xs uppercase tracking-widest hover:bg-primary transition-colors"
                   >
-                    Donate &amp; share
+                    {t("emergency.section_cta")}
                   </Link>
                 </div>
               </motion.article>
