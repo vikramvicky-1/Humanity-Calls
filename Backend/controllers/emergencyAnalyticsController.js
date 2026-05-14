@@ -14,6 +14,7 @@ export const emergencyEventLimiter = rateLimit({
 
 const ALLOWED_TYPES = new Set([
   "list_view",
+  "list_card_open",
   "detail_view",
   "fab_click",
   "home_section_view",

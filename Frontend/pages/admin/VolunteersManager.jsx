@@ -501,14 +501,14 @@ const VolunteersManager = () => {
                           Profile:{" "}
                           <span
                             className={
-                              vol.adminProfileApproval === "approved"
+                              (vol.adminProfileApproval ?? "approved") === "approved"
                                 ? "text-emerald-600"
                                 : vol.adminProfileApproval === "rejected"
                                   ? "text-blood"
                                   : "text-amber-600"
                             }
                           >
-                            {vol.adminProfileApproval || "pending"}
+                            {vol.adminProfileApproval ?? "approved"}
                           </span>
                         </div>
                       )}
@@ -783,7 +783,7 @@ const VolunteersManager = () => {
           <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-300 text-center p-10">
             <h3 className="text-2xl font-black text-primary mb-6">Modify Standing</h3>
             {updateStatusTarget.status === "pending" &&
-              updateStatusTarget.adminProfileApproval !== "approved" && (
+              (updateStatusTarget.adminProfileApproval ?? "approved") !== "approved" && (
                 <p className="text-xs font-bold text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mb-4 text-left">
                   Approve this volunteer&apos;s profile first (use &quot;Approve profile&quot; in the row actions). Only then you can move them to Active, Temporary, or Inactive from Pending.
                 </p>
