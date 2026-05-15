@@ -189,7 +189,8 @@ export const updateVolunteerStatus = async (req, res) => {
     const needsProfileApproval =
       previous.status === "pending" &&
       ["active", "temporary", "inactive"].includes(status);
-    if (needsProfileApproval && previous.adminProfileApproval !== "approved") {
+    const profileApproval = previous.adminProfileApproval ?? "approved";
+    if (needsProfileApproval && profileApproval !== "approved") {
       return res.status(400).json({
         message:
           "Approve the volunteer profile before moving them to Active, Temporary, or Inactive from Pending.",

@@ -20,13 +20,16 @@ import {
   FaUniversity,
   FaCheckCircle,
   FaTimes,
+  FaCloudUploadAlt,
+  FaTrashAlt,
+  FaHandHoldingHeart,
+  FaFilePdf,
 } from "react-icons/fa";
 import { buildEmergencyShareUrls, copyEmergencyLink, trackEmergencyEvent } from "../utils/emergencyShare";
 import { parseVideoForEmbed } from "../utils/emergencyVideoEmbed";
 import { downloadEmergencyBannerPng } from "../utils/downloadEmergencyBanner";
 import { API_URL } from "../utils/apiConfig.js";
 import { createPortal } from "react-dom";
-import { FaCloudUploadAlt, FaTrashAlt, FaHandHoldingHeart, FaFilePdf } from "react-icons/fa";
 import { uploadPublicProofFile } from "../utils/publicForms";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -39,9 +42,14 @@ const EmergencyFundingDetails = () => {
   const [bannerBusy, setBannerBusy] = useState(false);
 
   const load = useCallback(() => {
+    if (!slug || !String(slug).trim()) {
+      setF(null);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     axios
-      .get(`${API_URL}/emergency-fundraisers/public/slug/${slug}`)
+      .get(`${API_URL}/emergency-fundraisers/public/slug/${encodeURIComponent(String(slug).trim())}`)
       .then((res) => {
         const payload = res?.data;
         const ok =
@@ -56,7 +64,7 @@ const EmergencyFundingDetails = () => {
         toast.error(t("emergency.fundraiser_not_found"));
       })
       .finally(() => setLoading(false));
-  }, [slug]);
+  }, [slug, t]);
 
   useEffect(() => {
     load();
@@ -109,6 +117,10 @@ const EmergencyFundingDetails = () => {
 
   const onDonationSubmit = async (e) => {
     e.preventDefault();
+    if (!f?._id) {
+      toast.error(t("emergency.fundraiser_not_found"));
+      return;
+    }
     const name = String(form.name || "").trim();
     const amt = Number(form.amount);
     if (!name) {

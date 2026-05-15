@@ -3,8 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FaTimes, FaCommentDots, FaPaperPlane, FaThumbtack, FaTrash } from "react-icons/fa";
 import { toast } from "react-toastify";
 import axios from "axios";
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+import { API_URL } from "../utils/apiConfig.js";
 
 const FeedbackModal = ({ isOpen, onClose }) => {
   const [formData, setFormData] = useState({ name: "", message: "" });
